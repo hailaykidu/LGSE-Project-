@@ -1,0 +1,53 @@
+from typing import Dict, List
+
+
+class MorphologicalSegmenter:
+    """
+    Loads and provides morpheme segmentation for Amharic + Tigrinya words.
+    Expected file format:
+        WORD<TAB>M1 M2 M3 ...
+    """
+
+    def __init__(self, lexicon: Dict[str, List[str]]):
+        self.lexicon = lexicon
+
+    @classmethod
+    def from_file(cls, path: str) -> "MorphologicalSegmenter":
+        lexicon: Dict[str, List[str]] = {}
+
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+
+                # Skip empty lines or comments
+                if not line or line.startswith("#"):
+                    continue
+
+                # Must contain a tab
+                if "\t" not in line:
+                    continue
+
+                word, morph_str = line.split("\t", 1)
+                morphemes = morph_str.split()
+
+                if morphemes:
+                    lexicon[word] = morphemes
+
+        return cls(lexicon)
+
+    def segment(self, token: str) -> List[str]:
+        """
+        Returns the morphemes for a token.
+        If not found, fallback to:
+        1. exact morphem match
+        2. treat token as a single morpheme
+        """
+        if token in self.lexicon:
+            return self.lexicon[token]
+
+        lower = token.lower()
+        if lower in self.lexicon:
+            return self.lexicon[lower]
+
+        # fallback: treat whole word as one morpheme
+        return [token]

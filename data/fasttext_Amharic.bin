@@ -1,0 +1,2 @@
+fasttext_amharic_path = "data/fasttext_amharic.bin"https://fasttext.cc/ 
+fasttext_tigrinya_path = "data/fasttext_tigrinya.bin" https://huggingface.co/Hailay/fasttext-tigrinya/blob/main/fasttext_tigrinya.bin 
