@@ -87,8 +87,9 @@ Best improvements observed in:
 
 Designed for extension to:
 
-* Oromo
-* Geez-script languages
+* Other Geez-script languages
+* Morphologically rich, low-resource languages
+* Hebrew, Arab 
 * Other Semitic languages
   
 
