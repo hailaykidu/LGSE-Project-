@@ -1,8 +1,8 @@
 # LGSE: Linguistically-Guided Subword Embeddings for Amharic & Tigrinya
 
-### Official Code Release — Accepted at LREC-COLING 2026
+### Official Code Release — Accepted at LREC 2026
 
-This repository accompanies our paper accepted for publication at **LREC-COLING 2026**.
+This repository accompanies our paper accepted for publication at **LREC 2026**.
 
 It provides a complete implementation of **LGSE (Linguistically-Guided Subword Embedding Initialization)** adapted for **Amharic** and **Tigrinya**, two morphologically rich Ethio-Semitic languages.
 
@@ -234,7 +234,7 @@ Designed for extension to:
 
 This repository accompanies our paper accepted at:
 
-**LREC-COLING 2026**
+**LREC 2026**
 
 ---
 
@@ -248,7 +248,7 @@ This repository accompanies our paper accepted at:
 
 ## 🤝 Citation
 
-If you use this code or lexicon, please cite our LREC-COLING 2026 paper.
+If you use this code or lexicon, please cite our LREC 2026 paper.
 
 (Citation details will be updated after publication.)
 
