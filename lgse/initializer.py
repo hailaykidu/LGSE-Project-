@@ -1,53 +1,65 @@
-from typing import List, Dict, Tuple
+from typing import Dict
 import torch
 
-from .segmentation import MorphologicalSegmenter
 from .morpheme_embeddings import MorphemeEmbeddingBuilder
 from .char_ngrams import CharNgramEncoder
 
+
 class LGSEInitializer:
+    """
+    Computes and writes initialization vectors for newly added tokens.
+
+    Deliberately does NOT resize the embedding matrix itself -- that is the
+    caller's responsibility via the tokenizer's own `add_tokens()` and the
+    model's own `resize_token_embeddings()`. An earlier version of this
+    class reconstructed the weight matrix by hand and replaced
+    `embedding_layer.weight` with a new Parameter, which silently breaks
+    weight tying between the input embeddings and a tied MLM output head
+    (common for XLM-R-style models): the tied head would keep pointing at
+    the old, smaller Parameter object instead of following the resize.
+    Using the model's own resize API first keeps both sides of the tie
+    consistent; this class only fills in the *values* for the new rows.
+    """
+
     def __init__(self,
-                 tokenizer,
                  embedding_layer: torch.nn.Embedding,
-                 segmenter: MorphologicalSegmenter,
                  morph_builder: MorphemeEmbeddingBuilder,
                  char_encoder: CharNgramEncoder,
                  device: str = "cpu"):
-        self.tokenizer = tokenizer
         self.embedding_layer = embedding_layer
-        self.segmenter = segmenter
         self.morph_builder = morph_builder
         self.char_encoder = char_encoder
         self.device = device
 
     def init_token_embedding(self, token: str) -> torch.Tensor:
-        morphemes = self.segmenter.segment(token)
-        if morphemes:
-            v = self.morph_builder.word_from_morphemes(morphemes)
-            if v is not None:
-                return v
-        return self.char_encoder.encode(token)
+        """Morpheme-average -> whole-token FastText -> character n-grams,
+        matching the paper's described fallback chain. Always returns a
+        torch.Tensor (not a mix of numpy arrays and tensors) so callers can
+        safely torch.stack() the results.
+        """
+        v = self.morph_builder.build_embedding_for_token(token)
+        if v is not None:
+            return torch.as_tensor(v, dtype=torch.float32, device=self.device)
 
-    def add_new_tokens(self, new_tokens: List[str]) -> Tuple[Dict[str, int], torch.Tensor]:
-        added = self.tokenizer.add_tokens(new_tokens)
-        if added != len(new_tokens):
-            raise ValueError("Tokenizer did not add all new tokens.")
+        return self.char_encoder.encode(token).to(self.device)
 
-        old_weight = self.embedding_layer.weight.data
-        old_num, dim = old_weight.shape
-        new_weight = torch.zeros(old_num + added, dim, device=self.device, dtype=old_weight.dtype)
-        new_weight[:old_num] = old_weight
+    def write_embeddings_for_new_tokens(self, token_to_id: Dict[str, int]) -> torch.Tensor:
+        """Writes an init vector into `embedding_layer` for each token in
+        `token_to_id` (in place, via .data indexing -- not a Parameter
+        replacement, so weight tying with any tied output head survives).
+        Returns the stacked init matrix (same order as dict iteration) so
+        the caller can hand it to LGSERegularizer as the anchor to
+        regularize toward.
+        """
+        tokens = list(token_to_id.keys())
+        vecs = [self.init_token_embedding(tok) for tok in tokens]
+        init_matrix = torch.stack(vecs, dim=0).to(
+            dtype=self.embedding_layer.weight.dtype, device=self.embedding_layer.weight.device
+        )
 
-        init_vecs = []
-        for tok in new_tokens:
-            v = self.init_token_embedding(tok)
-            init_vecs.append(v)
-        init_matrix = torch.stack(init_vecs, dim=0)
-        new_weight[old_num:] = init_matrix
+        with torch.no_grad():
+            for tok, vec in zip(tokens, init_matrix):
+                idx = token_to_id[tok]
+                self.embedding_layer.weight.data[idx] = vec
 
-        self.embedding_layer.weight = torch.nn.Parameter(new_weight)
-
-        token_to_id: Dict[str, int] = {
-            tok: self.tokenizer.convert_tokens_to_ids(tok) for tok in new_tokens
-        }
-        return token_to_id, init_matrix.detach().clone()
+        return init_matrix.detach().clone()
