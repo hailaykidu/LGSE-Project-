@@ -7,13 +7,6 @@ pretrained models (e.g. XLM-R) by initializing new vocabulary items with
 **morpheme-aware embeddings** and **FastText subword vectors**, instead of
 random vectors or arbitrary subword-derived initialization.
 
-This project includes:
-
-- A combined **Amharic + Tigrinya morphological lexicon**
-- A **new token list** for vocabulary expansion
-- **FastText embeddings** for both languages
-- A **LGSE Language-Adaptive Pretraining (LAP)** pipeline
-
 ## Method (and how the code implements each part)
 
 1. **New tokens get morpheme-averaged embeddings, not random vectors.**
@@ -47,49 +40,10 @@ together, covered by real tests (`tests/`, previously all `assert True`
 placeholders), and verified end-to-end against a real model
 (`xlm-roberta-base`) and a real FastText model before being written up here.
 
-## Project Structure
-
-```
-LGSE-Project/
-│
-├── data/
-│   ├── morph_lexicon.txt        # mixed-format lexicon: numbered Tigrinya
-│   │                            # prefix/root/suffix rows + a "$Amharic:"
-│   │                            # section of plain word->morpheme rows
-│   ├── new_tokens.txt
-│   ├── fasttext_Amharic.bin     # placeholder -- see FastText Models below
-│   └── fasttext_Tigriyna.bin    # placeholder -- see FastText Models below
-│
-├── lgse/
-│   ├── __init__.py              # re-exports LGSEConfig, LGSELAPTrainer
-│   ├── config.py                # single canonical LGSEConfig
-│   ├── lap_trainer.py           # LGSELAPTrainer: the actual training loop
-│   ├── segmentation.py          # MorphologicalSegmenter
-│   ├── morpheme_embeddings.py   # MorphemeEmbeddingBuilder
-│   ├── initializer.py           # LGSEInitializer (chains the fallbacks)
-│   ├── regularization.py        # LGSERegularizer
-│   ├── char_ngrams.py           # CharNgramEncoder
-│   └── token_selection.py       # load_new_tokens
-│
-├── lgse_tokenizers/              # unrelated helper utilities (SentencePiece
-│   │                            # / vocab-expansion helpers, not used by
-│   │                            # the LAP pipeline above). Named
-│   │                            # lgse_tokenizers, not tokenizers -- a
-│   │                            # bare `tokenizers/` directory here shadows
-│   │                            # the real PyPI `tokenizers` package that
-│   │                            # `transformers` itself depends on.
-│   ├── __init__.py
-│   ├── spm_utils.py
-│   └── vocab_expansion.py
-│
-├── scripts/
-│   ├── run_lgse_lap.py          # entry point: builds a config + dataset,
-│   │                            # runs LGSELAPTrainer
-│   └── analyze_tokens.py
-│
-├── tests/                       # real tests (see Testing below)
-└── requirements.txt
-```
+`lgse_tokenizers/` (SentencePiece / vocab-expansion helpers) is unrelated
+to the LAP pipeline above and isn't used by it; it's named `lgse_tokenizers`
+rather than `tokenizers` because a bare `tokenizers/` directory here would
+shadow the real PyPI `tokenizers` package that `transformers` depends on.
 
 ## Installation
 
