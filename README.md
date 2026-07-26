@@ -250,7 +250,7 @@ This repository accompanies our paper accepted at:
 
 If you use this code or lexicon, please cite our LREC 2026 paper.
 
-(Citation details will be updated after publication.)
+ Teklehaymanot, H., Fazlija, D., & Nejdl, W. (2026). LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation. arXiv preprint arXiv:2603.22629.
 
 ---
 
@@ -265,8 +265,7 @@ If you use this code or lexicon, please cite our LREC 2026 paper.
 ---
 
 ## 👩‍🔬 Authors
-
-This work was conducted as part of ongoing research on multilingual NLP and low-resource languages at the L3S research center in Germany.
+Teklehaymanot, H., Fazlija, D., & Nejdl, W. (2026). LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation. arXiv preprint arXiv:2603.22629.
 
 ---
 
