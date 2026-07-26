@@ -26,18 +26,16 @@ def set_seed(seed: int):
 
 class LGSELAPTrainer:
     """
-    Language-Adaptive Pretraining with LGSE-initialized new-token embeddings.
+    Language-Adaptive Pretraining (LAPT) with LGSE-initialized embeddings.
 
-    Implements the specific claims from the LGSE paper that a previous
-    version of this codebase defined supporting classes for but never
-    actually wired together or ran:
-      - new tokens get morpheme-averaged / FastText / character-n-gram
-        embeddings (via LGSEInitializer), not random vectors
-      - a regularization term anchors new embeddings to their init values
-        during training (LGSERegularizer, applied every step below)
-      - the base model is frozen and only the new-token embedding rows are
-        updated, isolating the effect of the initialization strategy
-    """
+    This implementation follows the LGSE framework described in the
+    accompanying paper, integrating morphology-aware decomposition,
+    FastText-based representations, and character n-gram fallback for
+    initializing new vocabulary embeddings. During LAPT, embedding
+    regularization preserves the initialized semantic structure while
+    adapting the new representations to target language data.
+"""
+
 
     def __init__(self, config: LGSEConfig, dataset):
         set_seed(config.seed)
