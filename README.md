@@ -36,8 +36,8 @@ LGSE-Project/
 ├── data/
 │   ├── morph_lexicon.txt
 │   ├── new_tokens.txt
-│   ├── fasttext_Amharic.bin       # https://fasttext.cc/docs/en/crawl-vectors.html /placeholder until replaced -- see FastText Models
-│   └── fasttext_Tigriyna.bin      # https://huggingface.co/Hailay/fasttext-tigrinya/ placeholder until replaced -- see FastText Models
+│   ├── fasttext_Amharic.bin       # https://fasttext.cc/docs/en/crawl-vectors.html /download  FastText Models
+│   └── fasttext_Tigriyna.bin      # https://huggingface.co/Hailay/fasttext-tigrinya/ download FastText Models
 │
 ├── lgse/
 │   ├── config.py
