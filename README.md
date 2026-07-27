@@ -83,12 +83,21 @@ pip install -r requirements.txt
 
 LGSE uses FastText embeddings for morpheme and fallback representations.
 
-> **The `.bin` files currently committed in `data/` are placeholders, not
-> real FastText models** (208 bytes each -- a real FastText model is
-> hundreds of MB to several GB). Replace them with the real downloads
-> below before running anything for a real experiment; until then, every
-> new token falls through to the character n-gram fallback tier (still
-> produces valid embeddings, just loses the FastText/morpheme grounding).
+### FastText Embeddings
+
+The LGSE framework initializes token embeddings using pretrained FastText
+models to provide morphology-aware semantic representations.
+
+- **Tigrinya:** Pretrained FastText model released with this project:
+  https://huggingface.co/Hailay/fasttext-tigrinya
+- **Amharic:** Official FastText Common Crawl vectors:
+  https://fasttext.cc/docs/en/crawl-vectors.html
+
+These pretrained models are used during vocabulary initialization to obtain
+word-level embeddings. For out-of-vocabulary items, LGSE automatically falls
+back to FastText's subword (character n-gram) representations, ensuring that
+embeddings can still be generated for unseen words without requiring explicit
+vocabulary entries.
 
 ### 🔹 Amharic FastText
 
