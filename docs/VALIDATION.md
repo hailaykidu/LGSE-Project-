@@ -61,3 +61,25 @@ separately:
 
 `tests/test_learned_projection_pipeline.py` covers both. Reverting either fix
 makes those tests fail (verified: 3 of 7 fail with fix 2 reverted).
+
+## Provenance recorded per run
+
+Every `experiment.json` carries what is needed to re-run it:
+
+| Field | Purpose |
+|---|---|
+| `commit`, `branch`, `dirty` | which code produced the result |
+| `config_file`, `config_sha256` | which configuration, verifiable |
+| `dataset_manifest` | dataset source URL, raw sha256, split seed, counts |
+| `lapt_corpus`, `lapt_corpus_sha256` | which adaptation corpus |
+| `fasttext` | model source, dimension, vocab size, sha256 per language |
+| `python`, `packages` | torch / transformers / fasttext / numpy versions |
+| `unavailable_hyperparameters` | count still marked `source: unavailable` |
+
+`dirty` is recorded rather than assumed false: a run made with uncommitted
+changes cannot be recovered from its commit hash alone, and a table built
+from such runs says so.
+
+`scripts/aggregate_results.py` surfaces the commit and config hash behind any
+table it generates, and warns when runs span more than one commit or when any
+was made with a dirty tree.

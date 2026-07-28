@@ -15,7 +15,9 @@ any difference in the reported F1 is attributable to initialization.
 """
 
 import argparse
+import hashlib
 import json
+import platform
 import subprocess
 import sys
 import time
@@ -34,6 +36,68 @@ def load_configs(base: Path, systems: Path):
 
 def experiment_name(system: str, task: str, language: str, seed: int) -> str:
     return f"{system}__{task}__{language}__seed{seed}"
+
+
+def _git(*args) -> str:
+    try:
+        return subprocess.check_output(["git", "-C", str(ROOT), *args],
+                                       stderr=subprocess.DEVNULL).decode().strip()
+    except Exception:
+        return "unavailable"
+
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def provenance(config_path: Path, data_dir: Path, corpus: Path) -> dict:
+    """Everything needed to re-run this exact experiment later.
+
+    A result is only reproducible if the code, the configuration and the
+    data it used can all be identified afterwards. `dirty` matters: a run
+    made with uncommitted changes cannot be recovered from the commit hash
+    alone, so it is recorded rather than assumed clean.
+    """
+    dataset = {}
+    manifest = data_dir / "manifest.json"
+    if manifest.exists():
+        dataset = json.load(open(manifest, encoding="utf-8"))
+
+    versions = {}
+    for module in ("torch", "transformers", "fasttext", "numpy"):
+        try:
+            versions[module] = __import__(module).__version__
+        except Exception:
+            versions[module] = "unavailable"
+
+    fasttext_manifest = ROOT / "data" / "fasttext_manifest.json"
+    embeddings = {}
+    if fasttext_manifest.exists():
+        embeddings = {
+            lang: {k: rec[k] for k in ("source", "dimension", "vocab_size",
+                                       "sha256") if k in rec}
+            for lang, rec in json.load(
+                open(fasttext_manifest, encoding="utf-8")).items()
+        }
+
+    return {
+        "commit": _git("rev-parse", "HEAD"),
+        "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
+        "dirty": bool(_git("status", "--porcelain")),
+        "config_file": str(config_path),
+        "config_sha256": _sha256(config_path) if config_path.exists() else None,
+        "data_dir": str(data_dir),
+        "dataset_manifest": dataset,
+        "lapt_corpus": str(corpus) if corpus else None,
+        "lapt_corpus_sha256": _sha256(corpus) if corpus and corpus.exists() else None,
+        "fasttext": embeddings,
+        "python": platform.python_version(),
+        "packages": versions,
+    }
 
 
 def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
@@ -142,6 +206,7 @@ def main():
     result = run_downstream(args.task, model_path, args.data_dir,
                             args.seed, cfg, out_dir)
 
+    config_text = args.config.read_text(encoding="utf-8")
     record = {
         "experiment": name,
         "system": args.system,
@@ -155,6 +220,11 @@ def main():
         "test": result["test"],
         "elapsed_seconds": round(time.time() - started, 1),
         "config": cfg,
+        "provenance": provenance(args.config, args.data_dir, args.corpus),
+        # The paper places several hyperparameters in Table 1, which could not
+        # be recovered. Any run made while some remain marked carries the
+        # count, so a record can never be mistaken for a faithful replication.
+        "unavailable_hyperparameters": config_text.count("source: unavailable"),
     }
     with open(out_dir / "experiment.json", "w", encoding="utf-8") as f:
         json.dump(record, f, indent=2, ensure_ascii=False)

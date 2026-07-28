@@ -82,6 +82,28 @@ def main():
                          f"± {stats['std']:.2f} | {len(seeds)} |")
         lines.append("")
 
+    # Provenance for the runs behind the table. A figure is only reproducible
+    # if the code and configuration that produced it can be identified, so a
+    # table that spans several commits, or includes runs made with
+    # uncommitted changes, says so.
+    commits = {r["provenance"]["commit"][:12]
+               for rs in runs.values() for r in rs
+               if "provenance" in r}
+    dirty = any(r.get("provenance", {}).get("dirty")
+                for rs in runs.values() for r in rs)
+    configs = {r["provenance"].get("config_sha256", "")[:12]
+               for rs in runs.values() for r in rs if "provenance" in r}
+    if commits:
+        lines += ["## Provenance", "",
+                  f"- commit: {', '.join(sorted(commits))}",
+                  f"- config sha256: {', '.join(sorted(c for c in configs if c))}"]
+        if len(commits) > 1:
+            lines.append("- **runs span more than one commit**")
+        if dirty:
+            lines.append("- **some runs were made with uncommitted changes**; "
+                         "the commit hash alone does not identify the code used")
+        lines.append("")
+
     body = "\n".join(lines)
     print(body)
     out = args.out or args.results_dir / "TABLE2.md"
