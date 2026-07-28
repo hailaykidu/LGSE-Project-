@@ -1,0 +1,50 @@
+# Base experiment configuration.
+#
+# NOTE ON HYPERPARAMETERS
+# The paper states that "complete training configurations and hyperparameter
+# settings are presented in Table 1". Table 1 was not available when this
+# branch was written, so the fine-tuning values below are conventional
+# defaults for XLM-R on low-resource sequence-labelling and QA, not the
+# paper's. They are marked `source: assumed` and must be replaced with
+# Table 1's values before any result is compared against the paper.
+#
+# Values taken from the paper or the original release are marked
+# `source: paper` / `source: release`.
+
+model:
+  name: xlm-roberta-base            # source: paper (Sec 6.1)
+
+lgse:
+  projection: learned               # source: paper -- learned W, trained jointly
+                                    # (the release used a fixed random projection;
+                                    #  set to `random` to reproduce that)
+  ngram_min: 3                      # source: release
+  ngram_max: 5                      # source: release
+  reg_lambda: 1.0                   # source: release
+  fasttext_dim: 300                 # source: FastText standard release
+
+lapt:                               # language-adaptive pretraining
+  mlm_probability: 0.15             # source: assumed (standard MLM)
+  learning_rate: 5.0e-5             # source: assumed
+  batch_size: 16                    # source: assumed
+  epochs: 1                         # source: assumed
+  max_length: 128                   # source: release
+  freeze_backbone: true             # source: paper -- only new embeddings train
+
+finetune:                           # downstream task fine-tuning
+  learning_rate: 2.0e-5             # source: assumed
+  batch_size: 16                    # source: assumed
+  epochs: 5                         # source: assumed
+  max_length: 256                   # source: assumed
+  warmup_ratio: 0.1                 # source: assumed
+  weight_decay: 0.01                # source: assumed
+
+evaluation:
+  seeds: [42, 43, 44, 45, 46]       # source: paper -- "repeated five times"
+  metric: f1                        # source: paper -- F1 for NER, QA, classification
+  model_selection: dev              # source: paper -- selection on dev, report test
+
+output:
+  results_dir: results
+  checkpoints_dir: checkpoints
+  logs_dir: logs
