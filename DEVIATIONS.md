@@ -63,7 +63,33 @@ smoke test.
 **This branch:** documented download and preparation scripts under
 `data/scripts/`, with checksums. No large binaries are committed.
 
-## 5. Single seed
+## 5. TIGQA is abstractive, not extractive
+
+TIGQA (Zenodo 11423987, CC-BY-4.0) is released as a `.docx` table -- columns
+R/no, Grade level, Topic, Context, Question, Answer -- with several numbered
+question-answer pairs packed into single cells. Parsing yields 107 context
+rows and ~120 QA pairs.
+
+Extractive QA requires each answer to be a span of its context, identified by
+a character offset. **107 of the 120 TIGQA answers do not occur in their
+context**, even after normalising whitespace: they are rewritten rather than
+copied. Only 13 pairs are usable for extractive QA.
+
+`data/scripts/prepare_qa.py` drops unmatched pairs and records the count in
+the manifest rather than fabricating offsets. Consequences:
+
+* An extractive QA model can be evaluated on 13 Tigrinya test items at most,
+  which is far too few for a stable F1, let alone a standard deviation over
+  five seeds.
+* The paper reports F1 on "TIGQA train-dev-test splits". Those splits are not
+  in the Zenodo release, and the release as published does not support the
+  extractive setup that F1-over-spans implies.
+
+Either the experiments used a generative/abstractive QA setup, or they used a
+version of TIGQA with answer spans and official splits that is not the one
+published. This cannot be resolved from the released artifacts.
+
+## 6. Single seed
 
 The release sets `seed=42` in one place with no CLI override, so
 mean +/- standard deviation over multiple runs cannot be produced.
