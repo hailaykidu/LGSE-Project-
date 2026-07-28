@@ -61,11 +61,29 @@ def main():
              "every figure comes from a completed run in this repository.", ""]
     if n_unavailable:
         lines += [
-            f"> **Not a replication.** {n_unavailable} hyperparameters are "
+            f"> **Not a replication.** {n_unavailable} hyperparameter(s) are "
             "marked `source: unavailable` in `configs/base.yaml`: the paper "
-            "places them in Table 1, which could not be recovered. The values "
-            "used are conventional defaults, not the paper's, so these "
-            "figures are not directly comparable with the published Table 2.",
+            "introduces them but never states their values. The values used "
+            "are the experimenter's, not the paper's, so these figures are "
+            "not directly comparable with the published Table 2.",
+            "",
+        ]
+
+    # W cannot be derived from the paper. A run that used one the authors
+    # did not provide is not faithful to the published method, and the
+    # generated table must say so rather than leaving it to DEVIATIONS.md.
+    unfaithful = sorted({
+        r.get("system", "?") for records in runs.values() for r in records
+        if isinstance(r.get("projection"), dict)
+        and not r["projection"].get("author_supplied", False)
+    })
+    if unfaithful:
+        lines += [
+            "> **Not faithful to the published method.** These runs used no "
+            f"author-provided alignment matrix W: {', '.join(unfaithful)}. "
+            "The paper introduces W (Sec 4.1) but never states how it is "
+            "obtained, so any W used here is a substitution. See "
+            "`DEVIATIONS.md` section 1a.",
             "",
         ]
 

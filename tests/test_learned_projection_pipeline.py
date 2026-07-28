@@ -79,10 +79,26 @@ def _builder(projection):
         embedding_dim=DIM, projection=projection)
 
 
+def _W(tmp_path, weight=None, name="W.pt"):
+    """Write an author-supplied alignment matrix and return its path.
+
+    W has no default, so every test that needs a projection must supply one
+    -- exactly as a real run must.
+    """
+    path = tmp_path / name
+    torch.save(torch.eye(DIM) if weight is None else weight, path)
+    return path
+
+
+@pytest.fixture
+def projection(tmp_path):
+    """A supplied W, standing in for the author-provided artifact."""
+    return build_projection(DIM, DIM, alignment_matrix_path=_W(tmp_path))
+
+
 # --- shape: W is square (Sec 4.1) ------------------------------------
 
-def test_projection_is_square():
-    projection = build_projection(DIM, DIM)
+def test_projection_is_square(projection):
     assert projection.linear.weight.shape == (DIM, DIM)
 
 
@@ -146,32 +162,57 @@ def test_no_silent_reshaping_of_mismatched_vectors():
             build_projection(ft_dim, DIM)
 
 
-def test_projection_is_identity_initialized():
-    """Alignment starts from 'no change', so the initial embeddings are
-    exactly the FastText morpheme averages Sec 4.1 defines."""
-    projection = build_projection(DIM, DIM)
-    assert torch.allclose(projection.linear.weight, torch.eye(DIM))
+def test_missing_alignment_matrix_is_refused():
+    """No W supplied -> fail. There is no default, not even the identity.
+
+    The identity would assert the FastText and model embedding spaces are
+    already aligned -- the claim Sec 4.1 introduces W to avoid making.
+    """
+    from lgse.projection import MissingAlignmentMatrix
+
+    with pytest.raises(MissingAlignmentMatrix):
+        build_projection(DIM, DIM)
+
+
+def test_missing_matrix_error_explains_the_gap():
+    from lgse.projection import MissingAlignmentMatrix
+
+    with pytest.raises(MissingAlignmentMatrix) as exc:
+        build_projection(DIM, DIM)
+    msg = str(exc.value)
+
+    assert "Sec 4.1" in msg                        # where W comes from
+    assert "never states how W is obtained" in msg  # the actual gap
+    assert "identity" in msg                        # why not defaulted
+    assert "alignment_matrix_path" in msg           # how to proceed
+    assert "NOT" in msg and "faithful" in msg       # fidelity warning
+    assert "DEVIATIONS.md" in msg
+
+
+def test_a_supplied_identity_still_works_but_is_flagged(tmp_path):
+    """The identity is a legitimate *choice*, just not a default."""
+    projection = build_projection(
+        DIM, DIM, alignment_matrix_path=_W(tmp_path, torch.eye(DIM)))
+    assert projection.is_identity
 
     x = torch.randn(4, DIM)
     with torch.no_grad():
         assert torch.allclose(projection(x), x, atol=1e-5)
 
 
-def test_projection_is_frozen_by_default():
+def test_projection_is_frozen_by_default(projection):
     """W is externally supplied, not fitted here.
 
     The paper states no objective that trains W, so a trainable W would
     advertise a capability the run does not have.
     """
-    projection = build_projection(DIM, DIM)
     assert not projection.is_trainable
     assert sum(p.numel() for p in projection.parameters()
                if p.requires_grad) == 0
 
 
-def test_frozen_projection_is_excluded_from_the_optimizer():
+def test_frozen_projection_is_excluded_from_the_optimizer(projection):
     """The optimizer must contain the embeddings only."""
-    projection = build_projection(DIM, DIM)
     embedding = torch.nn.Embedding(120, DIM)
 
     trainable = [embedding.weight]
@@ -188,7 +229,8 @@ def test_trainable_flag_exists_for_a_future_objective():
     """
     from lgse.projection import AlignmentProjection
 
-    projection = AlignmentProjection(DIM, trainable=True)
+    projection = AlignmentProjection(DIM, weight=torch.eye(DIM),
+                                     trainable=True)
     assert projection.is_trainable
     assert sum(p.numel() for p in projection.parameters()
                if p.requires_grad) == DIM * DIM
@@ -196,23 +238,21 @@ def test_trainable_flag_exists_for_a_future_objective():
 
 # --- autograd: W stays on the graph through morpheme averaging -------
 
-def test_morpheme_averaging_produces_a_correctly_shaped_vector():
+def test_morpheme_averaging_produces_a_correctly_shaped_vector(projection):
     """Regression: `np.mean` used to break this path outright when W's
     output was a grad-tracking tensor."""
-    projection = build_projection(DIM, DIM)
     vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
 
     assert isinstance(vec, torch.Tensor)
     assert vec.shape == (DIM,)
 
 
-def test_no_gradient_is_created_for_a_frozen_w():
+def test_no_gradient_is_created_for_a_frozen_w(projection):
     """A loss through W must not produce a gradient on it.
 
     With W frozen there is nothing to accumulate into, so this stays None
     regardless of what the caller does downstream.
     """
-    projection = build_projection(DIM, DIM)
     vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
 
     assert not vec.requires_grad, "frozen W must not put the output on the graph"
@@ -227,7 +267,8 @@ def test_a_trainable_w_would_be_differentiable():
     """
     from lgse.projection import AlignmentProjection
 
-    projection = AlignmentProjection(DIM, trainable=True)
+    projection = AlignmentProjection(DIM, weight=torch.eye(DIM),
+                                     trainable=True)
     vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
     vec.sum().backward()
 
@@ -238,7 +279,7 @@ def test_a_trainable_w_would_be_differentiable():
 
 # --- the paper's objectives leave W without a gradient ---------------
 
-def test_paper_objectives_give_w_no_gradient():
+def test_paper_objectives_give_w_no_gradient(projection):
     """The documented gap, asserted so it cannot regress into a false claim.
 
     Sec 4.2's L_reg anchors to a constant mu, and the MLM loss reads the
@@ -248,7 +289,6 @@ def test_paper_objectives_give_w_no_gradient():
     """
     from lgse.regularization import LGSERegularizer
 
-    projection = build_projection(DIM, DIM)
     embedding = torch.nn.Embedding(120, DIM)
     initializer = LGSEInitializer(
         embedding_layer=embedding, morph_builder=_builder(projection),
@@ -272,11 +312,10 @@ def test_paper_objectives_give_w_no_gradient():
 
 # --- initialization writes rows in place -----------------------------
 
-def test_initializer_writes_rows_without_breaking_weight_tying():
+def test_initializer_writes_rows_without_breaking_weight_tying(projection):
     """Init vectors are written in place, so a tied output head survives."""
     embedding = torch.nn.Embedding(120, DIM)
     original = embedding.weight
-    projection = build_projection(DIM, DIM)
     initializer = LGSEInitializer(
         embedding_layer=embedding, morph_builder=_builder(projection),
         char_encoder=StubCharEncoder(DIM))
@@ -291,10 +330,11 @@ def test_initializer_writes_rows_without_breaking_weight_tying():
                               init_matrix[list(token_to_id).index(token)])
 
 
-def test_projection_is_deterministic():
-    """With no seeded randomness left, W is identical run to run."""
-    a = build_projection(DIM, DIM)
-    b = build_projection(DIM, DIM)
+def test_projection_is_deterministic(tmp_path):
+    """The same supplied W yields the same mapping every time."""
+    w = _W(tmp_path, torch.randn(DIM, DIM))
+    a = build_projection(DIM, DIM, alignment_matrix_path=w)
+    b = build_projection(DIM, DIM, alignment_matrix_path=w)
     x = torch.randn(4, DIM)
     with torch.no_grad():
         assert torch.allclose(a(x), b(x))
@@ -323,15 +363,16 @@ def test_supplied_matrix_of_wrong_shape_is_refused(tmp_path):
         build_projection(DIM, DIM, alignment_matrix_path=path)
 
 
-def test_identity_is_the_default_when_no_matrix_is_supplied():
-    """The identity leaves FastText morpheme averages as Sec 4.1 defines
-    them, rather than distorting them by an arbitrary map."""
-    projection = build_projection(DIM, DIM)
-    assert projection.is_identity
+def test_alignment_matrix_is_required_by_every_entry_point():
+    """Neither build_projection nor AlignmentProjection may default."""
+    from lgse.projection import AlignmentProjection, MissingAlignmentMatrix
 
-    x = torch.randn(4, DIM)
-    with torch.no_grad():
-        assert torch.allclose(projection(x), x, atol=1e-5)
+    with pytest.raises(MissingAlignmentMatrix):
+        build_projection(DIM, DIM)
+    with pytest.raises(MissingAlignmentMatrix):
+        AlignmentProjection(DIM, weight=None)
+    with pytest.raises(TypeError):
+        AlignmentProjection(DIM)          # weight is positional-required
 
 
 # --- checkpointing ---------------------------------------------------
@@ -346,18 +387,19 @@ def test_projection_survives_a_checkpoint_round_trip(tmp_path):
     """
     from lgse.lap_trainer import LGSELAPTrainer
 
-    projection = build_projection(DIM, DIM)
-    with torch.no_grad():                      # stand in for training
-        projection.linear.weight.add_(1.0)
+    projection = build_projection(
+        DIM, DIM, alignment_matrix_path=_W(tmp_path, torch.randn(DIM, DIM)))
     trained = projection.linear.weight.detach().clone()
 
     torch.save({"state_dict": projection.state_dict(),
                 "source_dim": DIM, "target_dim": DIM},
                tmp_path / LGSELAPTrainer.PROJECTION_FILE)
 
-    restored = build_projection(DIM, DIM)
+    restored = build_projection(
+        DIM, DIM,
+        alignment_matrix_path=_W(tmp_path, torch.eye(DIM), name="other.pt"))
     assert not torch.allclose(restored.linear.weight, trained), \
-        "fresh projection already equals the trained one; test is vacuous"
+        "fresh projection already equals the saved one; test is vacuous"
 
     trainer = LGSELAPTrainer.__new__(LGSELAPTrainer)   # no model download
     trainer.projection = restored
@@ -400,6 +442,34 @@ def test_manifest_accepts_the_required_dimension(tmp_path):
     config = LGSEConfig(language="am", model_name="xlm-roberta-base",
                         fasttext_manifest=str(manifest), reg_lambda=1.0)
     assert config.fasttext_path == "/models/am.768.bin"
+
+
+def test_shipped_config_leaves_the_matrix_unset():
+    """configs/base.yaml must NOT ship a W.
+
+    Shipping one would hand every user an alignment matrix this project
+    invented and the authors never specified -- the exact silent choice the
+    fail-fast behaviour exists to prevent.
+    """
+    import yaml
+
+    cfg = yaml.safe_load(
+        open(Path(__file__).resolve().parent.parent / "configs" / "base.yaml"))
+    assert cfg["lgse"]["alignment_matrix_path"] == ""
+
+
+def test_run_experiment_guards_fasttext_systems():
+    """The early guard must exist for lgse/focus.
+
+    Checked against the source rather than by running the sweep, which
+    would need a backbone download.
+    """
+    source = (Path(__file__).resolve().parent.parent / "src" / "training"
+              / "run_experiment.py").read_text()
+
+    assert "alignment_matrix_path" in source
+    assert '("lgse", "focus")' in source
+    assert "faithful" in source
 
 
 # --- reg_lambda is mandatory ----------------------------------------
@@ -453,13 +523,16 @@ def test_restoring_a_mismatched_projection_is_refused(tmp_path):
     """Loading a differently-shaped W would mean loading another run's map."""
     from lgse.lap_trainer import LGSELAPTrainer
 
-    other = build_projection(512, 512)
+    other = build_projection(
+        512, 512, alignment_matrix_path=_W(tmp_path, torch.eye(512),
+                                          name="w512.pt"))
     torch.save({"state_dict": other.state_dict(),
                 "source_dim": 512, "target_dim": 512},
                tmp_path / LGSELAPTrainer.PROJECTION_FILE)
 
     trainer = LGSELAPTrainer.__new__(LGSELAPTrainer)
-    trainer.projection = build_projection(DIM, DIM)
+    trainer.projection = build_projection(
+        DIM, DIM, alignment_matrix_path=_W(tmp_path, name="wdim.pt"))
     trainer.device = torch.device("cpu")
 
     with pytest.raises(ValueError, match="shape mismatch"):

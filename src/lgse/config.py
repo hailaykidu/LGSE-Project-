@@ -64,11 +64,16 @@ class LGSEConfig:
     expand_vocab: bool = True
     initializer: str = "lgse"      # lgse | default | random | focus
 
-    # Alignment matrix W (paper Sec 4.1). Externally supplied: point this at
-    # a .pt/.npy file holding a d x d matrix. Empty means the identity,
-    # which leaves the FastText morpheme averages exactly as Sec 4.1 defines
-    # them. W is frozen either way -- the paper specifies no objective that
-    # trains it. See src/lgse/projection.py and DEVIATIONS.md section 1a.
+    # Alignment matrix W (paper Sec 4.1). MANDATORY for any system that uses
+    # FastText: point this at a .pt/.npy file holding a d x d matrix.
+    #
+    # There is no default -- not even the identity. The paper introduces W
+    # but never says how it is obtained, so any matrix chosen here would be
+    # this implementation's decision rather than the authors'. Runs without
+    # one fail; see build_projection() for the full explanation.
+    #
+    # W is frozen regardless: no objective in the paper trains it.
+    # See src/lgse/projection.py and DEVIATIONS.md section 1a.
     alignment_matrix_path: str = ""
 
     # Training

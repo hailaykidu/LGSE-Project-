@@ -6,6 +6,24 @@ implementation differs from the published release
 it is recorded here. Nothing in this list is a claim about which is correct
 -- only about what differs.
 
+> ## Fidelity prerequisites
+>
+> Two artifacts cannot be derived from the paper, and the implementation
+> **fails rather than substituting a value** for either:
+>
+> | Required | Why it cannot be defaulted |
+> |---|---|
+> | `lgse.alignment_matrix_path` (W) | Sec 4.1 introduces W but never says how it is obtained (§1a) |
+> | `lgse.reg_lambda` (λ) | Sec 4.2 introduces λ but never assigns it (§8a) |
+>
+> **Any result produced without an author-provided W is not faithful to the
+> published method.** It may still be a useful experiment, but it is an
+> experiment under a documented substitution, not a reproduction — and the
+> substitution is the experimenter's, recorded in the run record.
+>
+> A third prerequisite is data, not configuration: FastText vectors at the
+> model's embedding width (768), since W is square (§1).
+
 ## 1. Projection W is square, and externally supplied
 
 **Paper (Sec 4.1):** "To align the FastText embedding space with the
@@ -109,16 +127,42 @@ under three assumptions recorded here as assumptions, not findings:
 
 | # | Assumption | Consequence |
 |---|---|---|
-| 1 | W is a *given* of the run, not something this pipeline fits | `alignment_matrix_path` loads a `d×d` matrix from `.pt`/`.npy`; absent one, W is the identity |
-| 2 | No gradient is created for W without a documented objective | W carries `requires_grad=False` and is excluded from the optimizer |
-| 3 | Training W is the authors' to specify | Status recorded as "author-required / unspecified in paper" in the run record, the checkpoint, and the per-run log |
+| 1 | W is an externally supplied artifact | `alignment_matrix_path` loads a `d×d` matrix from `.pt`/`.npy`; **no default of any kind** |
+| 2 | W is frozen | `requires_grad=False`, excluded from the optimizer |
+| 3 | No objective trains W | No loss term is invented to give it a gradient |
+| 4 | `reg_lambda` must be explicitly provided | No default; see §8a |
+| 5 | A result without an author-provided W is **not faithful** to the published method | Runs fail rather than proceed |
 
-**Why the identity is the default.** It is the only choice that adds
-nothing: it leaves the FastText morpheme averages exactly as Sec 4.1 defines
-them. A random or arbitrary W would distort the lexically grounded
-initialization before training ever saw it, which is precisely what the
-method exists to avoid. The identity is a stated default, not a
-reconstruction of anything the authors did.
+**There is no default W — not even the identity.**
+
+An earlier revision of this branch defaulted to the identity, on the
+reasoning that it "adds nothing". That reasoning was wrong. The identity is
+not a neutral choice: it asserts that the FastText and model embedding
+spaces are *already aligned*, which is precisely the claim Sec 4.1
+introduces W to avoid having to make. Substituting it would replace a
+missing specification with an implementation decision that materially
+affects results, while the run still looked faithful.
+
+Every candidate default fails the same test:
+
+| Candidate | Why it is not used |
+|---|---|
+| Identity | Asserts the two spaces are already aligned — the claim W exists to avoid |
+| Random / seeded | An alignment strategy the paper does not describe |
+| Fitted (Procrustes, CCA, …) | A method the paper does not describe, requiring anchor data it never mentions |
+| Release's Johnson–Lindenstrauss map | Rectangular, and tied to the release's 300→768 setup |
+
+So the implementation refuses. `build_projection` raises
+`MissingAlignmentMatrix` — a distinct type, because this marks a genuinely
+unspecified part of the method rather than a misconfiguration to patch. The
+message quotes Sec 4.1, states that the paper never says how W is obtained,
+explains why neither the identity nor a random matrix is substituted, and
+records that any result produced without an author-provided W is not
+faithful to the published method.
+
+A *supplied* identity remains perfectly legitimate — it is then the author's
+documented choice, recorded as such, not this project's silent one. The
+trainer flags it in the log when it occurs.
 
 **Why W is frozen rather than trainable-but-unused.** An earlier revision
 placed W in the optimizer on the reasoning that "any objective which is a
@@ -140,16 +184,26 @@ function of W; that was reverted on reading Sec 4.2, since it contradicts
 
 ### 1a-ii. How the status is surfaced
 
-The gap is reported wherever a result could be read, not only here:
+The gap is enforced before a run starts and reported wherever a result could
+be read:
 
+- **Before the run:** `run_experiment.py` refuses to start any
+  FastText-using system (`lgse`, `focus`) when `lgse.alignment_matrix_path`
+  is unset — checked before the backbone and the multi-GB FastText model are
+  loaded. `build_projection` is the authoritative check.
 - **Per run:** `[LGSELAPTrainer] W training status: author-required /
-  unspecified in paper -- W is frozen`
+  unspecified in paper -- W is frozen`. A supplied identity is additionally
+  flagged.
 - **Per checkpoint:** `projection.pt` carries `source`, `trainable` and
-  `training_status`; `projection_status.json` sits beside it
-- **Per result:** the run record's `projection` field records the source,
-  `training_status`, and `trained_during_this_run: false`
-- **In tests:** `test_paper_objectives_give_w_no_gradient` fails loudly if a
-  future change adds an unstated loss term
+  `training_status`; `projection_status.json` sits beside it.
+- **Per result:** the run record's `projection` field records `source`,
+  `author_supplied`, `training_status`, and `trained_during_this_run: false`.
+- **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a future
+  change adds an unstated loss term;
+  `test_alignment_matrix_is_required_by_every_entry_point` fails if any
+  entry point reintroduces a default;
+  `test_shipped_config_leaves_the_matrix_unset` fails if a W is ever
+  committed to `configs/base.yaml`.
 
 **To resolve this, the authors need to state which objective trains W.**
 Until then, "learned" describes W's declared type in Sec 4.1, not its

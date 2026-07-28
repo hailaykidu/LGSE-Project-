@@ -152,6 +152,28 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
             f"so there is no default to apply -- set it explicitly under "
             f"`lgse:` in your config. See DEVIATIONS.md section 8.")
 
+    # W is mandatory for the systems that consume FastText (lgse, focus).
+    # Checked here so the run stops before downloading a backbone and
+    # loading a multi-GB FastText model; build_projection is authoritative.
+    initializer_kind = system_cfg["initializer"] or "default"
+    if (system_cfg["expand_vocab"] and initializer_kind in ("lgse", "focus")
+            and not cfg["lgse"].get("alignment_matrix_path")):
+        raise SystemExit(
+            f"`lgse.alignment_matrix_path` is not set, and system "
+            f"'{system_cfg.get('name', initializer_kind)}' requires the "
+            f"alignment matrix W.\n"
+            f"\n"
+            f"Paper Sec 4.1 introduces W but never states how it is "
+            f"obtained. There is no default -- not even the identity, which "
+            f"would assert the FastText and model embedding spaces are "
+            f"already aligned, the very claim W exists to avoid making.\n"
+            f"\n"
+            f"Supply an author-provided W as a .pt/.npy file holding a "
+            f"d x d matrix.\n"
+            f"\n"
+            f"Any result produced without one is NOT faithful to the "
+            f"published method. See DEVIATIONS.md section 1a.")
+
     lgse_cfg = LGSEConfig(
         model_name=base_model,
         language="am" if language == "amharic" else "ti",
@@ -262,7 +284,8 @@ def main():
         # run cannot support: no objective the paper states trains W.
         "projection": {
             "kind": "externally supplied alignment matrix (paper Sec 4.1)",
-            "source": cfg["lgse"].get("alignment_matrix_path") or "identity",
+            "source": cfg["lgse"].get("alignment_matrix_path") or None,
+            "author_supplied": bool(cfg["lgse"].get("alignment_matrix_path")),
             "training_status": "author-required / unspecified in paper",
             "trained_during_this_run": False,
         },

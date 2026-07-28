@@ -15,6 +15,27 @@ LGSE improves multilingual pretrained language models (e.g., Hugging Face Transf
 
 ---
 
+## ⚠️ Prerequisites you must supply
+
+Three artifacts cannot be derived from the paper. **The implementation fails
+rather than substituting a value for any of them** — explicit incompleteness
+is preferred to a silent choice the authors never described.
+
+| Required | Where | Why it has no default |
+|---|---|---|
+| **Alignment matrix W** | `lgse.alignment_matrix_path` | Sec 4.1 introduces W but never says how it is obtained |
+| **Regularization strength λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but never assigns it |
+| **FastText at dim 768** | `data/fasttext_manifest.json` | W is square, so FastText must match the model's width |
+
+> **Any result produced without an author-provided W is not faithful to the
+> published method.** It may still be a useful experiment, but it is one run
+> under a documented substitution — and the substitution is yours, recorded
+> in the run record.
+
+See `DEVIATIONS.md` §1, §1a and §8a.
+
+---
+
 ## 📌 Motivation
 
 Adapting pretrained multilingual language models to **low-resource, morphologically rich languages** remains challenging.
@@ -209,26 +230,39 @@ FastText must be trained at the model's embedding width (768 for XLM-R base)
 — `build_projection` refuses a rectangular map rather than silently changing
 the method.
 
-### W: author-required / unspecified in paper
+### ⚠️ W must be supplied — there is no default
 
-> The paper describes W as "learned", but **specifies no objective that
-> trains it**: `L_reg` anchors to a constant μ (Sec 4.2), and LAPT's MLM
-> loss reads the embedding matrix, not W. Initialization writes W's output
-> into the embedding in place, which ends the gradient path.
+> The paper introduces W (Sec 4.1) but **never states how it is obtained**:
+> no initialization, no fitting procedure, and no training objective
+> anywhere in the paper is a function of W. `L_reg` anchors to a constant μ
+> (Sec 4.2), and LAPT's MLM loss reads the embedding matrix, not W.
 >
-> W is therefore an **externally supplied alignment matrix**: a given of the
-> run, frozen and excluded from the optimizer. No gradient path is
-> manufactured for it — doing so would require inventing a loss term the
-> paper does not state.
+> W is therefore an **author-supplied artifact**. LGSE runs **fail** unless
+> `lgse.alignment_matrix_path` points at a `.pt`/`.npy` file holding a `d×d`
+> matrix.
 >
-> **Resolving this requires the authors to state which objective trains W.**
-> See `DEVIATIONS.md` §1a.
+> **No default is substituted — not even the identity.** The identity is not
+> neutral: it asserts the FastText and model embedding spaces are already
+> aligned, which is exactly the claim W exists to avoid making. A random or
+> fitted W would be an alignment strategy the paper does not describe.
+> Either would materially affect results while the run still looked
+> faithful.
+>
+> **Any result produced without an author-provided W is not faithful to the
+> published method.**
+>
+> W is frozen in all cases — no gradient path is manufactured for it.
+> Resolving this requires the authors to state both how W is obtained and
+> which objective, if any, trains it. See `DEVIATIONS.md` §1a.
 
-Supply your own W with `lgse.alignment_matrix_path` (a `.pt`/`.npy` file
-holding a `d×d` matrix). Left empty, W is the identity, which leaves the
-FastText morpheme averages exactly as Sec 4.1 defines them. Either way W is
-saved with the checkpoint, and its source and training status are recorded
-in every run record.
+```yaml
+lgse:
+  alignment_matrix_path: path/to/W.pt   # required; d x d
+```
+
+W is saved with the checkpoint, and its source, `author_supplied` flag, and
+training status are recorded in every run record. A *supplied* identity is
+fine — that is the author's documented choice, and the trainer flags it.
 
 ### `reg_lambda` is mandatory
 

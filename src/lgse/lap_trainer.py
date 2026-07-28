@@ -96,8 +96,10 @@ class LGSELAPTrainer:
         # 4) the square alignment matrix W (paper Sec 4.1), aligning the
         # FastText space to the model's. Externally supplied, frozen, and
         # only needed on the paths that consume FastText vectors.
-        # build_projection raises if the dimensions differ rather than
-        # substituting a rectangular map.
+        #
+        # build_projection raises when no W is supplied and when the
+        # dimensions differ. Neither is patched with a default: there is no
+        # identity fallback and no rectangular map.
         self.projection = None
         if ft_model is not None:
             self.projection = build_projection(
@@ -110,9 +112,10 @@ class LGSELAPTrainer:
             print(f"[LGSELAPTrainer] alignment matrix: "
                   f"{self.projection.describe()}")
             if self.projection.is_identity:
-                print("[LGSELAPTrainer] W is the identity: no author-supplied "
-                      "alignment matrix was provided. FastText morpheme "
-                      "averages are used unchanged (paper Sec 4.1).")
+                print("[LGSELAPTrainer] NOTE: the supplied W is the identity "
+                      "matrix. This asserts the FastText and model embedding "
+                      "spaces are already aligned -- a strong claim the paper "
+                      "does not make. Recorded in the run record.")
             print("[LGSELAPTrainer] W training status: author-required / "
                   "unspecified in paper -- W is frozen; see DEVIATIONS.md 1a")
 
@@ -247,10 +250,13 @@ class LGSELAPTrainer:
         alignment matrix it used and the fact that W was not trained.
         """
         if self.projection is None:
-            return {"present": False}
+            return {"present": False,
+                    "note": "this system does not use FastText, so no "
+                            "alignment matrix is involved"}
         return {
             "present": True,
             "source": self.projection.source,
+            "author_supplied": True,   # build_projection raises otherwise
             "is_identity": self.projection.is_identity,
             "trainable": self.projection.is_trainable,
             "received_gradient": self.projection_receives_gradient(),

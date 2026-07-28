@@ -25,9 +25,18 @@ Two things follow directly, and both are load-bearing:
 STATUS: author-required / unspecified in paper
 ------------------------------------------------------------------
 W is therefore treated here as an **externally supplied alignment matrix**:
-a given of the run, loaded from disk when the author provides one and
-defaulting to the identity when they do not. It is frozen -- excluded from
-the optimizer and carrying `requires_grad=False`.
+a given of the run, loaded from disk, with **no default of any kind**. A run
+without an author-provided W fails rather than starting.
+
+That includes the identity. The identity is not a neutral fallback -- it
+asserts that the FastText and model embedding spaces are already aligned,
+which is precisely the claim Sec 4.1 introduces W to avoid making. Choosing
+it silently would substitute an implementation decision for a specification
+the paper does not give, and would materially affect results while looking
+like a faithful run.
+
+W is frozen -- excluded from the optimizer and carrying
+`requires_grad=False`.
 
 No gradient path is manufactured for W. Constructing one would require
 inventing a loss term the paper does not state, which would be implementing
@@ -47,14 +56,23 @@ import torch
 import torch.nn as nn
 
 
+class MissingAlignmentMatrix(ValueError):
+    """Raised when no author-supplied W is available.
+
+    A distinct type because this is not a misconfiguration to patch with a
+    default -- it marks a genuinely unspecified part of the method.
+    """
+
+
 class AlignmentProjection(nn.Module):
     """Square alignment matrix W (d x d), externally supplied.
 
-    W is a *given* of the run, not something this pipeline fits. It is
-    loaded from disk when the author supplies one, and defaults to the
-    identity when they do not -- the identity being the only honest default,
-    since it leaves the FastText morpheme averages exactly as Sec 4.1
-    defines them rather than distorting them by an arbitrary map.
+    W is a *given* of the run, never something this pipeline fits or
+    invents. `weight` is required: there is no default, not even the
+    identity. The identity would be an implementation choice the paper does
+    not describe, and one that materially affects results -- it asserts that
+    the FastText and model embedding spaces are already aligned, which is
+    exactly the claim Sec 4.1 introduces W to avoid having to make.
 
     W is **frozen**: `requires_grad=False`, excluded from the optimizer.
     This is not an oversight but the documented consequence of the paper
@@ -67,8 +85,8 @@ class AlignmentProjection(nn.Module):
     not create a gradient path -- it only makes W eligible for one.
     """
 
-    def __init__(self, dim: int, weight: Optional[torch.Tensor] = None,
-                 trainable: bool = False, source: str = "identity"):
+    def __init__(self, dim: int, weight: torch.Tensor,
+                 trainable: bool = False, source: str = "unspecified"):
         super().__init__()
         self.dim = dim
         # Retained for checkpoint compatibility and shape assertions.
@@ -77,13 +95,15 @@ class AlignmentProjection(nn.Module):
         self.source = source
 
         if weight is None:
-            w = torch.eye(dim)
-        else:
-            if tuple(weight.shape) != (dim, dim):
-                raise ValueError(
-                    f"alignment matrix W must be square {dim}x{dim}, got "
-                    f"{tuple(weight.shape)} from {source}")
-            w = weight.to(dtype=torch.float32)
+            raise MissingAlignmentMatrix(
+                "AlignmentProjection requires an explicit weight matrix; "
+                "there is no default. See build_projection() for the "
+                "user-facing error and DEVIATIONS.md section 1a.")
+        if tuple(weight.shape) != (dim, dim):
+            raise ValueError(
+                f"alignment matrix W must be square {dim}x{dim}, got "
+                f"{tuple(weight.shape)} from {source}")
+        w = weight.to(dtype=torch.float32)
 
         self.linear = nn.Linear(dim, dim, bias=False)
         with torch.no_grad():
@@ -210,11 +230,37 @@ def build_projection(source_dim: int, target_dim: int,
     """
     check_dimensions(source_dim, target_dim)
 
-    if alignment_matrix_path:
-        weight = load_alignment_matrix(alignment_matrix_path, source_dim)
-        source = str(alignment_matrix_path)
-    else:
-        weight, source = None, "identity (no alignment matrix supplied)"
+    if not alignment_matrix_path:
+        raise MissingAlignmentMatrix(
+            f"No alignment matrix W was supplied.\n"
+            f"\n"
+            f"Paper Sec 4.1 introduces W:\n"
+            f"    \"a learned linear projection W in R^(d x d) is applied,\n"
+            f"     i.e. e_aligned_t = W e_t\"\n"
+            f"but never states how W is obtained -- no initialization, no\n"
+            f"fitting procedure, and no training objective anywhere in the\n"
+            f"paper is a function of W.\n"
+            f"\n"
+            f"W is therefore an author-supplied artifact. It cannot be\n"
+            f"derived from the paper, and this implementation will not\n"
+            f"choose one on the authors' behalf:\n"
+            f"\n"
+            f"  - The identity would assert that the FastText and model\n"
+            f"    embedding spaces are already aligned -- exactly the claim\n"
+            f"    W exists to avoid making.\n"
+            f"  - A random or fitted W would be an alignment strategy the\n"
+            f"    paper does not describe.\n"
+            f"\n"
+            f"Either would materially affect results while looking like a\n"
+            f"faithful run.\n"
+            f"\n"
+            f"To proceed, set `lgse.alignment_matrix_path` to a .pt/.npy\n"
+            f"file holding a {source_dim}x{source_dim} matrix.\n"
+            f"\n"
+            f"Any result produced without an author-provided W is NOT\n"
+            f"faithful to the published method. See DEVIATIONS.md 1a.")
 
+    weight = load_alignment_matrix(alignment_matrix_path, source_dim)
     return AlignmentProjection(source_dim, weight=weight,
-                               trainable=trainable, source=source)
+                               trainable=trainable,
+                               source=str(alignment_matrix_path))

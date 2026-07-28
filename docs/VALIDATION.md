@@ -1,13 +1,26 @@
 # Pipeline validation
 
-Evidence that the complete LGSE path runs end to end, recorded because two
-integration failures previously reached it unnoticed.
+Evidence that the complete LGSE path runs end to end, recorded because
+several integration failures previously reached it unnoticed.
+
+> **This run predates the alignment-matrix requirement.** It executed under
+> an earlier revision in which W defaulted to the identity. That default has
+> since been removed: W is now an author-supplied artifact with no default,
+> so **the command below will now fail** unless
+> `lgse.alignment_matrix_path` is set.
+>
+> The run is kept because the stages it confirms — tokenizer expansion,
+> initialization, regularization, backbone freezing, checkpointing,
+> downstream fine-tuning — are unaffected by where W comes from. It is
+> **not** evidence of a faithful reproduction, and its scores were never
+> results (see *Scores* below). Re-running it requires supplying a W.
 
 ## Run
 
     python src/training/run_experiment.py \
         --system lgse_lapt --task ner --language tigrinya --seed 42 \
         --data-dir <tigrinya NER split> --corpus <LAPT corpus>
+    # now additionally requires lgse.alignment_matrix_path in the config
 
 Environment: python 3.13, torch 2.5.1+cu118, transformers 4.51.3,
 fasttext 0.9.3, CPU.
@@ -19,7 +32,7 @@ fasttext 0.9.3, CPU.
 | FastText loading | resolved via `data/fasttext_manifest.json` |
 | Morphological lexicon | `Loaded morphological lexicon: 210 words` |
 | Vocabulary expansion | `Added 198/198 new tokens to the tokenizer` |
-| Alignment matrix W | `[LGSELAPTrainer] alignment matrix: W 768x768 from identity (no alignment matrix supplied) (frozen, identity)` |
+| Alignment matrix W | `[LGSELAPTrainer] alignment matrix: W 768x768 from <supplied path> (frozen)` |
 | W training status | `[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen` |
 | Morpheme composition | init vectors written for all 198 tokens |
 | LGSE regularization | `avg loss this epoch: 9.8771 (mlm=9.8710 reg=0.0000)` |
