@@ -118,7 +118,8 @@ def split_80_10_10(items, seed: int):
 
 def main():
     p = argparse.ArgumentParser(description="Prepare QA splits")
-    p.add_argument("--dataset", choices=("amqa", "tigqa"), required=True)
+    p.add_argument("--dataset", choices=("amqa", "tigqa", "tigqa_squad"),
+                   required=True)
     p.add_argument("--raw", type=Path, required=True)
     p.add_argument("--out-dir", type=Path, default=Path("data/qa"))
     p.add_argument("--seed", type=int, default=42)
@@ -127,7 +128,47 @@ def main():
     manifest = {"raw_sha256": sha256(args.raw), "seed": args.seed,
                 "split": "random 80/10/10 with the seed recorded here"}
 
-    if args.dataset == "tigqa":
+    if args.dataset == "tigqa_squad":
+        # TIGQA already converted to SQuAD form, with answer_start offsets.
+        # Answers the conversion could not locate in their context carry
+        # answer_start == -1; those are abstractive rewrites and are kept
+        # aside rather than dropped silently, so the extractive subset is
+        # explicit.
+        raw = json.load(open(args.raw, encoding="utf-8"))
+        items, extractive, abstractive, unanswerable = [], 0, 0, 0
+        for article in raw["data"]:
+            for para in article["paragraphs"]:
+                ctx = para["context"]
+                keep = []
+                for qa in para["qas"]:
+                    answers = qa.get("answers") or []
+                    if not answers:
+                        unanswerable += 1
+                        continue
+                    valid = [x for x in answers
+                             if x.get("answer_start", -1) >= 0
+                             and ctx[x["answer_start"]:
+                                     x["answer_start"] + len(x["text"])] == x["text"]]
+                    if valid:
+                        extractive += 1
+                        keep.append({**qa, "answers": valid})
+                    else:
+                        abstractive += 1
+                if keep:
+                    items.append({"title": article.get("title", "TIGQA"),
+                                  "context": ctx, "qas": keep})
+        manifest.update({
+            "source": str(args.raw),
+            "citation": "Teklehaymanot et al. (2024), TIGQA",
+            "version": raw.get("version"),
+            "extractive_qa_pairs": extractive,
+            "abstractive_dropped": abstractive,
+            "unanswerable_dropped": unanswerable,
+            "note": ("answer_start == -1 marks answers not present verbatim in "
+                     "the context; those are abstractive and cannot be scored "
+                     "by span-extraction F1"),
+        })
+    elif args.dataset == "tigqa":
         triples = read_tigqa(args.raw)
         items, kept, dropped = to_squad(triples)
         manifest.update({

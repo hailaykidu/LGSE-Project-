@@ -85,9 +85,37 @@ the manifest rather than fabricating offsets. Consequences:
   in the Zenodo release, and the release as published does not support the
   extractive setup that F1-over-spans implies.
 
-Either the experiments used a generative/abstractive QA setup, or they used a
-version of TIGQA with answer spans and official splits that is not the one
-published. This cannot be resolved from the released artifacts.
+**Resolved.** A SQuAD-format conversion of TIGQA (`TIGQA_squad_format.json`,
+version TIGQA-1.0) supplies 2,108 QA pairs over 433 contexts with
+`answer_start` offsets -- an order of magnitude more than the .docx yields,
+and enough for span-extraction F1.
+
+Of those 2,108:
+
+| | count | usable for extractive F1 |
+|---|---|---|
+| valid span (offset resolves) | 797 | yes |
+| `answer_start == -1` | 1,039 | no -- abstractive rewrite |
+| no answer given | 272 | no |
+
+`prepare_qa.py --dataset tigqa_squad` keeps the 797 extractive pairs and
+records the other two counts in the manifest. Splits: 644/67/86 QA pairs over
+292/36/37 contexts.
+
+The `answer_start == -1` marker is the conversion's own signal that an answer
+could not be located in its context; verified independently here, none of the
+1,039 occurs verbatim in its context. They are not recoverable by string
+matching, and fabricating offsets for them would corrupt the metric.
+
+Two caveats remain for strict reproduction:
+
+* These splits are derived here with seed 42, not taken from an official
+  release. The paper refers to "TIGQA train-dev-test splits"; the split files
+  in `hailaykidu/TigQA-Dataset` are not usable as published -- `dev.json` and
+  `test.json` contain malformed JSON, and in `train.json` all 37 answer
+  offsets are relative to the source document rather than the merged
+  paragraph, so none resolve.
+* Tigrinya QA is scored on 86 test items against Amharic's 285.
 
 ## 6. Single seed
 
