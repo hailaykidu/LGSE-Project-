@@ -82,27 +82,60 @@ def main():
                          f"± {stats['std']:.2f} | {len(seeds)} |")
         lines.append("")
 
-    # Provenance for the runs behind the table. A figure is only reproducible
-    # if the code and configuration that produced it can be identified, so a
-    # table that spans several commits, or includes runs made with
-    # uncommitted changes, says so.
-    commits = {r["provenance"]["commit"][:12]
-               for rs in runs.values() for r in rs
-               if "provenance" in r}
-    dirty = any(r.get("provenance", {}).get("dirty")
-                for rs in runs.values() for r in rs)
-    configs = {r["provenance"].get("config_sha256", "")[:12]
-               for rs in runs.values() for r in rs if "provenance" in r}
-    if commits:
+    # Provenance for the runs behind the table. A figure is only defensible
+    # if the code, configuration, data, seeds and environment that produced
+    # it can all be named, so all five are rendered rather than left in the
+    # JSON where a reader of the table would not see them.
+    records = [r for rs in runs.values() for r in rs if "provenance" in r]
+    if records:
+        commits = sorted({r["provenance"]["commit"][:12] for r in records})
+        configs = sorted({c for r in records
+                          if (c := (r["provenance"].get("config_sha256") or "")[:12])})
+        dirty = any(r["provenance"].get("dirty") for r in records)
+        seeds = sorted({r["seed"] for r in records})
+        unavailable = max(r.get("unavailable_hyperparameters", 0) for r in records)
+
         lines += ["## Provenance", "",
-                  f"- commit: {', '.join(sorted(commits))}",
-                  f"- config sha256: {', '.join(sorted(c for c in configs if c))}"]
-        if len(commits) > 1:
-            lines.append("- **runs span more than one commit**")
-        if dirty:
-            lines.append("- **some runs were made with uncommitted changes**; "
-                         "the commit hash alone does not identify the code used")
+                  "| Field | Value |", "|---|---|",
+                  f"| Commit | `{', '.join(commits)}` |",
+                  f"| Config sha256 | `{', '.join(configs) or 'unavailable'}` |",
+                  f"| Seeds | {', '.join(map(str, seeds))} ({len(seeds)} runs per system) |"]
+
+        env = records[0]["provenance"]
+        packages = env.get("packages", {})
+        lines.append(f"| Environment | python {env.get('python', '?')}, "
+                     + ", ".join(f"{k} {v}" for k, v in packages.items()) + " |")
+
+        for lang, rec in (env.get("fasttext") or {}).items():
+            lines.append(f"| FastText ({lang}) | dim {rec.get('dimension')}, "
+                         f"vocab {rec.get('vocab_size'):,}, "
+                         f"sha256 `{(rec.get('sha256') or '')[:12]}` |")
+
+        seen_datasets = set()
+        for r in records:
+            manifest = r["provenance"].get("dataset_manifest") or {}
+            key = (r["language"], r["task"])
+            if not manifest or key in seen_datasets:
+                continue
+            seen_datasets.add(key)
+            source = manifest.get("source", "unavailable")
+            split = manifest.get("split", "")
+            detail = f"{source}"
+            if split:
+                detail += f" -- {split}"
+            if "seed" in manifest:
+                detail += f" (split seed {manifest['seed']})"
+            lines.append(f"| Dataset ({r['language']} {r['task'].upper()}) | {detail} |")
+
+        lines.append(f"| Unavailable hyperparameters | {unavailable} |")
         lines.append("")
+
+        if len(commits) > 1:
+            lines += ["> **Runs span more than one commit.** The table mixes "
+                      "results produced by different code.", ""]
+        if dirty:
+            lines += ["> **Some runs were made with uncommitted changes.** The "
+                      "commit hash alone does not identify the code used.", ""]
 
     body = "\n".join(lines)
     print(body)
