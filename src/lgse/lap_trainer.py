@@ -12,6 +12,7 @@ from .char_ngrams import CharNgramEncoder
 from .config import LGSEConfig
 from .initializer import LGSEInitializer
 from .morpheme_embeddings import MorphemeEmbeddingBuilder
+from .projection import build_projection
 from .regularization import LGSERegularizer
 from .segmentation import MorphologicalSegmenter
 from .token_selection import load_new_tokens
@@ -54,10 +55,30 @@ class LGSELAPTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(config.model_name)
         self.model = AutoModelForMaskedLM.from_pretrained(config.model_name).to(self.device)
 
-        # 2) lexicon + FastText
+        # A system that does not expand the vocabulary (the XLM-R baseline)
+        # has no new tokens to initialize and no LAPT stage: it is the
+        # unmodified backbone, and Table 2 reports it as such.
+        self.system = getattr(config, "system", "lgse_lapt")
+        self.expand_vocab = getattr(config, "expand_vocab", True)
+        self.initializer_kind = getattr(config, "initializer", "lgse")
+
+        if not self.expand_vocab:
+            self.regularizer = None
+            self.embedding_layer = self.model.get_input_embeddings()
+            self.old_vocab_size = self.embedding_layer.weight.shape[0]
+            self.optimizer = None
+            self.dataloader = None
+            print(f"[LGSELAPTrainer] system={self.system}: no vocabulary "
+                  f"expansion, no LAPT")
+            return
+
+        # 2) lexicon + FastText. Only the LGSE and FOCUS paths need them:
+        # the random and default initializers use no external signal.
+        needs_fasttext = self.initializer_kind in ("lgse", "focus")
         segmenter = MorphologicalSegmenter.from_file(config.morph_lexicon_path)
         print(f"Loaded morphological lexicon: {len(segmenter.lexicon)} words")
-        ft_model = fasttext.load_model(config.fasttext_path)
+        ft_model = fasttext.load_model(config.fasttext_path) \
+            if needs_fasttext else None
 
         # 3) add new tokens, then resize via the model's own API (keeps a
         # tied MLM output head in sync -- see LGSEInitializer's docstring
@@ -71,23 +92,54 @@ class LGSELAPTrainer:
         embedding_dim = embedding_layer.embedding_dim
         old_vocab_size = embedding_layer.weight.shape[0] - num_added
 
-        # 4) LGSE initialization: morpheme-average -> whole-token FastText
-        # -> character n-grams
-        morph_builder = MorphemeEmbeddingBuilder(
-            fasttext_model=ft_model, segmenter=segmenter, embedding_dim=embedding_dim
-        )
-        char_encoder = CharNgramEncoder(
-            n_min=config.ngram_min, n_max=config.ngram_max, dim=embedding_dim, device=str(self.device)
-        )
-        initializer = LGSEInitializer(
-            embedding_layer=embedding_layer,
-            morph_builder=morph_builder,
-            char_encoder=char_encoder,
-            device=str(self.device),
-        )
+        # 4) projection W. The paper learns it jointly with the new
+        # embeddings; the original release used a fixed random map. Which one
+        # is active is recorded so any result states it.
+        self.projection = None
+        if ft_model is not None:
+            self.projection = build_projection(
+                getattr(config, "projection", "learned"),
+                source_dim=ft_model.get_dimension(),
+                target_dim=embedding_dim,
+                seed=config.seed,
+            )
+            if self.projection is not None:
+                self.projection.to(self.device)
+                print(f"[LGSELAPTrainer] projection="
+                      f"{getattr(config, 'projection', 'learned')} "
+                      f"(learned={self.projection.is_learned})")
 
+        # 5) initialization: LGSE, or one of the Table 2 baselines
         vocab = self.tokenizer.get_vocab()
         token_to_id = {tok: vocab[tok] for tok in new_tokens if tok in vocab}
+
+        if self.initializer_kind == "lgse":
+            morph_builder = MorphemeEmbeddingBuilder(
+                fasttext_model=ft_model, segmenter=segmenter,
+                embedding_dim=embedding_dim, seed=config.seed,
+                projection=self.projection,
+            )
+            char_encoder = CharNgramEncoder(
+                n_min=config.ngram_min, n_max=config.ngram_max,
+                dim=embedding_dim, device=str(self.device),
+            )
+            initializer = LGSEInitializer(
+                embedding_layer=embedding_layer,
+                morph_builder=morph_builder,
+                char_encoder=char_encoder,
+                device=str(self.device),
+            )
+        else:
+            from baselines import build_initializer
+            kwargs = {"embedding_layer": embedding_layer,
+                      "device": str(self.device)}
+            if self.initializer_kind == "random":
+                kwargs.update(seed=config.seed, old_vocab_size=old_vocab_size)
+            elif self.initializer_kind == "focus":
+                kwargs.update(aux_vectors=None, aux_index=None,
+                              old_vocab_size=old_vocab_size)
+            initializer = build_initializer(self.initializer_kind, **kwargs)
+
         init_matrix = initializer.write_embeddings_for_new_tokens(token_to_id)
 
         # 5) regularizer anchored to the just-computed init vectors
@@ -110,7 +162,13 @@ class LGSELAPTrainer:
         self.embedding_layer = embedding_layer
         self.old_vocab_size = old_vocab_size
 
-        self.optimizer = AdamW([embedding_layer.weight], lr=config.learning_rate)
+        # The learned projection is part of the optimization problem: if its
+        # parameters are not handed to the optimizer, W never moves and
+        # "learned" silently degrades to "randomly initialized and frozen".
+        trainable = [embedding_layer.weight]
+        if self.projection is not None and self.projection.is_learned:
+            trainable += list(self.projection.parameters())
+        self.optimizer = AdamW(trainable, lr=config.learning_rate)
 
         self.collator = DataCollatorForLanguageModeling(
             tokenizer=self.tokenizer, mlm=True, mlm_probability=config.mlm_probability

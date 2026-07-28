@@ -3,30 +3,31 @@ import numpy as np
 
 
 class MorphemeEmbeddingBuilder:
-    def __init__(self, fasttext_model, segmenter, embedding_dim: int, seed: int = 42):
+    def __init__(self, fasttext_model, segmenter, embedding_dim: int,
+                 seed: int = 42, projection=None):
         self.fasttext_model = fasttext_model
         self.segmenter = segmenter
         self.embedding_dim = embedding_dim
 
-        # FastText models are essentially always 300-dim (the standard
-        # Facebook release / the fasttext.cc default), but the target
-        # model's embedding space can be any width -- 768 for
-        # xlm-roberta-base, for instance. Raw FastText vectors were being
-        # written directly into the embedding matrix with no dimension
-        # check at all, which crashes the moment the two widths differ (as
-        # they did on the very first real run against xlm-roberta-base: a
-        # 300 vs 768 mismatch). A fixed, seeded random projection maps
-        # FastText-space vectors into the target space; per the
-        # Johnson-Lindenstrauss lemma a random linear projection
-        # approximately preserves relative distances, which is a
-        # defensible way to bridge the two spaces without requiring extra
-        # training data to fit a learned projection.
-        self._projection = None
-        if fasttext_model is not None:
+        # FastText is 300-dim; the target embedding space can be any width
+        # (768 for xlm-roberta-base). Something must bridge the two. Which
+        # projection is used is a methodological choice, not a detail:
+        #
+        #   learned  the paper's W, trained jointly with the new embeddings
+        #   random   a fixed Johnson-Lindenstrauss map (the original release)
+        #
+        # See src/lgse/projection.py. The module is held here and applied in
+        # _fasttext_vec; when it is learned, the trainer registers its
+        # parameters with the optimizer so gradients actually reach it.
+        self.projection = projection
+        self._legacy_projection = None
+        if projection is None and fasttext_model is not None:
             ft_dim = fasttext_model.get_dimension()
             if ft_dim != embedding_dim:
+                # No projection supplied: fall back to the released
+                # behaviour rather than crashing on the dimension mismatch.
                 rng = np.random.default_rng(seed)
-                self._projection = rng.normal(
+                self._legacy_projection = rng.normal(
                     scale=1.0 / np.sqrt(ft_dim), size=(ft_dim, embedding_dim)
                 ).astype(np.float32)
 
@@ -37,8 +38,14 @@ class MorphemeEmbeddingBuilder:
             vec = self.fasttext_model.get_word_vector(text)
         except Exception:
             return None
-        if self._projection is not None:
-            vec = vec @ self._projection
+        if self.projection is not None:
+            import torch
+            with torch.set_grad_enabled(self.projection.training):
+                t = torch.as_tensor(vec, dtype=torch.float32)
+                out = self.projection(t)
+            return out
+        if self._legacy_projection is not None:
+            vec = vec @ self._legacy_projection
         return vec
 
     def word_from_morphemes(self, morphemes: List[str]) -> Optional[np.ndarray]:

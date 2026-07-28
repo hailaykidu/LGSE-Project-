@@ -38,6 +38,20 @@ class LGSEConfig:
     # from their initialized values during LAP (see LGSERegularizer)
     reg_lambda: float = 1.0
 
+    # --- Table 2 system selection -------------------------------------
+    # Which of the five compared systems this run is. The five differ only
+    # in vocabulary expansion and new-token initialization; the backbone,
+    # LAPT procedure and downstream fine-tuning are identical.
+    system: str = "lgse_lapt"
+    expand_vocab: bool = True
+    initializer: str = "lgse"      # lgse | default | random | focus
+
+    # Projection from FastText space to the model's embedding space.
+    # "learned" is the paper's W, trained jointly with the new embeddings;
+    # "random" reproduces the original release's fixed Johnson-Lindenstrauss
+    # map. See src/lgse/projection.py.
+    projection: str = "learned"
+
     # Training
     output_dir: str = "outputs/lgse_lap"
     batch_size: int = 32
