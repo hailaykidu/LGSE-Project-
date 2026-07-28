@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from lgse.morpheme_embeddings import MorphemeEmbeddingBuilder
 from lgse.segmentation import MorphologicalSegmenter
 
