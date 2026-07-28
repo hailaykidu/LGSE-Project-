@@ -87,9 +87,26 @@ def main():
             "",
         ]
 
+    # Fidelity is rendered per row, not only in the notice above. A reader
+    # scanning the table sees which systems required an author-supplied W
+    # and whether they got one, without cross-referencing anything.
+    def fidelity(records):
+        projections = [r["projection"] for r in records
+                       if isinstance(r.get("projection"), dict)]
+        if not projections:
+            # No projection at all: the baselines. Nothing to be unfaithful
+            # about -- W is not part of these systems.
+            return "n/a -- no alignment matrix required"
+        if all(p.get("author_supplied") for p in projections):
+            return "author-supplied W"
+        if any(p.get("author_supplied") for p in projections):
+            return "**MIXED -- some runs had no author-supplied W**"
+        return "**not faithful -- no author-supplied W**"
+
     for (language, task) in sorted({(l, t) for l, t, _ in runs}):
         lines += [f"## {language.title()} -- {task.upper()}", "",
-                  "| System | F1 | seeds |", "|---|---|---|"]
+                  "| System | F1 | seeds | Alignment matrix W |",
+                  "|---|---|---|---|"]
         for system in ORDER:
             key = (language, task, system)
             if key not in runs:
@@ -97,7 +114,8 @@ def main():
             stats = aggregate([r["test"] for r in runs[key]])["f1"]
             seeds = sorted(r["seed"] for r in runs[key])
             lines.append(f"| {LABELS[system]} | {stats['mean']:.2f} "
-                         f"± {stats['std']:.2f} | {len(seeds)} |")
+                         f"± {stats['std']:.2f} | {len(seeds)} | "
+                         f"{fidelity(runs[key])} |")
         lines.append("")
 
     # Provenance for the runs behind the table. A figure is only defensible

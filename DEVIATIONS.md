@@ -23,6 +23,30 @@ it is recorded here. Nothing in this list is a claim about which is correct
 >
 > A third prerequisite is data, not configuration: FastText vectors at the
 > model's embedding width (768), since W is square (§1).
+>
+> ### Standing policy
+>
+> **No silent fallback may be added for an unspecified methodological
+> component.** Where the paper does not specify something, this repository
+> fails and says so; it does not infer, reconstruct, or default. That
+> applies to future changes as much as to the current state.
+>
+> A run either satisfies all three prerequisites, or it reports itself as a
+> partial reproduction / implementation validation. There is no third
+> category, and no result should be presented as faithful without the
+> artifacts above.
+>
+> This is enforced, not merely stated:
+>
+> | Invariant | Test |
+> |---|---|
+> | No entry point defaults W | `test_alignment_matrix_is_required_by_every_entry_point` |
+> | No W is committed to the shipped config | `test_shipped_config_leaves_the_matrix_unset` |
+> | λ has no default | `test_reg_lambda_is_mandatory` |
+> | No dimension is silently reshaped | `test_no_silent_reshaping_of_mismatched_vectors` |
+> | No unstated loss term trains W | `test_paper_objectives_give_w_no_gradient` |
+> | Unfaithful runs are flagged in the table | `tests/test_results_table_fidelity.py` |
+> | Baselines are *not* falsely flagged | `test_baselines_are_not_flagged_as_unfaithful` |
 
 ## 1. Projection W is square, and externally supplied
 
@@ -198,6 +222,12 @@ be read:
   `training_status`; `projection_status.json` sits beside it.
 - **Per result:** the run record's `projection` field records `source`,
   `author_supplied`, `training_status`, and `trained_during_this_run: false`.
+- **In the generated table:** `scripts/aggregate_results.py` emits a notice
+  naming any system whose runs lacked an author-supplied W, *and* an
+  "Alignment matrix W" column per row — `author-supplied W`, `not faithful`,
+  `MIXED` when seeds within one system disagree, or `n/a` for the baselines,
+  which use no FastText and need no W. A reader gets the fidelity status
+  from the table alone, without opening this file.
 - **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a future
   change adds an unstated loss term;
   `test_alignment_matrix_is_required_by_every_entry_point` fails if any

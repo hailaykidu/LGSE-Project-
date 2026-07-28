@@ -32,6 +32,20 @@ is preferred to a silent choice the authors never described.
 > under a documented substitution — and the substitution is yours, recorded
 > in the run record.
 
+A run either satisfies all three prerequisites, or it reports itself as a
+**partial reproduction / implementation validation**. The generated results
+table states this per row, so fidelity is readable from the table itself:
+
+| System | F1 | seeds | Alignment matrix W |
+|---|---|---|---|
+| XLM-R | … | 5 | n/a — no alignment matrix required |
+| +FOCUS+LAPT | … | 5 | author-supplied W |
+| +LGSE+LAPT | … | 5 | **not faithful — no author-supplied W** |
+
+The baselines (`xlmr`, `lapt`, `random_lapt`) use no FastText, need no W,
+and run normally — the prerequisite applies only to the LGSE/FOCUS systems
+that consume FastText.
+
 See `DEVIATIONS.md` §1, §1a and §8a.
 
 ---
