@@ -9,26 +9,18 @@ class MorphemeEmbeddingBuilder:
         self.segmenter = segmenter
         self.embedding_dim = embedding_dim
 
-        # FastText is 300-dim; the target embedding space is wider (768 for
-        # xlm-roberta-base). The learned projection W bridges the two -- see
-        # src/lgse/projection.py. It is held here and applied in
-        # _fasttext_vec; the trainer registers its parameters with the
-        # optimizer so gradients actually reach it.
+        # LGSE's W is square (paper Sec 4.1), so FastText and the model's
+        # embedding space must share a dimension. Verify that here rather
+        # than waiting for a shape error deep in a forward pass, and use the
+        # same check as build_projection so the two cannot disagree.
         #
-        # There is deliberately no fallback for a missing projection under a
-        # dimension mismatch. Substituting an untrained map here would leave
-        # the run reporting as LGSE while the projection never learns
-        # anything, so this raises instead.
+        # There is deliberately no fallback: reshaping or rectangularly
+        # projecting mismatched vectors would leave the run reporting as
+        # LGSE while computing something the paper does not describe.
         self.projection = projection
-        if projection is None and fasttext_model is not None:
-            ft_dim = fasttext_model.get_dimension()
-            if ft_dim != embedding_dim:
-                raise ValueError(
-                    f"FastText is {ft_dim}-dim but the embedding space is "
-                    f"{embedding_dim}-dim, and no learned projection was "
-                    f"supplied. Build one with "
-                    f"lgse.projection.build_projection({ft_dim}, "
-                    f"{embedding_dim}) and pass it as `projection=`.")
+        if fasttext_model is not None:
+            from .projection import check_dimensions
+            check_dimensions(fasttext_model.get_dimension(), embedding_dim)
 
     def _fasttext_vec(self, text: str) -> Optional[np.ndarray]:
         if self.fasttext_model is None:

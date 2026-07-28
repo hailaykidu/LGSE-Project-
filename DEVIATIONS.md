@@ -15,15 +15,39 @@ pretrained model embedding space, a learned linear projection
 Two consequences, both implemented:
 
 **W is square.** The paper aligns two spaces of the same dimension `d`; it
-describes no dimensionality change. `build_projection` enforces this and
-raises on a mismatch rather than substituting a rectangular map, which would
-be a different method than the published one. In practice this means
-FastText must be trained at the model's embedding width (768 for
-xlm-roberta-base), not the standard 300 — `configs/base.yaml` sets
-`fasttext_dim: 768` accordingly. **The 300-dim CC vectors referenced under
-`data.fasttext` cannot be used with the paper's W without retraining or
-reducing at dimension 768; this is a data prerequisite, not something the
-code can resolve.**
+describes no dimensionality change. In practice this means FastText must be
+trained at the model's embedding width (768 for xlm-roberta-base), not the
+standard 300 — `configs/base.yaml` sets `fasttext_dim: 768` accordingly.
+
+**The 300-dim CC vectors referenced under `data.fasttext` cannot be used
+with the paper's W. This is a data prerequisite, not something the code can
+resolve**, so the implementation refuses rather than adapting:
+
+| Not done | Why |
+|---|---|
+| Rectangular `W ∈ R^(300×768)` | Not the published method; W is `d×d` |
+| Truncating 768→300 or padding 300→768 | Silently discards or fabricates dimensions |
+| PCA/SVD reduction of the model's space | Changes what the embeddings mean |
+| Falling back to char n-grams on mismatch | Reports as LGSE while bypassing FastText entirely |
+
+Each of these would produce numbers that look like results. None would be
+the published method, and the substitution would not be visible in any
+metric — which is why the code raises instead of choosing one.
+
+Enforcement is layered so the failure comes as early as possible:
+
+1. **`data/scripts/download_fasttext.py`** — checks at download time
+   (`--expect-dim`, default 768), prints a prominent warning naming the fix,
+   records `dimension_ok` in the manifest, and exits non-zero.
+2. **`LGSEConfig.fasttext_path`** — reads the manifest's recorded dimension
+   and raises before a multi-GB model is loaded.
+3. **`build_projection` / `MorphemeEmbeddingBuilder`** — the authoritative
+   check, via `check_dimensions`. Both share one implementation so they
+   cannot disagree.
+
+All three raise `IncompatibleFastTextDimension`, a distinct exception type,
+with a message naming both dimensions, the reason, the required width, and
+the `fasttext -dim 768` command that produces it.
 
 **W is identity-initialized.** Alignment between same-dimension spaces
 starts from "no change", so the initial embeddings are exactly the FastText

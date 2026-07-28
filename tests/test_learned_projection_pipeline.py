@@ -88,8 +88,62 @@ def test_projection_is_square():
 
 def test_rectangular_projection_is_refused():
     """A 300->768 map would be a different method than the published one."""
-    with pytest.raises(ValueError, match="square"):
+    from lgse.projection import IncompatibleFastTextDimension
+
+    with pytest.raises(IncompatibleFastTextDimension):
         build_projection(300, DIM)
+
+
+def test_dimension_error_is_actionable():
+    """The message must name both dims, the requirement, and the fix.
+
+    A user hitting this has a large, slow-to-replace data artifact; the
+    error is the only place they learn that 300-dim CC vectors cannot be
+    used with the published method at all.
+    """
+    from lgse.projection import IncompatibleFastTextDimension
+
+    with pytest.raises(IncompatibleFastTextDimension) as exc:
+        build_projection(300, DIM)
+    msg = str(exc.value)
+
+    assert "300" in msg and str(DIM) in msg          # both dimensions
+    assert "square" in msg                            # why
+    assert "Sec 4.1" in msg                           # where in the paper
+    assert f"-dim {DIM}" in msg                       # how to fix it
+    assert "DEVIATIONS.md" in msg                     # where to read more
+
+
+def test_mismatched_fasttext_is_refused_at_builder_construction():
+    """The builder must refuse too, not just build_projection.
+
+    A caller who constructs the builder without a projection would
+    otherwise get vectors of the wrong width flowing into the initializer.
+    """
+    from lgse.projection import IncompatibleFastTextDimension
+
+    with pytest.raises(IncompatibleFastTextDimension):
+        MorphemeEmbeddingBuilder(
+            fasttext_model=StubFastText(dim=300), segmenter=StubSegmenter(),
+            embedding_dim=DIM, projection=None)
+
+
+def test_no_silent_reshaping_of_mismatched_vectors():
+    """Nothing anywhere may pad, truncate or rectangularly project.
+
+    Asserted as a property of the whole entry surface rather than of one
+    function, since any single lenient path would reintroduce the silent
+    method change.
+    """
+    from lgse.projection import IncompatibleFastTextDimension, check_dimensions
+
+    for ft_dim in (100, 300, 512, 1024):        # smaller and larger than DIM
+        if ft_dim == DIM:
+            continue
+        with pytest.raises(IncompatibleFastTextDimension):
+            check_dimensions(ft_dim, DIM)
+        with pytest.raises(IncompatibleFastTextDimension):
+            build_projection(ft_dim, DIM)
 
 
 def test_projection_is_identity_initialized():
@@ -232,6 +286,41 @@ def test_trained_projection_survives_a_checkpoint_round_trip(tmp_path):
     trainer.load_projection(str(tmp_path))
 
     assert torch.allclose(restored.linear.weight, trained)
+
+
+def test_manifest_rejects_wrong_dimension_before_loading_the_model(tmp_path):
+    """Config resolution must fail on a bad dimension recorded in the
+    manifest, so the run stops before loading a multi-GB model."""
+    import json
+
+    from lgse.config import LGSEConfig
+    from lgse.projection import IncompatibleFastTextDimension
+
+    manifest = tmp_path / "fasttext_manifest.json"
+    manifest.write_text(json.dumps({
+        "amharic": {"path": "/nonexistent/cc.am.300.bin", "dimension": 300,
+                    "vocab_size": 100, "sha256": "x"}}))
+
+    config = LGSEConfig(language="am", model_name="xlm-roberta-base",
+                        fasttext_manifest=str(manifest))
+
+    with pytest.raises(IncompatibleFastTextDimension, match="300"):
+        _ = config.fasttext_path
+
+
+def test_manifest_accepts_the_required_dimension(tmp_path):
+    import json
+
+    from lgse.config import LGSEConfig
+
+    manifest = tmp_path / "fasttext_manifest.json"
+    manifest.write_text(json.dumps({
+        "amharic": {"path": "/models/am.768.bin", "dimension": DIM,
+                    "vocab_size": 100, "sha256": "x"}}))
+
+    config = LGSEConfig(language="am", model_name="xlm-roberta-base",
+                        fasttext_manifest=str(manifest))
+    assert config.fasttext_path == "/models/am.768.bin"
 
 
 def test_restoring_a_mismatched_projection_is_refused(tmp_path):

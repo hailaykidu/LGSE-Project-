@@ -10,12 +10,28 @@ URLs, not FastText binaries; loading either raises
   Amharic   cc.am.300.bin from the FastText CC vectors (Grave et al., 2018)
   Tigrinya  Hailay/fasttext-tigrinya on the HuggingFace Hub
 
-Both are 300-dimensional, which is why a projection into the model's
-embedding space is needed at all (see src/lgse/projection.py).
+DIMENSION REQUIREMENT
+---------------------
+Both of the above are **300-dimensional**, and LGSE's projection W is
+**square** (W in R^(d x d), paper Sec 4.1): it aligns the FastText space
+with the model's embedding space, both of dimension d, and does not change
+dimensionality.
 
-Nothing synthetic is generated: if a model cannot be downloaded the script
-fails rather than substituting random vectors, because a placeholder would
-silently turn LGSE into its own character-n-gram fallback.
+So these downloads are usable only with a model whose embedding width is
+300. They are **not** usable with xlm-roberta-base (768-dim), which is the
+model the paper uses. Running LGSE with 768-dim XLM-R requires FastText
+vectors trained at dimension 768:
+
+    fasttext skipgram -input <corpus> -output <model> -dim 768
+
+This script therefore warns loudly whenever it records a model whose
+dimension is not the expected one, so the mismatch surfaces at download
+time rather than hours into a run. `--expect-dim` sets the target width.
+
+Nothing synthetic is generated, and nothing is reshaped: if a model cannot
+be downloaded the script fails rather than substituting random vectors, and
+mismatched vectors are never truncated or padded to fit. Either would
+silently change the method -- see DEVIATIONS.md section 1.
 """
 
 import argparse
@@ -28,6 +44,10 @@ AMHARIC_URL = ("https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/"
 TIGRINYA_REPO = "Hailay/fasttext-tigrinya"
 TIGRINYA_FILE = "fasttext_tigrinya.bin"
 CACHE = Path.home() / ".cache" / "lgse"
+
+# The paper's model is xlm-roberta-base, whose embedding space is 768-dim.
+# Because W is square, FastText must match it.
+DEFAULT_EXPECTED_DIM = 768
 
 
 def sha256(path: Path) -> str:
@@ -62,17 +82,49 @@ def fetch_tigrinya() -> Path:
     return Path(hf_hub_download(TIGRINYA_REPO, TIGRINYA_FILE))
 
 
-def verify(path: Path, language: str) -> dict:
-    """Load the model and confirm it behaves like a FastText model."""
+def verify(path: Path, language: str, expected_dim: int) -> dict:
+    """Load the model, confirm it is a FastText model, and check its width.
+
+    A dimension mismatch is recorded in the manifest and warned about here
+    rather than raising: downloading is still useful (the file is large and
+    slow to fetch), but the run that consumes it will refuse to start, so
+    the warning must be impossible to miss.
+    """
     import fasttext
 
     model = fasttext.load_model(str(path))
     dim, vocab = model.get_dimension(), len(model.get_words())
     if dim <= 0 or vocab <= 0:
         raise SystemExit(f"{path} loaded but is empty (dim={dim}, vocab={vocab})")
-    return {"language": language, "path": str(path), "dimension": dim,
-            "vocab_size": vocab, "sha256": sha256(path),
-            "size_bytes": path.stat().st_size}
+
+    record = {"language": language, "path": str(path), "dimension": dim,
+              "vocab_size": vocab, "sha256": sha256(path),
+              "size_bytes": path.stat().st_size,
+              "expected_dimension": expected_dim,
+              "dimension_ok": dim == expected_dim}
+
+    if dim != expected_dim:
+        print(
+            f"\n"
+            f"  !!  WARNING: {language} FastText is {dim}-dim, but "
+            f"{expected_dim}-dim is required.\n"
+            f"  !!\n"
+            f"  !!  LGSE's projection W is square (paper Sec 4.1), so "
+            f"FastText must match\n"
+            f"  !!  the model's embedding width. LGSE will REFUSE TO RUN "
+            f"with this model.\n"
+            f"  !!\n"
+            f"  !!  These vectors are not reshaped or truncated to fit -- "
+            f"that would\n"
+            f"  !!  silently change the method. Train FastText at "
+            f"dimension {expected_dim}:\n"
+            f"  !!\n"
+            f"  !!    fasttext skipgram -input <corpus> -output <model> "
+            f"-dim {expected_dim}\n"
+            f"  !!\n"
+            f"  !!  See DEVIATIONS.md section 1.\n")
+
+    return record
 
 
 def main():
@@ -81,19 +133,27 @@ def main():
                    default="both")
     p.add_argument("--manifest", type=Path,
                    default=Path("data/fasttext_manifest.json"))
+    p.add_argument("--expect-dim", type=int, default=DEFAULT_EXPECTED_DIM,
+                   help="required FastText width; must equal the model's "
+                        "embedding dimension because LGSE's W is square "
+                        f"(default {DEFAULT_EXPECTED_DIM}, xlm-roberta-base)")
     args = p.parse_args()
 
     records = {}
     if args.language in ("tigrinya", "both"):
-        records["tigrinya"] = verify(fetch_tigrinya(), "tigrinya")
+        records["tigrinya"] = verify(fetch_tigrinya(), "tigrinya",
+                                     args.expect_dim)
         records["tigrinya"]["source"] = f"https://huggingface.co/{TIGRINYA_REPO}"
     if args.language in ("amharic", "both"):
-        records["amharic"] = verify(fetch_amharic(), "amharic")
+        records["amharic"] = verify(fetch_amharic(), "amharic",
+                                    args.expect_dim)
         records["amharic"]["source"] = AMHARIC_URL
 
     for lang, r in records.items():
+        status = "OK" if r["dimension_ok"] else \
+            f"UNUSABLE (need dim {r['expected_dimension']})"
         print(f"  {lang:9} dim={r['dimension']} vocab={r['vocab_size']:,} "
-              f"{r['size_bytes'] / 1e9:.2f} GB")
+              f"{r['size_bytes'] / 1e9:.2f} GB  [{status}]")
 
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
     existing = {}
@@ -103,6 +163,15 @@ def main():
     with open(args.manifest, "w", encoding="utf-8") as f:
         json.dump(existing, f, indent=2, ensure_ascii=False)
     print(f"manifest -> {args.manifest}")
+
+    unusable = [l for l, r in records.items() if not r["dimension_ok"]]
+    if unusable:
+        raise SystemExit(
+            f"\n{len(unusable)} model(s) have the wrong dimension: "
+            f"{', '.join(unusable)}.\n"
+            f"They are downloaded and recorded, but LGSE will refuse to run "
+            f"with them.\nSee the dimension requirement in this script's "
+            f"docstring and DEVIATIONS.md section 1.")
 
 
 if __name__ == "__main__":

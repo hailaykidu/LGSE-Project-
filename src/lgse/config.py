@@ -80,7 +80,32 @@ class LGSEConfig:
         record = json.load(open(manifest, encoding="utf-8")).get(language)
         if not record:
             raise SystemExit(f"{manifest} has no entry for {language!r}")
+
+        # Fail here rather than after loading a multi-GB model: the manifest
+        # already records the dimension, so an incompatible model can be
+        # rejected before any expensive work happens. The authoritative
+        # check still runs in build_projection; this is an early, cheaper
+        # copy of it.
+        dim = record.get("dimension")
+        if dim is not None:
+            from .projection import check_dimensions
+            check_dimensions(dim, self.embedding_dim,
+                             source=f"{language} FastText, {record['path']}")
         return record["path"]
+
+    @property
+    def embedding_dim(self) -> int:
+        """The target model's embedding width.
+
+        FastText must match this exactly, because LGSE's W is square
+        (paper Sec 4.1). Declared here so the requirement can be checked
+        before a model is loaded; `xlm-roberta-base` is the paper's model.
+        """
+        known = {"xlm-roberta-base": 768, "xlm-roberta-large": 1024}
+        if self.model_name in known:
+            return known[self.model_name]
+        from transformers import AutoConfig
+        return AutoConfig.from_pretrained(self.model_name).hidden_size
 
     @property
     def fasttext_path(self) -> str:

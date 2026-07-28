@@ -83,6 +83,39 @@ pip install -r requirements.txt
 
 LGSE uses FastText embeddings for morpheme and fallback representations.
 
+### ⚠️ Required embedding dimension
+
+> **FastText vectors must have the same dimension as the model's embedding
+> space — 768 for `xlm-roberta-base`, the model used in the paper.**
+>
+> LGSE aligns the two spaces with a **square** learned projection
+> `W ∈ R^(d×d)` (paper Sec 4.1). W performs an alignment, not a change of
+> dimensionality, so both spaces must already be of width `d`.
+>
+> **The standard 300-dimensional FastText vectors cannot be used with a
+> 768-dim model under the published method.** LGSE will refuse to start
+> rather than reshape them.
+
+Train FastText at the required width:
+
+```bash
+fasttext skipgram -input <corpus> -output fasttext_amharic_768 -dim 768
+```
+
+The dimension is checked in three places, earliest first, so a mismatch
+never reaches training:
+
+| Where | When |
+|---|---|
+| `data/scripts/download_fasttext.py` | at download — warns and exits non-zero |
+| `LGSEConfig.fasttext_path` | at config resolution — before the model is loaded |
+| `build_projection` / `MorphemeEmbeddingBuilder` | at construction — authoritative |
+
+**Mismatched vectors are never truncated, zero-padded, or rectangularly
+projected to fit.** Any of those would change the method into one the paper
+does not describe, and would do so invisibly in the reported numbers. See
+`DEVIATIONS.md` §1.
+
 ### FastText Embeddings
 
 The LGSE framework initializes token embeddings using pretrained FastText
@@ -92,6 +125,9 @@ models to provide morphology-aware semantic representations.
   https://huggingface.co/Hailay/fasttext-tigrinya
 - **Amharic:** Official FastText Common Crawl vectors:
   https://fasttext.cc/docs/en/crawl-vectors.html
+
+Both sources above are **300-dimensional** and therefore require retraining
+at dimension 768 before use with XLM-R — see the requirement above.
 
 These pretrained models are used during vocabulary initialization to obtain
 word-level embeddings. For out-of-vocabulary items, LGSE automatically falls
@@ -104,10 +140,8 @@ vocabulary entries.
 Download from Facebook FastText:
 https://fasttext.cc/
 
-Use:
-
 ```
-cc.am.300.bin
+cc.am.300.bin        # 300-dim: NOT usable with 768-dim XLM-R as-is
 ```
 
 Rename to:

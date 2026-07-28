@@ -77,13 +77,25 @@ evaluation:
   model_selection: dev              # source: paper -- selection on dev, report test
 
 data:
+  # REQUIRED DIMENSION: FastText must match `lgse.fasttext_dim` (768),
+  # because LGSE's W is square (paper Sec 4.1). Both sources below are
+  # 300-dim and must be retrained at 768 before use with xlm-roberta-base:
+  #
+  #   fasttext skipgram -input <corpus> -output <model> -dim 768
+  #
+  # The code refuses mismatched vectors rather than reshaping them; see
+  # DEVIATIONS.md section 1.
   fasttext:
     amharic:
       source: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz
       citation: Grave et al. (2018), FastText CC vectors
+      dimension: 300
+      usable_as_is: false             # 300 != 768; retrain required
     tigrinya:
       source: https://huggingface.co/Hailay/fasttext-tigrinya
       citation: project-released Tigrinya FastText model
+      dimension: 300
+      usable_as_is: false             # 300 != 768; retrain required
 
 output:
   results_dir: results

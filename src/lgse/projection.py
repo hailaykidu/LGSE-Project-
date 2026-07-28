@@ -63,21 +63,62 @@ class LearnedProjection(nn.Module):
         return True
 
 
+class IncompatibleFastTextDimension(ValueError):
+    """Raised when FastText's width does not match the embedding space.
+
+    A distinct type so callers can catch this specific, actionable data
+    problem rather than pattern-matching on a generic ValueError.
+    """
+
+
+def check_dimensions(fasttext_dim: int, embedding_dim: int,
+                     source: str = "") -> None:
+    """Verify FastText matches the model's embedding width, or raise.
+
+    LGSE's W is square (paper Sec 4.1), so these two must be equal. When
+    they are not, the only correct fix is different FastText vectors --
+    reshaping, truncating, padding or rectangular-projecting the ones in
+    hand would change the method into one the paper does not describe, and
+    would do so invisibly in the reported numbers.
+    """
+    if fasttext_dim == embedding_dim:
+        return
+
+    where = f"\n  Model:      {source}" if source else ""
+    raise IncompatibleFastTextDimension(
+        f"Incompatible FastText embedding dimension.\n"
+        f"\n"
+        f"  FastText:   {fasttext_dim}-dim{where}\n"
+        f"  Model:      {embedding_dim}-dim embedding space\n"
+        f"\n"
+        f"LGSE's projection W is square (W in R^(d x d), paper Sec 4.1): it "
+        f"aligns the FastText space with the model's embedding space, both "
+        f"of dimension d. It does not change dimensionality.\n"
+        f"\n"
+        f"Required: FastText vectors trained at dimension {embedding_dim}.\n"
+        f"\n"
+        f"This is a data prerequisite, not a configuration problem. The "
+        f"standard 300-dim FastText CC vectors (Grave et al., 2018) cannot "
+        f"be used with a {embedding_dim}-dim model under the published "
+        f"method. Options:\n"
+        f"  - train FastText at dimension {embedding_dim} on the target "
+        f"language corpus (`fasttext ... -dim {embedding_dim}`);\n"
+        f"  - use a model whose embedding width is {fasttext_dim}.\n"
+        f"\n"
+        f"Reshaping, truncating, zero-padding or rectangularly projecting "
+        f"the {fasttext_dim}-dim vectors would silently change the method "
+        f"and is deliberately not implemented. See DEVIATIONS.md section 1.")
+
+
 def build_projection(source_dim: int, target_dim: int,
                      seed: int = 42) -> nn.Module:
     """Return the learned square projection W (paper Sec 4.1).
 
-    Raises on a dimension mismatch. The paper's W is square, so unequal
-    dimensions mean the FastText model does not match the target embedding
-    width -- a data problem to fix by training or fetching FastText at
-    dimension d, not something to paper over with a rectangular map. A
-    rectangular W would be a different method than the one published.
+    Raises `IncompatibleFastTextDimension` on a dimension mismatch: the
+    paper's W is square, so unequal dimensions mean the FastText model does
+    not match the target embedding width. That is a data problem to fix by
+    training or fetching FastText at dimension d, not something to paper
+    over with a rectangular map.
     """
-    if source_dim != target_dim:
-        raise ValueError(
-            f"LGSE's projection W is square (d x d, paper Sec 4.1), but "
-            f"FastText is {source_dim}-dim and the embedding space is "
-            f"{target_dim}-dim. Use FastText vectors trained at "
-            f"dimension {target_dim}; a {source_dim}->{target_dim} "
-            f"rectangular map is not the published method.")
+    check_dimensions(source_dim, target_dim)
     return LearnedProjection(source_dim, seed=seed)
