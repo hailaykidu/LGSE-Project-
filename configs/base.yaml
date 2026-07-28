@@ -21,8 +21,9 @@ model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
 
 lgse:
-  projection: learned               # source: paper -- learned W, trained jointly
-                                    #   set to `random` to reproduce the release
+  # The projection W (FastText 300-dim -> model embedding space) is learned:
+  # trained jointly with the new token embeddings and saved with the
+  # checkpoint. It is not a config option -- see src/lgse/projection.py.
   ngram_min: 3                      # source: release
   ngram_max: 5                      # source: release
   reg_lambda: 1.0                   # source: release

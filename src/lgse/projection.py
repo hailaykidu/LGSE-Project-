@@ -1,22 +1,27 @@
 """
-projection.py -- projection W from FastText space to the model's embedding space.
+projection.py -- the learned projection W of the LGSE method.
 
 FastText vectors are 300-dimensional; the target model's embedding space is
-wider (768 for xlm-roberta-base). Something must map between them.
+wider (768 for xlm-roberta-base). W bridges the two.
 
-The paper specifies a **learned** projection: W is a trainable parameter
-optimized jointly with the new token embeddings during LAPT, so the mapping
-adapts to the target embedding space rather than merely preserving relative
-distances.
+W is a *learned* parameter. It is initialized once and then optimized jointly
+with the new token embeddings during LAPT, so the mapping adapts to the
+geometry of the target embedding space instead of merely preserving relative
+distances between FastText vectors. This is the method LGSE describes, and it
+is the only projection this package supports.
 
-The released implementation instead used a fixed, seeded Johnson-Lindenstrauss
-random projection (lgse/morpheme_embeddings.py in the original release). That
-is a defensible way to bridge two spaces without extra training data, but it
-is not what the paper describes: a random W is never updated, so it cannot
-learn anything about the target space. Both are provided here --
-`LearnedProjection` implements the paper, `RandomProjection` reproduces the
-original release -- and the choice is recorded in the run config so any
-result states which was used.
+Three properties are load-bearing, and each is covered by a regression test in
+tests/test_learned_projection_pipeline.py:
+
+  1. W carries trainable parameters (`requires_grad`).
+  2. Those parameters reach the optimizer, and gradients flow back through
+     the morpheme-averaging path into W.
+  3. W is serialized with the checkpoint, so a restored run continues with
+     the trained mapping rather than a fresh initialization.
+
+A projection that fails any one of these is indistinguishable, at the level
+of reported numbers, from a fixed random map -- which is why they are
+asserted rather than assumed.
 """
 
 from typing import Optional
@@ -27,12 +32,12 @@ import torch.nn as nn
 
 
 class LearnedProjection(nn.Module):
-    """Trainable W: FastText space -> model embedding space (paper).
+    """Trainable W: FastText space -> the model's embedding space.
 
-    Initialized as a scaled Gaussian, the same distribution the fixed
-    random projection uses, so training starts from an equivalent mapping
-    and any difference in results comes from W being learned rather than
-    from a different starting point.
+    Initialized as a scaled Gaussian (std 1/sqrt(source_dim)), which keeps
+    the initial mapping approximately norm-preserving so training starts
+    from a well-conditioned point rather than one that inflates or crushes
+    the projected vectors.
     """
 
     def __init__(self, source_dim: int, target_dim: int, seed: int = 42,
@@ -58,38 +63,14 @@ class LearnedProjection(nn.Module):
         return True
 
 
-class RandomProjection(nn.Module):
-    """Fixed Johnson-Lindenstrauss projection (original release).
-
-    Not trainable: `requires_grad` is False on the buffer, and it is never
-    handed to an optimizer. Kept so the released behaviour stays
-    reproducible and comparable against the paper's learned W.
-    """
-
-    def __init__(self, source_dim: int, target_dim: int, seed: int = 42):
-        super().__init__()
-        self.source_dim = source_dim
-        self.target_dim = target_dim
-        rng = np.random.default_rng(seed)
-        w = rng.normal(scale=1.0 / np.sqrt(source_dim),
-                       size=(source_dim, target_dim)).astype(np.float32)
-        self.register_buffer("weight", torch.from_numpy(w))
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x @ self.weight
-
-    @property
-    def is_learned(self) -> bool:
-        return False
-
-
-def build_projection(kind: str, source_dim: int, target_dim: int,
+def build_projection(source_dim: int, target_dim: int,
                      seed: int = 42) -> Optional[nn.Module]:
-    """Return the configured projection, or None when dims already match."""
+    """Return the learned projection W, or None when the dims already match.
+
+    None is not a silent fallback to identity-by-accident: when FastText and
+    the model share a width there is nothing for W to map between, and the
+    vectors are used directly.
+    """
     if source_dim == target_dim:
         return None
-    if kind == "learned":
-        return LearnedProjection(source_dim, target_dim, seed=seed)
-    if kind == "random":
-        return RandomProjection(source_dim, target_dim, seed=seed)
-    raise ValueError(f"unknown projection {kind!r}; expected 'learned' or 'random'")
+    return LearnedProjection(source_dim, target_dim, seed=seed)

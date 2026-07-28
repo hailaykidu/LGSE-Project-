@@ -1,10 +1,12 @@
 # Deviations from the paper and the original release
 
-Every difference between this reproduction branch, the published release
-(`published-release-77987c5`), and the paper is recorded here. Nothing in this
-list is a claim about which is correct -- only about what differs.
+This branch implements the LGSE method as described in the paper. Where the
+implementation differs from the published release
+(`published-release-77987c5`), or where the paper underdetermines a choice,
+it is recorded here. Nothing in this list is a claim about which is correct
+-- only about what differs.
 
-## 1. Projection W: learned (paper) vs fixed random (release)
+## 1. Projection W is learned
 
 **Paper:** W is learned, trained jointly with the new token embeddings.
 
@@ -15,13 +17,58 @@ updated. The code comment states the rationale: bridging 300-dim FastText to
 768-dim XLM-R "without requiring extra training data to fit a learned
 projection."
 
-**This branch:** `src/lgse/projection.py` provides both.
-`LearnedProjection` implements the paper (230,400 trainable parameters for
-300->768) and is the default; `RandomProjection` reproduces the release
-behaviour (0 trainable parameters). Both start from the same scaled-Gaussian
-distribution, so a difference in results is attributable to W being learned
-rather than to a different initialization. The choice is recorded in each run
-config.
+**This branch implements the paper's learned W as the only supported
+projection.** `src/lgse/projection.py` defines `LearnedProjection` (230,400
+trainable parameters for 300->768). There is no fixed-projection path and no
+`projection:` config key to select one. When FastText and the model share a
+width, `build_projection` returns `None` and the vectors are used directly --
+there is nothing to map between. A dimension mismatch with no W raises rather
+than substituting an untrained map, so a run cannot silently fall back to the
+released behaviour while still reporting as LGSE.
+
+### 1a. Making "learned" true required a change to the regularizer
+
+Putting W in the optimizer is necessary but **not sufficient**, and the
+insufficiency is invisible in the reported numbers.
+
+The initializer writes W's output into the embedding matrix through `.data`
+(`src/lgse/initializer.py:60-63`), which severs the autograd graph. That
+in-place write is deliberate: replacing the `Parameter` would break weight
+tying with the MLM head. But if the regularizer's anchor is then a detached
+constant, **no LAPT loss term is a function of W at all**. W sits in the
+optimizer, reports as trainable, receives `grad = None` on every step, and
+never moves -- an end state identical to a frozen random map, reached by a
+different route.
+
+This branch therefore recomputes the regularizer anchor through W on every
+step (`src/lgse/regularization.py`, `anchor_is_live`). The penalty
+`lambda*||E_new - W(f)||^2` is live on both sides, so it pulls the new
+embeddings toward their lexically grounded targets and simultaneously adapts
+W toward the representations the LM is learning -- "trained jointly with the
+new embeddings" in fact, not merely in the optimizer's parameter list.
+
+The baselines have no projection; their anchor remains a fixed tensor and
+their behaviour is unchanged.
+
+`tests/test_learned_projection_pipeline.py` asserts both directions:
+`test_w_is_updated_by_a_lapt_step` fails if W stops moving, and
+`test_detached_anchor_leaves_w_without_gradient` pins the reason the live
+anchor is required.
+
+**Scope note.** The paper specifies that W is learned jointly with the new
+embeddings; it does not spell out which loss term carries W's gradient.
+Routing it through the existing regularization term is the smallest
+formulation consistent with that description -- it introduces no new loss
+term and no new hyperparameter. It is an implementation choice the paper
+does not dictate, recorded here as such.
+
+### 1b. W is part of the checkpoint
+
+W is trained, so it cannot be recovered from its seed once optimized.
+`save_pretrained()` covers only the model, so `LGSELAPTrainer.save()` writes
+`projection.pt` alongside it and `load_projection()` restores it, refusing a
+shape mismatch. Without this, a resumed run would silently restart from a
+fresh initialization and discard the training that produced W.
 
 ## 2. Baselines absent from the release
 

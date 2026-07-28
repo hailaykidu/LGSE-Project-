@@ -17,30 +17,40 @@ each statement.
 All work is on `reproduction`. Neither tag nor either main branch has been
 modified, and nothing has been pushed.
 
-## The paper's method files are unchanged
+## Relationship to the published release
+
+This branch implements the method the paper describes. Where the release
+and the paper disagree, **the paper governs** -- the release's behaviour is
+not preserved for its own sake.
 
 Byte-identical to the published release, relocated only:
 
-    segmentation.py  char_ngrams.py  regularization.py
-    token_selection.py  initializer.py
+    segmentation.py  char_ngrams.py  token_selection.py  initializer.py
 
-Two files changed, both additively:
+Changed, deliberately:
 
-**`morpheme_embeddings.py`** takes an optional `projection` argument. With
-`projection=None` -- the default -- it reproduces the release's fixed
-Johnson-Lindenstrauss map exactly; verified numerically against an
-independent recomputation of the release's own formula. The learned
-projection is opt-in via config.
+**`projection.py`** implements the paper's learned W as the only supported
+projection. The release's fixed Johnson-Lindenstrauss map is not retained,
+not selectable, and has no config key. See DEVIATIONS.md §1.
 
-**`lap_trainer.py`** reads `system`/`initializer`/`projection` from the
-config and dispatches accordingly. With the default config it follows the
-release's LGSE path.
+**`regularization.py`** accepts a live anchor recomputed through W, in
+addition to the release's fixed-tensor anchor (still used by the baselines,
+which have no projection). This is what gives W a gradient path during LAPT;
+with a detached anchor W would be frozen in practice. See DEVIATIONS.md §1a.
+
+**`morpheme_embeddings.py`** applies W to FastText vectors and averages in
+the tensor's own framework so W stays on the autograd graph. A dimension
+mismatch with no W raises rather than silently substituting an untrained map.
+
+**`lap_trainer.py`** reads `system`/`initializer` from the config and
+dispatches accordingly, builds W, registers it with the optimizer, and
+serializes it with the checkpoint.
 
 ## What is added, and where it lives
 
 | Addition | Location | Touches the method? |
 |---|---|---|
-| Learned projection W | `src/lgse/projection.py` | Implements the paper's stated W; the release's random map remains available and is the fallback |
+| Learned projection W | `src/lgse/projection.py`, `regularization.py` | **Yes -- deliberately.** Implements the paper's learned W as the only projection; the release's fixed random map is removed, not retained as a fallback. The regularizer anchor is recomputed through W so W actually trains. See DEVIATIONS.md §1, §1a |
 | Table 2 baselines | `src/baselines/` | New systems the paper compares against; LGSE itself untouched |
 | Evaluation harness | `src/evaluation/` | Implements the metrics the paper reports; no metric redefined |
 | Dataset preparation | `data/scripts/` | Fetches the datasets the paper names; splits follow the paper's stated policy |

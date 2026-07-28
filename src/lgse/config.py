@@ -48,11 +48,11 @@ class LGSEConfig:
     expand_vocab: bool = True
     initializer: str = "lgse"      # lgse | default | random | focus
 
-    # Projection from FastText space to the model's embedding space.
-    # "learned" is the paper's W, trained jointly with the new embeddings;
-    # "random" reproduces the original release's fixed Johnson-Lindenstrauss
-    # map. See src/lgse/projection.py.
-    projection: str = "learned"
+    # The projection from FastText space to the model's embedding space is
+    # the learned W of the LGSE method: trained jointly with the new
+    # embeddings and saved with the checkpoint. It is deliberately not a
+    # config option -- there is one projection, implemented in
+    # src/lgse/projection.py.
 
     # Training
     output_dir: str = "outputs/lgse_lap"

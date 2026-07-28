@@ -92,22 +92,23 @@ class LGSELAPTrainer:
         embedding_dim = embedding_layer.embedding_dim
         old_vocab_size = embedding_layer.weight.shape[0] - num_added
 
-        # 4) projection W. The paper learns it jointly with the new
-        # embeddings; the original release used a fixed random map. Which one
-        # is active is recorded so any result states it.
+        # 4) the learned projection W, trained jointly with the new
+        # embeddings (see src/lgse/projection.py). It is only needed on the
+        # paths that consume FastText vectors.
         self.projection = None
         if ft_model is not None:
             self.projection = build_projection(
-                getattr(config, "projection", "learned"),
                 source_dim=ft_model.get_dimension(),
                 target_dim=embedding_dim,
                 seed=config.seed,
             )
             if self.projection is not None:
                 self.projection.to(self.device)
-                print(f"[LGSELAPTrainer] projection="
-                      f"{getattr(config, 'projection', 'learned')} "
-                      f"(learned={self.projection.is_learned})")
+                n_params = sum(p.numel() for p in self.projection.parameters()
+                               if p.requires_grad)
+                print(f"[LGSELAPTrainer] learned projection W: "
+                      f"{ft_model.get_dimension()} -> {embedding_dim} "
+                      f"({n_params} trainable parameters)")
 
         # 5) initialization: LGSE, or one of the Table 2 baselines
         vocab = self.tokenizer.get_vocab()
@@ -142,13 +143,36 @@ class LGSELAPTrainer:
 
         init_matrix = initializer.write_embeddings_for_new_tokens(token_to_id)
 
-        # 5) regularizer anchored to the just-computed init vectors
+        # 6) regularizer anchored to the lexically grounded targets.
+        #
+        # For LGSE the anchor is recomputed through W on every step rather
+        # than frozen at its initial value. This is what puts W on the
+        # training graph at all: the initializer writes its output into the
+        # embedding via `.data`, which severs the graph, so a detached
+        # anchor would leave W with no gradient source anywhere in LAPT --
+        # trainable on paper, frozen in fact.
+        #
+        # The baselines have no projection, so their anchor stays a fixed
+        # tensor and their behaviour is unchanged.
+        if self.projection is not None and self.initializer_kind == "lgse":
+            tokens = list(token_to_id.keys())
+
+            def live_anchor(_tokens=tokens, _init=initializer):
+                return torch.stack(
+                    [_init.init_token_embedding(t) for t in _tokens], dim=0)
+
+            anchor = live_anchor
+        else:
+            anchor = init_matrix
+
         self.regularizer = LGSERegularizer(
-            init_embeddings=init_matrix,
+            init_embeddings=anchor,
             token_ids=token_to_id,
             lambda_reg=config.reg_lambda,
             device=str(self.device),
         )
+        print(f"[LGSELAPTrainer] regularizer anchor: "
+              f"{'live through W' if self.regularizer.anchor_is_live else 'fixed'}")
 
         # 6) freeze the whole model except the embedding matrix; gradients
         # for the *old* rows of that matrix get zeroed every step in
@@ -205,9 +229,58 @@ class LGSELAPTrainer:
               f"(mlm={mlm_loss.item():.4f} reg={reg_loss.item():.4f} on last batch)")
         return avg_loss
 
+    PROJECTION_FILE = "projection.pt"
+
     def save(self, output_dir: str = None):
         output_dir = output_dir or self.config.output_dir
         os.makedirs(output_dir, exist_ok=True)
         self.model.save_pretrained(output_dir)
         self.tokenizer.save_pretrained(output_dir)
+
+        # W is a trained parameter of the method, not a derived artifact: it
+        # cannot be recomputed from the seed once it has been optimized.
+        # save_pretrained() only covers the model, so without this the
+        # trained mapping is lost and a restored run silently falls back to
+        # a fresh initialization.
+        if self.projection is not None:
+            path = os.path.join(output_dir, self.PROJECTION_FILE)
+            torch.save({
+                "state_dict": self.projection.state_dict(),
+                "source_dim": self.projection.source_dim,
+                "target_dim": self.projection.target_dim,
+            }, path)
+            print(f"Saved learned projection W to {path}")
+
         print(f"Saved LGSE-specialized model to {output_dir}")
+
+    def load_projection(self, output_dir: str = None):
+        """Restore a trained W saved by `save()`.
+
+        Raises if the checkpoint's shape disagrees with the projection this
+        run built -- a silent shape mismatch would mean loading someone
+        else's mapping.
+        """
+        output_dir = output_dir or self.config.output_dir
+        path = os.path.join(output_dir, self.PROJECTION_FILE)
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"no saved projection at {path}; the checkpoint was written "
+                "without one, so the trained W is unavailable.")
+        # weights_only=True: the checkpoint holds tensors and two ints, so
+        # there is no reason to allow arbitrary pickle execution here.
+        ckpt = torch.load(path, map_location=self.device, weights_only=True)
+        if self.projection is None:
+            raise RuntimeError(
+                "this run built no projection (FastText and the embedding "
+                "space share a width), so there is nothing to restore into.")
+        if (ckpt["source_dim"], ckpt["target_dim"]) != (
+                self.projection.source_dim, self.projection.target_dim):
+            raise ValueError(
+                f"projection shape mismatch: checkpoint is "
+                f"{ckpt['source_dim']}->{ckpt['target_dim']}, this run "
+                f"expects {self.projection.source_dim}->"
+                f"{self.projection.target_dim}")
+        self.projection.load_state_dict(ckpt["state_dict"])
+        self.projection.to(self.device)
+        print(f"Restored learned projection W from {path}")
+        return self.projection

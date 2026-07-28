@@ -169,10 +169,13 @@ FastText embeddings. During training, pretrained vocabulary embeddings
 remain fixed while newly introduced vocabulary embeddings are optimized
 through the LGSE-guided objective.
 
-To support compatibility between FastText embeddings (300 dimensions)
-and pretrained language models such as XLM-RoBERTa (768 dimensions), the
-implementation automatically applies a seeded projection layer when
-embedding dimensions differ.See the regularization algorithms from the paper
+To bridge FastText embeddings (300 dimensions) and pretrained language
+models such as XLM-RoBERTa (768 dimensions), LGSE uses a **learned
+projection W**. W is a trainable parameter: it is optimized jointly with
+the new token embeddings during LAPT, saved with the checkpoint, and
+restored on resume. It is the only projection the implementation supports
+-- there is no fixed or random-projection mode. See `src/lgse/projection.py`
+and `DEVIATIONS.md` §1.
 
 ---
 

@@ -19,7 +19,8 @@ fasttext 0.9.3, CPU.
 | FastText loading | resolved via `data/fasttext_manifest.json` |
 | Morphological lexicon | `Loaded morphological lexicon: 210 words` |
 | Vocabulary expansion | `Added 198/198 new tokens to the tokenizer` |
-| Learned projection | `[LGSELAPTrainer] projection=learned (learned=True)` |
+| Learned projection | `[LGSELAPTrainer] learned projection W: 300 -> 768 (230400 trainable parameters)` |
+| Live anchor | `[LGSELAPTrainer] regularizer anchor: live through W` |
 | Morpheme composition | init vectors written for all 198 tokens |
 | LGSE regularization | `avg loss this epoch: 9.8771 (mlm=9.8710 reg=0.0000)` |
 | Frozen backbone | only the embedding matrix and W receive gradients |
@@ -45,13 +46,13 @@ require the full corpora and the hyperparameters the paper places in Table 1
 
 ## Failures this validation caught
 
-Both were invisible to unit tests, which exercised these components
+All were invisible to unit tests, which exercised these components
 separately:
 
 1. **The learned projection was never optimized.** Its parameters were not in
-   the AdamW parameter group, so W was initialized and then frozen --
-   `projection: learned` behaved identically to `random` while reporting as
-   learned. Fixed in `src/lgse/lap_trainer.py`.
+   the AdamW parameter group, so W was initialized and then frozen, behaving
+   identically to a fixed map while reporting as learned. Fixed in
+   `src/lgse/lap_trainer.py`.
 
 2. **The learned projection crashed on real vectors.**
    `word_from_morphemes` averaged with `np.mean`, which cannot consume a
@@ -59,8 +60,22 @@ separately:
    requires grad`. Fixed in `src/lgse/morpheme_embeddings.py` by averaging in
    the tensor's own framework.
 
-`tests/test_learned_projection_pipeline.py` covers both. Reverting either fix
-makes those tests fail (verified: 3 of 7 fail with fix 2 reverted).
+3. **W had no gradient path even once it was in the optimizer.** The
+   initializer writes W's output into the embedding via `.data`, severing the
+   graph; with a detached regularizer anchor, no LAPT loss term was a
+   function of W, so it received `grad = None` every step and never moved --
+   trainable on paper, frozen in fact, and indistinguishable from a fixed map
+   in any reported number. Fixed by recomputing the regularizer anchor
+   through W (`src/lgse/regularization.py`). See `DEVIATIONS.md` §1a.
+
+4. **A trained W was discarded at checkpoint time.** `save()` wrote only the
+   model and tokenizer, so a resumed run silently restarted from a fresh
+   initialization. Fixed by serializing `projection.pt`
+   (`LGSELAPTrainer.save` / `load_projection`).
+
+`tests/test_learned_projection_pipeline.py` covers all four; 28 tests pass.
+`test_w_is_updated_by_a_lapt_step` is the load-bearing one -- every other
+assertion in that file still passes when W is frozen in practice.
 
 ## Provenance recorded per run
 
