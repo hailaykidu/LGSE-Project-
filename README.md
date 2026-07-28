@@ -204,17 +204,41 @@ remain fixed while newly introduced vocabulary embeddings are optimized
 through the LGSE-guided objective.
 
 To align the FastText embedding space with the pretrained model's, LGSE
-applies a **learned linear projection W ∈ R^(d×d)** (paper Sec 4.1). W is
-square, so FastText must be trained at the model's embedding width (768 for
-XLM-R base) — `build_projection` refuses a rectangular map rather than
-silently changing the method. W is identity-initialized, registered with the
-optimizer, and saved with the checkpoint.
+applies a linear projection **W ∈ R^(d×d)** (paper Sec 4.1). W is square, so
+FastText must be trained at the model's embedding width (768 for XLM-R base)
+— `build_projection` refuses a rectangular map rather than silently changing
+the method.
 
-> **Note.** Under the paper's stated objectives W receives no gradient during
-> LAPT: `L_reg` anchors to a constant μ (Sec 4.2) and the MLM loss reads the
-> embedding matrix, not W. This implementation follows the paper and reports
-> W's gradient status each epoch rather than adding an unstated loss term.
+### W: author-required / unspecified in paper
+
+> The paper describes W as "learned", but **specifies no objective that
+> trains it**: `L_reg` anchors to a constant μ (Sec 4.2), and LAPT's MLM
+> loss reads the embedding matrix, not W. Initialization writes W's output
+> into the embedding in place, which ends the gradient path.
+>
+> W is therefore an **externally supplied alignment matrix**: a given of the
+> run, frozen and excluded from the optimizer. No gradient path is
+> manufactured for it — doing so would require inventing a loss term the
+> paper does not state.
+>
+> **Resolving this requires the authors to state which objective trains W.**
 > See `DEVIATIONS.md` §1a.
+
+Supply your own W with `lgse.alignment_matrix_path` (a `.pt`/`.npy` file
+holding a `d×d` matrix). Left empty, W is the identity, which leaves the
+FastText morpheme averages exactly as Sec 4.1 defines them. Either way W is
+saved with the checkpoint, and its source and training status are recorded
+in every run record.
+
+### `reg_lambda` is mandatory
+
+`lgse.reg_lambda` — λ in `L_reg = λ‖e_new − μ‖²` (Sec 4.2) — **has no
+default and must be set explicitly.** The paper introduces λ but never
+states its value, so any setting is the experimenter's choice; a silent
+default would make every result look as if it followed a published one. Runs
+fail with an explanatory error if it is absent. `configs/base.yaml` ships
+`1.0`, carried over from the original release and marked
+`source: unavailable`.
 
 ---
 

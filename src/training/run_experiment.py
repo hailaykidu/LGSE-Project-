@@ -139,6 +139,19 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
 
     ft_key = ("fasttext_amharic_path" if language == "amharic"
               else "fasttext_tigrinya_path")
+
+    # reg_lambda is mandatory: the paper never assigns lambda, so there is
+    # no published value to fall back on. A bare KeyError here would not say
+    # that, and a default would present our choice as the paper's.
+    if "reg_lambda" not in cfg["lgse"]:
+        raise SystemExit(
+            f"`lgse.reg_lambda` is missing from the run config.\n"
+            f"\n"
+            f"It is lambda in L_reg = lambda * ||e_new - mu||^2 (paper Sec "
+            f"4.2). The paper introduces lambda but never states its value, "
+            f"so there is no default to apply -- set it explicitly under "
+            f"`lgse:` in your config. See DEVIATIONS.md section 8.")
+
     lgse_cfg = LGSEConfig(
         model_name=base_model,
         language="am" if language == "amharic" else "ti",
@@ -148,6 +161,7 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
         ngram_min=cfg["lgse"]["ngram_min"],
         ngram_max=cfg["lgse"]["ngram_max"],
         reg_lambda=cfg["lgse"]["reg_lambda"],
+        alignment_matrix_path=cfg["lgse"].get("alignment_matrix_path", ""),
         seed=seed,
         learning_rate=cfg["lapt"]["learning_rate"],
         batch_size=cfg["lapt"]["batch_size"],
@@ -164,6 +178,15 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
     for _ in range(cfg["lapt"]["epochs"]):
         trainer.train_epoch()
     trainer.save(str(out_dir / "lapt"))
+
+    # Record W's provenance and training status beside the checkpoint, so a
+    # result carries the alignment matrix it used and the fact that W was
+    # not trained under any objective the paper states.
+    import json as _json
+    with open(out_dir / "lapt" / "projection_status.json", "w",
+              encoding="utf-8") as f:
+        _json.dump(trainer.projection_status(), f, indent=2)
+
     return str(out_dir / "lapt")
 
 
@@ -235,7 +258,16 @@ def main():
         "task": args.task,
         "language": args.language,
         "seed": args.seed,
-        "projection": "learned",
+        # W's status travels with the result. "learned" would be a claim the
+        # run cannot support: no objective the paper states trains W.
+        "projection": {
+            "kind": "externally supplied alignment matrix (paper Sec 4.1)",
+            "source": cfg["lgse"].get("alignment_matrix_path") or "identity",
+            "training_status": "author-required / unspecified in paper",
+            "trained_during_this_run": False,
+        },
+        "reg_lambda": cfg["lgse"]["reg_lambda"],
+        "reg_lambda_source": "unavailable -- not stated in the paper",
         "model_path": model_path,
         "dev": result["dev"],
         "test": result["test"],

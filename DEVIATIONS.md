@@ -6,7 +6,7 @@ implementation differs from the published release
 it is recorded here. Nothing in this list is a claim about which is correct
 -- only about what differs.
 
-## 1. Projection W is learned, and square
+## 1. Projection W is square, and externally supplied
 
 **Paper (Sec 4.1):** "To align the FastText embedding space with the
 pretrained model embedding space, a learned linear projection
@@ -49,12 +49,13 @@ All three raise `IncompatibleFastTextDimension`, a distinct exception type,
 with a message naming both dimensions, the reason, the required width, and
 the `fasttext -dim 768` command that produces it.
 
-**W is identity-initialized.** Alignment between same-dimension spaces
+**W defaults to the identity.** Alignment between same-dimension spaces
 starts from "no change", so the initial embeddings are exactly the FastText
-morpheme averages Sec 4.1 defines. A random init would scramble those
+morpheme averages Sec 4.1 defines. An arbitrary W would distort those
 vectors before training saw them, defeating the point of grounding the
 initialization lexically. (The original release's scaled-Gaussian init was
-tied to its rectangular map and does not carry over.)
+tied to its rectangular map and does not carry over.) An author-supplied
+matrix replaces the identity — see §1a-i.
 
 **Original release:** `lgse/morpheme_embeddings.py:24-31` builds a fixed,
 seeded Johnson-Lindenstrauss projection with `np.random.default_rng`. It is
@@ -64,10 +65,10 @@ updated. The code comment states the rationale: bridging 300-dim FastText to
 projection."
 
 **This branch implements the paper's W as the only supported projection.**
-`src/lgse/projection.py` defines `LearnedProjection` as a square `d×d`
-trainable map. There is no fixed-projection path and no `projection:` config
-key. The release's rectangular Johnson–Lindenstrauss map is removed, not
-retained as a fallback.
+`src/lgse/projection.py` defines `AlignmentProjection` as a square `d×d`
+matrix, externally supplied and frozen. There is no fixed-projection path
+and no `projection:` config key. The release's rectangular
+Johnson–Lindenstrauss map is removed, not retained as a fallback.
 
 ### 1a. Under the paper's stated objectives, W receives no gradient
 
@@ -99,35 +100,71 @@ emb grad         : True
 W grad under paper formulation: None
 ```
 
-**What this implementation does.** W is registered with the optimizer, so
-any objective that is a function of it would train it — but none is, so W
-remains at its identity initialization throughout LAPT. This is faithful to
-the paper's equations. Constructing a gradient path for W would require
-inventing a loss term the paper does not state, which would be implementing
-a different method.
+**Status: author-required / unspecified in paper.**
 
-`LGSELAPTrainer.projection_receives_gradient()` reports the actual situation
-after each epoch, so the gap is visible per run rather than only in this
-document. `test_paper_objectives_give_w_no_gradient` asserts it, and is
-written to fail loudly if a future change silently adds such a term.
+### 1a-i. Implementation assumptions
 
-**To resolve this, the paper's authors would need to state which objective
-trains W.** Until then, "learned" describes W's declared type, not its
+W is therefore implemented as an **externally supplied alignment matrix**,
+under three assumptions recorded here as assumptions, not findings:
+
+| # | Assumption | Consequence |
+|---|---|---|
+| 1 | W is a *given* of the run, not something this pipeline fits | `alignment_matrix_path` loads a `d×d` matrix from `.pt`/`.npy`; absent one, W is the identity |
+| 2 | No gradient is created for W without a documented objective | W carries `requires_grad=False` and is excluded from the optimizer |
+| 3 | Training W is the authors' to specify | Status recorded as "author-required / unspecified in paper" in the run record, the checkpoint, and the per-run log |
+
+**Why the identity is the default.** It is the only choice that adds
+nothing: it leaves the FastText morpheme averages exactly as Sec 4.1 defines
+them. A random or arbitrary W would distort the lexically grounded
+initialization before training ever saw it, which is precisely what the
+method exists to avoid. The identity is a stated default, not a
+reconstruction of anything the authors did.
+
+**Why W is frozen rather than trainable-but-unused.** An earlier revision
+placed W in the optimizer on the reasoning that "any objective which is a
+function of it would train it". But nothing differentiates W, so that
+optimizer entry advertised a capability the run did not have — a reader
+inspecting the parameter groups would conclude W was being learned.
+`AlignmentProjection` still accepts `trainable=True` for a future run under
+an author-supplied objective; nothing in this repository sets it, and
+setting it alone does not create a gradient path.
+
+**What is *not* done.** No loss term is invented to give W a gradient.
+Candidates exist — a live regularizer anchor, a reconstruction loss, an
+alignment loss against anchor translations — and any of them would make W
+train and produce numbers. None is in the paper, so none is implemented.
+An earlier revision of this branch did make the regularizer anchor a live
+function of W; that was reverted on reading Sec 4.2, since it contradicts
+"μ is the initial embedding vector". The capability remains in
+`LGSERegularizer` (`anchor_is_live`), unused by any configured run.
+
+### 1a-ii. How the status is surfaced
+
+The gap is reported wherever a result could be read, not only here:
+
+- **Per run:** `[LGSELAPTrainer] W training status: author-required /
+  unspecified in paper -- W is frozen`
+- **Per checkpoint:** `projection.pt` carries `source`, `trainable` and
+  `training_status`; `projection_status.json` sits beside it
+- **Per result:** the run record's `projection` field records the source,
+  `training_status`, and `trained_during_this_run: false`
+- **In tests:** `test_paper_objectives_give_w_no_gradient` fails loudly if a
+  future change adds an unstated loss term
+
+**To resolve this, the authors need to state which objective trains W.**
+Until then, "learned" describes W's declared type in Sec 4.1, not its
 observed behaviour under the published equations.
-
-An earlier revision of this branch made the regularizer anchor a live
-function of W, which does give W a gradient. That was reverted on reading
-Sec 4.2: it contradicts "μ is the initial embedding vector". The capability
-remains in `LGSERegularizer` (`anchor_is_live`) for deliberate
-departures-from-paper experiments, but is not used by any configured run.
 
 ### 1b. W is part of the checkpoint
 
-W is trained, so it cannot be recovered from its seed once optimized.
 `save_pretrained()` covers only the model, so `LGSELAPTrainer.save()` writes
 `projection.pt` alongside it and `load_projection()` restores it, refusing a
-shape mismatch. Without this, a resumed run would silently restart from a
-fresh initialization and discard the training that produced W.
+shape mismatch. This keeps a run self-describing: the exact alignment matrix
+a result used travels with that result. Without it, a checkpoint made with
+an author-supplied W would silently reload as the identity — a different run
+from the one that produced the numbers. It also keeps the checkpoint correct
+if W is ever trained under an author-supplied objective, where it could not
+be recomputed at all.
 
 ## 2. Baselines absent from the release
 
@@ -298,5 +335,25 @@ The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
 
 **Still `source: unavailable`:** the regularization strength λ in
 `L_reg = λ‖e_new − μ‖²`. The paper introduces λ but does not give its value,
-and Table 1 does not list it. `reg_lambda: 1.0` is carried over from the
-release. This is now the only optimisation-relevant value not from the paper.
+and Table 1 does not list it. This is the only optimisation-relevant value
+not from the paper.
+
+### 8a. λ is a mandatory parameter
+
+Because there is no published value, **`reg_lambda` has no default**.
+`LGSEConfig` raises `MissingRequiredParameter` when it is not supplied, and
+`run_experiment.py` refuses to start if `lgse.reg_lambda` is absent from the
+run config.
+
+This is deliberate friction. A silent default would bury an experimenter's
+choice in a dataclass field, and every result would then carry a value that
+*looks* like it came from the paper. Requiring it means whoever runs an
+experiment states λ, and the value is recorded in the run record alongside
+`reg_lambda_source: "unavailable -- not stated in the paper"`.
+
+`configs/base.yaml` ships `reg_lambda: 1.0`, carried over from the original
+release and marked `source: unavailable`. **That value is the release's, not
+the paper's**, and λ is a plausible candidate for sensitivity analysis: it
+sets the balance between preserving the lexically grounded initialization
+and adapting to the target language, which is the trade-off the method turns
+on. Deleting the key from a config makes runs fail rather than fall back.

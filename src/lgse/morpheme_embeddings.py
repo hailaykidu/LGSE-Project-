@@ -47,7 +47,7 @@ class MorphemeEmbeddingBuilder:
         morpheme_vecs = [v for m in morphemes if (v := self._fasttext_vec(m)) is not None]
         if not morpheme_vecs:
             return None
-        # With a learned projection these are torch tensors carrying
+        # With a trainable W these are torch tensors carrying
         # gradients, and np.mean would try to convert them -- which raises
         # "Can't call numpy() on Tensor that requires grad". Averaging in the
         # tensor's own framework keeps W on the autograd graph, which is the

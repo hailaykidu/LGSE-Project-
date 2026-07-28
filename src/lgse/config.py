@@ -1,5 +1,14 @@
 from dataclasses import dataclass
 
+# Sentinel for a parameter the caller must set explicitly. A dataclass field
+# cannot be required once earlier fields carry defaults, so the requirement
+# is enforced in __post_init__ instead.
+REQUIRED = float("nan")
+
+
+class MissingRequiredParameter(ValueError):
+    """Raised when a mandatory configuration value was not supplied."""
+
 
 @dataclass
 class LGSEConfig:
@@ -36,9 +45,16 @@ class LGSEConfig:
     ngram_min: int = 3
     ngram_max: int = 5
 
-    # LGSE regularization: penalizes drift of new-token embeddings away
-    # from their initialized values during LAP (see LGSERegularizer)
-    reg_lambda: float = 1.0
+    # LGSE regularization strength: lambda in the paper's
+    # L_reg = lambda * ||e_new - mu||^2 (Sec 4.2).
+    #
+    # MANDATORY -- there is no default. The paper introduces lambda but
+    # never assigns it, and Table 1 does not list it, so any value is the
+    # experimenter's choice rather than the paper's. A silent default would
+    # bury that choice in a dataclass field and make every result look as if
+    # it followed a published setting. Callers must state it explicitly, and
+    # the value is recorded per run.
+    reg_lambda: float = REQUIRED
 
     # --- Table 2 system selection -------------------------------------
     # Which of the five compared systems this run is. The five differ only
@@ -48,11 +64,12 @@ class LGSEConfig:
     expand_vocab: bool = True
     initializer: str = "lgse"      # lgse | default | random | focus
 
-    # The projection from FastText space to the model's embedding space is
-    # the learned W of the LGSE method: trained jointly with the new
-    # embeddings and saved with the checkpoint. It is deliberately not a
-    # config option -- there is one projection, implemented in
-    # src/lgse/projection.py.
+    # Alignment matrix W (paper Sec 4.1). Externally supplied: point this at
+    # a .pt/.npy file holding a d x d matrix. Empty means the identity,
+    # which leaves the FastText morpheme averages exactly as Sec 4.1 defines
+    # them. W is frozen either way -- the paper specifies no objective that
+    # trains it. See src/lgse/projection.py and DEVIATIONS.md section 1a.
+    alignment_matrix_path: str = ""
 
     # Training
     output_dir: str = "outputs/lgse_lap"
@@ -63,6 +80,28 @@ class LGSEConfig:
     warmup_steps: int = 1000
     seed: int = 42
     device: str = "cuda"
+
+    def __post_init__(self):
+        # NaN is the sentinel, and NaN != NaN, so this catches "not set"
+        # without rejecting any real value the experimenter might choose.
+        if self.reg_lambda != self.reg_lambda:
+            raise MissingRequiredParameter(
+                "reg_lambda is mandatory and was not supplied.\n"
+                "\n"
+                "It is lambda in the paper's regularization term\n"
+                "    L_reg = lambda * ||e_new - mu||^2   (Sec 4.2)\n"
+                "\n"
+                "The paper introduces lambda but never states its value, and "
+                "Table 1 does not list it, so there is no published setting "
+                "to default to. Choosing one silently would present an "
+                "experimenter's choice as the paper's.\n"
+                "\n"
+                "Set it explicitly, e.g. LGSEConfig(reg_lambda=1.0, ...) or "
+                "`lgse.reg_lambda` in the run config. The value is recorded "
+                "with every result. See DEVIATIONS.md section 8.")
+        if self.reg_lambda < 0:
+            raise ValueError(
+                f"reg_lambda must be non-negative, got {self.reg_lambda}")
 
     def _from_manifest(self, language: str) -> str:
         """Resolve a model path recorded by download_fasttext.py."""

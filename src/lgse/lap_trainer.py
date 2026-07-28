@@ -93,23 +93,28 @@ class LGSELAPTrainer:
         embedding_dim = embedding_layer.embedding_dim
         old_vocab_size = embedding_layer.weight.shape[0] - num_added
 
-        # 4) the learned square projection W (paper Sec 4.1), aligning the
-        # FastText space to the model's. Only needed on the paths that
-        # consume FastText vectors. build_projection raises if the two
-        # dimensions differ rather than substituting a rectangular map.
+        # 4) the square alignment matrix W (paper Sec 4.1), aligning the
+        # FastText space to the model's. Externally supplied, frozen, and
+        # only needed on the paths that consume FastText vectors.
+        # build_projection raises if the dimensions differ rather than
+        # substituting a rectangular map.
         self.projection = None
         if ft_model is not None:
             self.projection = build_projection(
                 source_dim=ft_model.get_dimension(),
                 target_dim=embedding_dim,
-                seed=config.seed,
+                alignment_matrix_path=getattr(
+                    config, "alignment_matrix_path", "") or None,
             )
             self.projection.to(self.device)
-            n_params = sum(p.numel() for p in self.projection.parameters()
-                           if p.requires_grad)
-            print(f"[LGSELAPTrainer] learned projection W: "
-                  f"{embedding_dim} x {embedding_dim} "
-                  f"({n_params} trainable parameters, identity-initialized)")
+            print(f"[LGSELAPTrainer] alignment matrix: "
+                  f"{self.projection.describe()}")
+            if self.projection.is_identity:
+                print("[LGSELAPTrainer] W is the identity: no author-supplied "
+                      "alignment matrix was provided. FastText morpheme "
+                      "averages are used unchanged (paper Sec 4.1).")
+            print("[LGSELAPTrainer] W training status: author-required / "
+                  "unspecified in paper -- W is frozen; see DEVIATIONS.md 1a")
 
         # 5) initialization: LGSE, or one of the Table 2 baselines
         vocab = self.tokenizer.get_vocab()
@@ -169,23 +174,20 @@ class LGSELAPTrainer:
         self.embedding_layer = embedding_layer
         self.old_vocab_size = old_vocab_size
 
-        # W is registered with the optimizer so that any objective which is
-        # a function of it can train it.
+        # Only the embedding matrix trains. W is an externally supplied
+        # alignment matrix and is deliberately NOT in the optimizer: the
+        # paper specifies no objective that trains it (Sec 4.2's L_reg
+        # anchors to a constant mu, and LAPT's MLM reads the embedding
+        # matrix), so there is nothing for an optimizer entry to act on.
+        # Adding one would advertise a capability the run does not have.
         #
-        # Under the paper's own equations, however, none is: the MLM loss
-        # reads the embedding matrix (into which W's output was written at
-        # initialization, through `.data`, which severs the graph), and
-        # L_reg anchors to a constant mu (Sec 4.2). W therefore receives no
-        # gradient during LAPT and stays at its identity initialization,
-        # despite the paper describing it as "learned".
-        #
-        # This is a gap in the paper, not a defect to route around: giving W
-        # a gradient path would require inventing a loss term the paper does
-        # not state. `projection_receives_gradient` reports the actual
-        # situation each run, and DEVIATIONS.md section 1a documents it.
+        # If an author later supplies a training objective for W, both this
+        # list and the objective itself must change together; see
+        # DEVIATIONS.md section 1a.
         trainable = [embedding_layer.weight]
-        if self.projection is not None and self.projection.is_learned:
-            trainable += list(self.projection.parameters())
+        if self.projection is not None and self.projection.is_trainable:
+            trainable += [p for p in self.projection.parameters()
+                          if p.requires_grad]
         self.optimizer = AdamW(trainable, lr=config.learning_rate)
 
         self.collator = DataCollatorForLanguageModeling(
@@ -221,18 +223,15 @@ class LGSELAPTrainer:
         avg_loss = total_loss / max(n_batches, 1)
         print(f"[LGSELAPTrainer] avg loss this epoch: {avg_loss:.4f} "
               f"(mlm={mlm_loss.item():.4f} reg={reg_loss.item():.4f} on last batch)")
-        print(f"[LGSELAPTrainer] projection W received gradient: "
-              f"{self.projection_receives_gradient()}")
         return avg_loss
 
     def projection_receives_gradient(self) -> Optional[bool]:
         """Whether any gradient actually reached W in the last backward pass.
 
         Reported rather than assumed. Under the paper's stated objectives
-        this is False: W is written into the embedding through `.data` at
-        initialization and L_reg anchors to a constant, so no loss term is a
-        function of W. Surfacing it per run keeps the gap visible instead of
-        letting "W is in the optimizer" pass for "W is learned".
+        this is False: W is frozen, and even were it trainable no loss term
+        is a function of it. Surfacing it keeps the gap checkable instead of
+        resting on the claim in this docstring.
 
         None when the run has no projection at all.
         """
@@ -240,6 +239,23 @@ class LGSELAPTrainer:
             return None
         return any(p.grad is not None and torch.any(p.grad != 0)
                    for p in self.projection.parameters())
+
+    def projection_status(self) -> dict:
+        """W's provenance and training status, for the run record.
+
+        Recorded with every result so a reported number carries the
+        alignment matrix it used and the fact that W was not trained.
+        """
+        if self.projection is None:
+            return {"present": False}
+        return {
+            "present": True,
+            "source": self.projection.source,
+            "is_identity": self.projection.is_identity,
+            "trainable": self.projection.is_trainable,
+            "received_gradient": self.projection_receives_gradient(),
+            "training_status": "author-required / unspecified in paper",
+        }
 
     PROJECTION_FILE = "projection.pt"
 
@@ -249,24 +265,28 @@ class LGSELAPTrainer:
         self.model.save_pretrained(output_dir)
         self.tokenizer.save_pretrained(output_dir)
 
-        # W is a trained parameter of the method, not a derived artifact: it
-        # cannot be recomputed from the seed once it has been optimized.
-        # save_pretrained() only covers the model, so without this the
-        # trained mapping is lost and a restored run silently falls back to
-        # a fresh initialization.
+        # W is saved with the checkpoint so the run is self-describing: the
+        # exact alignment matrix a result used travels with that result,
+        # whether it came from the author or defaulted to the identity.
+        # save_pretrained() covers only the model. This also keeps the
+        # checkpoint correct if W is ever trained under an author-supplied
+        # objective, in which case it could not be recomputed at all.
         if self.projection is not None:
             path = os.path.join(output_dir, self.PROJECTION_FILE)
             torch.save({
                 "state_dict": self.projection.state_dict(),
                 "source_dim": self.projection.source_dim,
                 "target_dim": self.projection.target_dim,
+                "source": self.projection.source,
+                "trainable": self.projection.is_trainable,
+                "training_status": "author-required / unspecified in paper",
             }, path)
-            print(f"Saved learned projection W to {path}")
+            print(f"Saved alignment matrix W to {path}")
 
         print(f"Saved LGSE-specialized model to {output_dir}")
 
     def load_projection(self, output_dir: str = None):
-        """Restore a trained W saved by `save()`.
+        """Restore the alignment matrix W saved by `save()`.
 
         Raises if the checkpoint's shape disagrees with the projection this
         run built -- a silent shape mismatch would mean loading someone
@@ -294,5 +314,5 @@ class LGSELAPTrainer:
                 f"{self.projection.target_dim}")
         self.projection.load_state_dict(ckpt["state_dict"])
         self.projection.to(self.device)
-        print(f"Restored learned projection W from {path}")
+        print(f"Restored alignment matrix W from {path}")
         return self.projection

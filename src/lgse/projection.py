@@ -1,5 +1,5 @@
 """
-projection.py -- the learned projection W of the LGSE method.
+projection.py -- the alignment matrix W of the LGSE method.
 
 Paper Sec 4.1:
 
@@ -7,22 +7,37 @@ Paper Sec 4.1:
      embedding space, a learned linear projection W in R^{d x d} is
      applied, i.e. e_aligned_t = W e_t."
 
-Two things follow directly from that line, and both are load-bearing:
+Two things follow directly, and both are load-bearing:
 
   * **W is square** (d x d). The paper aligns two spaces of the same
     dimension d; it does not describe a rectangular map that changes
     dimensionality. Running with 300-dim FastText against 768-dim XLM-R
-    therefore requires FastText vectors trained at d=768, not a 300->768
-    rectangular W. `build_projection` enforces the square shape and reports
-    the mismatch rather than silently reshaping the method.
+    therefore requires FastText vectors trained at d=768. `check_dimensions`
+    enforces this and reports the mismatch rather than reshaping the method.
 
-  * **W is learned.** It is a trainable parameter, saved with the
-    checkpoint and restored on resume.
+  * **W is described as "learned", but the paper specifies no objective
+    that trains it.** Sec 4.2's L_reg anchors to a constant mu; Sec 5's
+    LAPT applies MLM to the embedding matrix with the encoder frozen.
+    Neither is a function of W. Initialization writes W's output into the
+    embedding through `.data`, which severs the autograd graph, and nothing
+    downstream depends on W again.
 
-What the paper does *not* do is give W a gradient path through the
-regularization term: L_reg anchors to a constant mu (Sec 4.2), so it
-trains the embeddings, not W. See DEVIATIONS.md section 1a for where W's
-gradient comes from and what remains underdetermined.
+STATUS: author-required / unspecified in paper
+------------------------------------------------------------------
+W is therefore treated here as an **externally supplied alignment matrix**:
+a given of the run, loaded from disk when the author provides one and
+defaulting to the identity when they do not. It is frozen -- excluded from
+the optimizer and carrying `requires_grad=False`.
+
+No gradient path is manufactured for W. Constructing one would require
+inventing a loss term the paper does not state, which would be implementing
+a different method while reporting it as LGSE. `AlignmentProjection`
+accepts `trainable=True` for a future run under an author-supplied
+objective, but nothing in this repository sets it, and setting it does not
+by itself create a gradient path.
+
+Resolving this requires the authors to state which objective trains W.
+See DEVIATIONS.md section 1a.
 """
 
 from typing import Optional
@@ -32,35 +47,103 @@ import torch
 import torch.nn as nn
 
 
-class LearnedProjection(nn.Module):
-    """Trainable square W (d x d), aligning FastText space to the model's.
+class AlignmentProjection(nn.Module):
+    """Square alignment matrix W (d x d), externally supplied.
 
-    Initialized to the identity: alignment between two spaces of the same
-    dimension starts from "no change", so the initial embeddings are exactly
-    the FastText morpheme averages the paper's Sec 4.1 defines, and W then
-    learns the alignment away from there. A random initialization would
-    instead scramble those vectors before training ever sees them, which
-    would defeat the point of grounding the initialization lexically.
+    W is a *given* of the run, not something this pipeline fits. It is
+    loaded from disk when the author supplies one, and defaults to the
+    identity when they do not -- the identity being the only honest default,
+    since it leaves the FastText morpheme averages exactly as Sec 4.1
+    defines them rather than distorting them by an arbitrary map.
+
+    W is **frozen**: `requires_grad=False`, excluded from the optimizer.
+    This is not an oversight but the documented consequence of the paper
+    specifying no objective that trains it (see DEVIATIONS.md section 1a).
+    Marking it trainable while nothing differentiates it would report a
+    capability the run does not have.
+
+    `trainable=True` exists only for a future run under an author-supplied
+    objective. Nothing in this repository sets it, and setting it alone does
+    not create a gradient path -- it only makes W eligible for one.
     """
 
-    def __init__(self, dim: int, seed: int = 42, bias: bool = False):
+    def __init__(self, dim: int, weight: Optional[torch.Tensor] = None,
+                 trainable: bool = False, source: str = "identity"):
         super().__init__()
         self.dim = dim
         # Retained for checkpoint compatibility and shape assertions.
         self.source_dim = dim
         self.target_dim = dim
-        self.linear = nn.Linear(dim, dim, bias=bias)
+        self.source = source
+
+        if weight is None:
+            w = torch.eye(dim)
+        else:
+            if tuple(weight.shape) != (dim, dim):
+                raise ValueError(
+                    f"alignment matrix W must be square {dim}x{dim}, got "
+                    f"{tuple(weight.shape)} from {source}")
+            w = weight.to(dtype=torch.float32)
+
+        self.linear = nn.Linear(dim, dim, bias=False)
         with torch.no_grad():
-            self.linear.weight.copy_(torch.eye(dim))
-            if bias:
-                self.linear.bias.zero_()
+            self.linear.weight.copy_(w)
+        self.linear.weight.requires_grad = bool(trainable)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(x)
 
     @property
-    def is_learned(self) -> bool:
-        return True
+    def is_trainable(self) -> bool:
+        return self.linear.weight.requires_grad
+
+    @property
+    def is_identity(self) -> bool:
+        with torch.no_grad():
+            return bool(torch.allclose(self.linear.weight,
+                                       torch.eye(self.dim,
+                                                 device=self.linear.weight.device)))
+
+    def describe(self) -> str:
+        state = "trainable" if self.is_trainable else "frozen"
+        return (f"W {self.dim}x{self.dim} from {self.source} ({state}"
+                f"{', identity' if self.is_identity else ''})")
+
+
+def load_alignment_matrix(path, dim: int) -> torch.Tensor:
+    """Read an author-supplied W from a .pt or .npy file.
+
+    The file must contain exactly a d x d matrix. Nothing is reshaped,
+    transposed or padded to make a mismatched file fit -- see the note on
+    dimensions in check_dimensions.
+    """
+    from pathlib import Path
+
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"alignment matrix not found: {path}")
+
+    if path.suffix == ".npy":
+        w = torch.from_numpy(np.load(path))
+    elif path.suffix in (".pt", ".pth"):
+        obj = torch.load(path, map_location="cpu", weights_only=True)
+        if isinstance(obj, dict):
+            if "weight" not in obj:
+                raise ValueError(
+                    f"{path} is a dict without a 'weight' key; expected a "
+                    f"bare {dim}x{dim} tensor or {{'weight': tensor}}")
+            obj = obj["weight"]
+        w = obj
+    else:
+        raise ValueError(
+            f"unsupported alignment matrix format {path.suffix!r}; "
+            f"expected .npy, .pt or .pth")
+
+    if tuple(w.shape) != (dim, dim):
+        raise ValueError(
+            f"alignment matrix in {path} has shape {tuple(w.shape)}, "
+            f"expected ({dim}, {dim}). It is not reshaped to fit.")
+    return w.to(dtype=torch.float32)
 
 
 class IncompatibleFastTextDimension(ValueError):
@@ -111,14 +194,27 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
 
 
 def build_projection(source_dim: int, target_dim: int,
-                     seed: int = 42) -> nn.Module:
-    """Return the learned square projection W (paper Sec 4.1).
+                     alignment_matrix_path=None,
+                     trainable: bool = False) -> nn.Module:
+    """Return the square alignment matrix W (paper Sec 4.1).
 
-    Raises `IncompatibleFastTextDimension` on a dimension mismatch: the
-    paper's W is square, so unequal dimensions mean the FastText model does
-    not match the target embedding width. That is a data problem to fix by
-    training or fetching FastText at dimension d, not something to paper
-    over with a rectangular map.
+    `alignment_matrix_path` supplies an author-provided W; without one, W is
+    the identity. W is frozen unless `trainable=True`, which no configured
+    run sets -- see this module's docstring for why.
+
+    Raises `IncompatibleFastTextDimension` on a dimension mismatch: W is
+    square, so unequal dimensions mean the FastText model does not match the
+    target embedding width. That is a data problem to fix by training
+    FastText at dimension d, not something to paper over with a rectangular
+    map.
     """
     check_dimensions(source_dim, target_dim)
-    return LearnedProjection(source_dim, seed=seed)
+
+    if alignment_matrix_path:
+        weight = load_alignment_matrix(alignment_matrix_path, source_dim)
+        source = str(alignment_matrix_path)
+    else:
+        weight, source = None, "identity (no alignment matrix supplied)"
+
+    return AlignmentProjection(source_dim, weight=weight,
+                               trainable=trainable, source=source)

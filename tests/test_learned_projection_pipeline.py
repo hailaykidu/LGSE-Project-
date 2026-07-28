@@ -157,40 +157,83 @@ def test_projection_is_identity_initialized():
         assert torch.allclose(projection(x), x, atol=1e-5)
 
 
-def test_projection_has_trainable_parameters():
+def test_projection_is_frozen_by_default():
+    """W is externally supplied, not fitted here.
+
+    The paper states no objective that trains W, so a trainable W would
+    advertise a capability the run does not have.
+    """
     projection = build_projection(DIM, DIM)
-    assert projection.is_learned
-    trainable = sum(p.numel() for p in projection.parameters()
-                    if p.requires_grad)
-    assert trainable == DIM * DIM
+    assert not projection.is_trainable
+    assert sum(p.numel() for p in projection.parameters()
+               if p.requires_grad) == 0
+
+
+def test_frozen_projection_is_excluded_from_the_optimizer():
+    """The optimizer must contain the embeddings only."""
+    projection = build_projection(DIM, DIM)
+    embedding = torch.nn.Embedding(120, DIM)
+
+    trainable = [embedding.weight]
+    if projection.is_trainable:
+        trainable += [p for p in projection.parameters() if p.requires_grad]
+
+    assert trainable == [embedding.weight]
+
+
+def test_trainable_flag_exists_for_a_future_objective():
+    """`trainable=True` is reachable but unused by any configured run.
+
+    It makes W *eligible* for a gradient; it does not create one.
+    """
+    from lgse.projection import AlignmentProjection
+
+    projection = AlignmentProjection(DIM, trainable=True)
+    assert projection.is_trainable
+    assert sum(p.numel() for p in projection.parameters()
+               if p.requires_grad) == DIM * DIM
 
 
 # --- autograd: W stays on the graph through morpheme averaging -------
 
-def test_projection_keeps_gradients_through_morpheme_averaging():
-    """Regression: `np.mean` used to break this path outright."""
+def test_morpheme_averaging_produces_a_correctly_shaped_vector():
+    """Regression: `np.mean` used to break this path outright when W's
+    output was a grad-tracking tensor."""
     projection = build_projection(DIM, DIM)
     vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
 
     assert isinstance(vec, torch.Tensor)
     assert vec.shape == (DIM,)
-    assert vec.requires_grad, "W must stay on the autograd graph"
 
 
-def test_gradient_reaches_projection_weights_from_a_live_loss():
-    """W is differentiable: a loss computed *through* it does reach it.
+def test_no_gradient_is_created_for_a_frozen_w():
+    """A loss through W must not produce a gradient on it.
 
-    This isolates W's mechanics from the separate question of whether the
-    paper's objectives actually produce such a loss (they do not -- see
-    test_paper_objectives_give_w_no_gradient).
+    With W frozen there is nothing to accumulate into, so this stays None
+    regardless of what the caller does downstream.
     """
     projection = build_projection(DIM, DIM)
+    vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
+
+    assert not vec.requires_grad, "frozen W must not put the output on the graph"
+    assert projection.linear.weight.grad is None
+
+
+def test_a_trainable_w_would_be_differentiable():
+    """W's mechanics are sound: were an objective supplied, it would train.
+
+    This isolates the mechanism from the separate fact that the paper
+    supplies no such objective (test_paper_objectives_give_w_no_gradient).
+    """
+    from lgse.projection import AlignmentProjection
+
+    projection = AlignmentProjection(DIM, trainable=True)
     vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
     vec.sum().backward()
 
     weight = projection.linear.weight
-    assert weight.grad is not None, "no gradient reached W"
-    assert torch.any(weight.grad != 0), "gradient reached W but is all zero"
+    assert weight.grad is not None
+    assert torch.any(weight.grad != 0)
 
 
 # --- the paper's objectives leave W without a gradient ---------------
@@ -249,21 +292,57 @@ def test_initializer_writes_rows_without_breaking_weight_tying():
 
 
 def test_projection_is_deterministic():
-    a = build_projection(DIM, DIM, seed=7)
-    b = build_projection(DIM, DIM, seed=7)
+    """With no seeded randomness left, W is identical run to run."""
+    a = build_projection(DIM, DIM)
+    b = build_projection(DIM, DIM)
     x = torch.randn(4, DIM)
     with torch.no_grad():
         assert torch.allclose(a(x), b(x))
 
 
+def test_externally_supplied_matrix_is_loaded_verbatim(tmp_path):
+    """An author-supplied W must be used exactly as given."""
+    w = torch.randn(DIM, DIM)
+    path = tmp_path / "W.pt"
+    torch.save(w, path)
+
+    projection = build_projection(DIM, DIM, alignment_matrix_path=path)
+
+    assert torch.allclose(projection.linear.weight, w)
+    assert not projection.is_identity
+    assert not projection.is_trainable
+    assert str(path) in projection.source
+
+
+def test_supplied_matrix_of_wrong_shape_is_refused(tmp_path):
+    """Not reshaped, transposed or padded to fit."""
+    path = tmp_path / "W.pt"
+    torch.save(torch.randn(300, DIM), path)
+
+    with pytest.raises(ValueError, match="not reshaped"):
+        build_projection(DIM, DIM, alignment_matrix_path=path)
+
+
+def test_identity_is_the_default_when_no_matrix_is_supplied():
+    """The identity leaves FastText morpheme averages as Sec 4.1 defines
+    them, rather than distorting them by an arbitrary map."""
+    projection = build_projection(DIM, DIM)
+    assert projection.is_identity
+
+    x = torch.randn(4, DIM)
+    with torch.no_grad():
+        assert torch.allclose(projection(x), x, atol=1e-5)
+
+
 # --- checkpointing ---------------------------------------------------
 
-def test_trained_projection_survives_a_checkpoint_round_trip(tmp_path):
-    """A trained W must be restored, not silently re-initialized.
+def test_projection_survives_a_checkpoint_round_trip(tmp_path):
+    """W must be restored exactly, not silently replaced by the identity.
 
     `save_pretrained()` covers the model only, so W needs explicit
-    serialization; without it a resumed run starts from a fresh identity
-    and any training that produced W is thrown away.
+    serialization. Without it, a checkpoint made with an author-supplied
+    alignment matrix would silently reload as the identity -- a different
+    run from the one that produced the numbers.
     """
     from lgse.lap_trainer import LGSELAPTrainer
 
@@ -302,7 +381,7 @@ def test_manifest_rejects_wrong_dimension_before_loading_the_model(tmp_path):
                     "vocab_size": 100, "sha256": "x"}}))
 
     config = LGSEConfig(language="am", model_name="xlm-roberta-base",
-                        fasttext_manifest=str(manifest))
+                        fasttext_manifest=str(manifest), reg_lambda=1.0)
 
     with pytest.raises(IncompatibleFastTextDimension, match="300"):
         _ = config.fasttext_path
@@ -319,8 +398,55 @@ def test_manifest_accepts_the_required_dimension(tmp_path):
                     "vocab_size": 100, "sha256": "x"}}))
 
     config = LGSEConfig(language="am", model_name="xlm-roberta-base",
-                        fasttext_manifest=str(manifest))
+                        fasttext_manifest=str(manifest), reg_lambda=1.0)
     assert config.fasttext_path == "/models/am.768.bin"
+
+
+# --- reg_lambda is mandatory ----------------------------------------
+
+def test_reg_lambda_is_mandatory():
+    """No default: the paper never assigns lambda, so any value is the
+    experimenter's choice and must be stated rather than inherited."""
+    from lgse.config import LGSEConfig, MissingRequiredParameter
+
+    with pytest.raises(MissingRequiredParameter, match="reg_lambda"):
+        LGSEConfig(language="am")
+
+
+def test_reg_lambda_error_explains_why_there_is_no_default():
+    from lgse.config import LGSEConfig, MissingRequiredParameter
+
+    with pytest.raises(MissingRequiredParameter) as exc:
+        LGSEConfig(language="am")
+    msg = str(exc.value)
+
+    assert "Sec 4.2" in msg                    # where it comes from
+    assert "never states its value" in msg     # why no default
+    assert "DEVIATIONS.md" in msg              # where to read more
+
+
+def test_reg_lambda_accepts_an_explicit_value():
+    from lgse.config import LGSEConfig
+
+    assert LGSEConfig(language="am", reg_lambda=0.5).reg_lambda == 0.5
+    # Zero is meaningful: it disables the regularizer.
+    assert LGSEConfig(language="am", reg_lambda=0.0).reg_lambda == 0.0
+
+
+def test_negative_reg_lambda_is_refused():
+    from lgse.config import LGSEConfig
+
+    with pytest.raises(ValueError, match="non-negative"):
+        LGSEConfig(language="am", reg_lambda=-1.0)
+
+
+def test_shipped_config_supplies_reg_lambda():
+    """configs/base.yaml must carry the key, or every run fails."""
+    import yaml
+
+    cfg = yaml.safe_load(
+        open(Path(__file__).resolve().parent.parent / "configs" / "base.yaml"))
+    assert "reg_lambda" in cfg["lgse"]
 
 
 def test_restoring_a_mismatched_projection_is_refused(tmp_path):

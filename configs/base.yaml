@@ -27,12 +27,19 @@ lgse:
   # build_projection refuses a rectangular map. See DEVIATIONS.md section 1.
   ngram_min: 3                      # source: release
   ngram_max: 5                      # source: release
-  reg_lambda: 1.0                   # source: unavailable -- the paper defines
-                                    #   L_reg = lambda*||e_new - mu||^2 (Sec 4.2)
-                                    #   but never gives lambda, and Table 1 does
-                                    #   not list it. Carried over from the
-                                    #   release. The only optimisation-relevant
-                                    #   value here not taken from the paper.
+  # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
+  # source: unavailable -- the paper introduces lambda but never assigns it,
+  # and Table 1 does not list it. There is no published value to default to,
+  # so this must be set explicitly and is recorded with every result. The
+  # value below is carried over from the original release, NOT the paper's.
+  # Removing this key makes runs fail rather than fall back to a default.
+  reg_lambda: 1.0
+
+  # Alignment matrix W (Sec 4.1), externally supplied. Path to a .pt/.npy
+  # file holding a d x d matrix; empty means the identity, which leaves the
+  # FastText morpheme averages unchanged. W is frozen either way -- the
+  # paper specifies no objective that trains it. See DEVIATIONS.md 1a.
+  alignment_matrix_path: ""         # source: author-required
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
 

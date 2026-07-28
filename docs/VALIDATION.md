@@ -19,8 +19,8 @@ fasttext 0.9.3, CPU.
 | FastText loading | resolved via `data/fasttext_manifest.json` |
 | Morphological lexicon | `Loaded morphological lexicon: 210 words` |
 | Vocabulary expansion | `Added 198/198 new tokens to the tokenizer` |
-| Projection W | `[LGSELAPTrainer] learned projection W: 768 x 768 (589824 trainable parameters, identity-initialized)` |
-| W gradient status | `[LGSELAPTrainer] projection W received gradient: False` — expected; see DEVIATIONS.md §1a |
+| Alignment matrix W | `[LGSELAPTrainer] alignment matrix: W 768x768 from identity (no alignment matrix supplied) (frozen, identity)` |
+| W training status | `[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen` |
 | Morpheme composition | init vectors written for all 198 tokens |
 | LGSE regularization | `avg loss this epoch: 9.8771 (mlm=9.8710 reg=0.0000)` |
 | Frozen backbone | only the embedding matrix and W receive gradients |
@@ -49,12 +49,13 @@ require the full corpora and the hyperparameters the paper places in Table 1
 All were invisible to unit tests, which exercised these components
 separately:
 
-1. **The learned projection was never optimized.** Its parameters were not in
-   the AdamW parameter group, so W was initialized and then frozen, behaving
-   identically to a fixed map while reporting as learned. Fixed in
-   `src/lgse/lap_trainer.py`.
+1. **W was not in the optimizer.** At the time this read as a bug. Reading
+   the paper showed the deeper issue: no stated objective trains W at all,
+   so an optimizer entry would have advertised a capability the run does not
+   have. W is now an externally supplied, frozen alignment matrix — see
+   `DEVIATIONS.md` §1a.
 
-2. **The learned projection crashed on real vectors.**
+2. **The projection crashed on real vectors.**
    `word_from_morphemes` averaged with `np.mean`, which cannot consume a
    grad-tracking tensor: `RuntimeError: Can't call numpy() on Tensor that
    requires grad`. Fixed in `src/lgse/morpheme_embeddings.py` by averaging in
