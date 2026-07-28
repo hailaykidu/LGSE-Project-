@@ -1,0 +1,17 @@
+{
+  "raw_sha256": "4d089b392276062390c201a966ebd56c17a3c4c4bad032d3e10db0bc8706912a",
+  "seed": 42,
+  "split": "random 80/10/10 with the seed recorded here",
+  "source": "../MPETokenization/Paralleldata/data/TIGQA_squad_format.json",
+  "citation": "Teklehaymanot et al. (2024), TIGQA",
+  "version": "TIGQA-1.0",
+  "extractive_qa_pairs": 797,
+  "abstractive_dropped": 1039,
+  "unanswerable_dropped": 272,
+  "note": "answer_start == -1 marks answers not present verbatim in the context; those are abstractive and cannot be scored by span-extraction F1",
+  "counts": {
+    "train": 292,
+    "dev": 36,
+    "test": 37
+  }
+}

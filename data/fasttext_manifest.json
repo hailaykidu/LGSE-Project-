@@ -7,5 +7,14 @@
     "sha256": "f8b1f97f76dd5516553ed3314e180069cfcbc4c6c9983f14f3e511578460f3f7",
     "size_bytes": 2779784524,
     "source": "https://huggingface.co/Hailay/fasttext-tigrinya"
+  },
+  "amharic": {
+    "language": "amharic",
+    "path": "/homes/neumann/teklehaymanot/.cache/lgse/cc.am.300.bin",
+    "dimension": 300,
+    "vocab_size": 304653,
+    "sha256": "65daaf0d22505146ebf77618e748d7b1010313a1dae9e8c23ac1f0228c8514b8",
+    "size_bytes": 3138436402,
+    "source": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz"
   }
 }
