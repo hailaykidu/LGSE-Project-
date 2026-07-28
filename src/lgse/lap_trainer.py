@@ -1,5 +1,6 @@
 import os
 import random
+from typing import Optional
 
 import fasttext
 import numpy as np
@@ -92,9 +93,10 @@ class LGSELAPTrainer:
         embedding_dim = embedding_layer.embedding_dim
         old_vocab_size = embedding_layer.weight.shape[0] - num_added
 
-        # 4) the learned projection W, trained jointly with the new
-        # embeddings (see src/lgse/projection.py). It is only needed on the
-        # paths that consume FastText vectors.
+        # 4) the learned square projection W (paper Sec 4.1), aligning the
+        # FastText space to the model's. Only needed on the paths that
+        # consume FastText vectors. build_projection raises if the two
+        # dimensions differ rather than substituting a rectangular map.
         self.projection = None
         if ft_model is not None:
             self.projection = build_projection(
@@ -102,13 +104,12 @@ class LGSELAPTrainer:
                 target_dim=embedding_dim,
                 seed=config.seed,
             )
-            if self.projection is not None:
-                self.projection.to(self.device)
-                n_params = sum(p.numel() for p in self.projection.parameters()
-                               if p.requires_grad)
-                print(f"[LGSELAPTrainer] learned projection W: "
-                      f"{ft_model.get_dimension()} -> {embedding_dim} "
-                      f"({n_params} trainable parameters)")
+            self.projection.to(self.device)
+            n_params = sum(p.numel() for p in self.projection.parameters()
+                           if p.requires_grad)
+            print(f"[LGSELAPTrainer] learned projection W: "
+                  f"{embedding_dim} x {embedding_dim} "
+                  f"({n_params} trainable parameters, identity-initialized)")
 
         # 5) initialization: LGSE, or one of the Table 2 baselines
         vocab = self.tokenizer.get_vocab()
@@ -143,36 +144,18 @@ class LGSELAPTrainer:
 
         init_matrix = initializer.write_embeddings_for_new_tokens(token_to_id)
 
-        # 6) regularizer anchored to the lexically grounded targets.
+        # 6) regularizer anchored to the initial embedding vectors.
         #
-        # For LGSE the anchor is recomputed through W on every step rather
-        # than frozen at its initial value. This is what puts W on the
-        # training graph at all: the initializer writes its output into the
-        # embedding via `.data`, which severs the graph, so a detached
-        # anchor would leave W with no gradient source anywhere in LAPT --
-        # trainable on paper, frozen in fact.
-        #
-        # The baselines have no projection, so their anchor stays a fixed
-        # tensor and their behaviour is unchanged.
-        if self.projection is not None and self.initializer_kind == "lgse":
-            tokens = list(token_to_id.keys())
-
-            def live_anchor(_tokens=tokens, _init=initializer):
-                return torch.stack(
-                    [_init.init_token_embedding(t) for t in _tokens], dim=0)
-
-            anchor = live_anchor
-        else:
-            anchor = init_matrix
-
+        # Paper Sec 4.2: L_reg = lambda * ||e_new - mu||^2, "where mu is the
+        # initial embedding vector". mu is a constant -- the value each new
+        # embedding was initialized to -- so the term measures drift from
+        # initialization. It trains the embeddings, not W.
         self.regularizer = LGSERegularizer(
-            init_embeddings=anchor,
+            init_embeddings=init_matrix,
             token_ids=token_to_id,
             lambda_reg=config.reg_lambda,
             device=str(self.device),
         )
-        print(f"[LGSELAPTrainer] regularizer anchor: "
-              f"{'live through W' if self.regularizer.anchor_is_live else 'fixed'}")
 
         # 6) freeze the whole model except the embedding matrix; gradients
         # for the *old* rows of that matrix get zeroed every step in
@@ -186,9 +169,20 @@ class LGSELAPTrainer:
         self.embedding_layer = embedding_layer
         self.old_vocab_size = old_vocab_size
 
-        # The learned projection is part of the optimization problem: if its
-        # parameters are not handed to the optimizer, W never moves and
-        # "learned" silently degrades to "randomly initialized and frozen".
+        # W is registered with the optimizer so that any objective which is
+        # a function of it can train it.
+        #
+        # Under the paper's own equations, however, none is: the MLM loss
+        # reads the embedding matrix (into which W's output was written at
+        # initialization, through `.data`, which severs the graph), and
+        # L_reg anchors to a constant mu (Sec 4.2). W therefore receives no
+        # gradient during LAPT and stays at its identity initialization,
+        # despite the paper describing it as "learned".
+        #
+        # This is a gap in the paper, not a defect to route around: giving W
+        # a gradient path would require inventing a loss term the paper does
+        # not state. `projection_receives_gradient` reports the actual
+        # situation each run, and DEVIATIONS.md section 1a documents it.
         trainable = [embedding_layer.weight]
         if self.projection is not None and self.projection.is_learned:
             trainable += list(self.projection.parameters())
@@ -227,7 +221,25 @@ class LGSELAPTrainer:
         avg_loss = total_loss / max(n_batches, 1)
         print(f"[LGSELAPTrainer] avg loss this epoch: {avg_loss:.4f} "
               f"(mlm={mlm_loss.item():.4f} reg={reg_loss.item():.4f} on last batch)")
+        print(f"[LGSELAPTrainer] projection W received gradient: "
+              f"{self.projection_receives_gradient()}")
         return avg_loss
+
+    def projection_receives_gradient(self) -> Optional[bool]:
+        """Whether any gradient actually reached W in the last backward pass.
+
+        Reported rather than assumed. Under the paper's stated objectives
+        this is False: W is written into the embedding through `.data` at
+        initialization and L_reg anchors to a constant, so no loss term is a
+        function of W. Surfacing it per run keeps the gap visible instead of
+        letting "W is in the optimizer" pass for "W is learned".
+
+        None when the run has no projection at all.
+        """
+        if self.projection is None:
+            return None
+        return any(p.grad is not None and torch.any(p.grad != 0)
+                   for p in self.projection.parameters())
 
     PROJECTION_FILE = "projection.pt"
 

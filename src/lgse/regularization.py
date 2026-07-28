@@ -7,24 +7,26 @@ class LGSERegularizer:
 
     The anchor can be supplied two ways:
 
-      * a fixed tensor -- used by the baselines, which have no projection,
-        and by any run where the target is a constant;
+      * a fixed tensor -- the paper's formulation, and the default;
 
-      * a callable returning the anchor -- used by LGSE proper, where the
-        target is W(f) and must stay a live function of W.
+      * a callable returning the anchor -- retained only for experiments
+        that deliberately depart from the paper (see the note below).
 
-    The distinction matters. With a detached anchor the penalty
-    lambda*||E_new - anchor||^2 is a function of the embeddings alone, so
-    W receives no gradient from it: the initializer writes W's output into
-    the embedding through `.data`, which severs the graph, and nothing
-    downstream depends on W again. W would then sit in the optimizer,
-    report as trainable, and never move -- reaching exactly the same end
-    state as a frozen random map.
+    The paper (Sec 4.2) defines the penalty as
 
-    Recomputing the anchor through W each step is what makes "trained
-    jointly with the new embeddings" true: both sides of the penalty are
-    live, so the term pulls the embeddings toward W(f) and simultaneously
-    adapts W toward the embeddings the LM is learning.
+        L_reg = lambda * ||e_new - mu||^2
+
+    "where mu is the initial embedding vector (e.g., from FastText
+    projection)". mu is therefore a *constant*: the value the embedding was
+    initialized to, frozen at that value, not recomputed as training
+    proceeds. The term measures drift from initialization, which is what
+    "prevent excessive deviation of new embeddings from their
+    initialization" asks for.
+
+    A live anchor recomputed through W would change what this term
+    measures -- and would additionally give W a gradient path it does not
+    have under the paper's formulation. That path is not part of the
+    method; see DEVIATIONS.md section 1a.
     """
 
     def __init__(self,

@@ -19,8 +19,8 @@ fasttext 0.9.3, CPU.
 | FastText loading | resolved via `data/fasttext_manifest.json` |
 | Morphological lexicon | `Loaded morphological lexicon: 210 words` |
 | Vocabulary expansion | `Added 198/198 new tokens to the tokenizer` |
-| Learned projection | `[LGSELAPTrainer] learned projection W: 300 -> 768 (230400 trainable parameters)` |
-| Live anchor | `[LGSELAPTrainer] regularizer anchor: live through W` |
+| Projection W | `[LGSELAPTrainer] learned projection W: 768 x 768 (589824 trainable parameters, identity-initialized)` |
+| W gradient status | `[LGSELAPTrainer] projection W received gradient: False` — expected; see DEVIATIONS.md §1a |
 | Morpheme composition | init vectors written for all 198 tokens |
 | LGSE regularization | `avg loss this epoch: 9.8771 (mlm=9.8710 reg=0.0000)` |
 | Frozen backbone | only the embedding matrix and W receive gradients |
@@ -60,22 +60,27 @@ separately:
    requires grad`. Fixed in `src/lgse/morpheme_embeddings.py` by averaging in
    the tensor's own framework.
 
-3. **W had no gradient path even once it was in the optimizer.** The
+3. **W has no gradient path even once it is in the optimizer.** The
    initializer writes W's output into the embedding via `.data`, severing the
-   graph; with a detached regularizer anchor, no LAPT loss term was a
-   function of W, so it received `grad = None` every step and never moved --
-   trainable on paper, frozen in fact, and indistinguishable from a fixed map
-   in any reported number. Fixed by recomputing the regularizer anchor
-   through W (`src/lgse/regularization.py`). See `DEVIATIONS.md` §1a.
+   graph; the regularizer anchors to a constant μ. No LAPT loss term is a
+   function of W, so it receives `grad = None` every step and never moves.
+
+   Reading the paper (arXiv:2603.22629) established this is **not a defect in
+   this implementation** — it follows from the paper's own equations, which
+   call W "learned" while specifying no objective that depends on it. The
+   implementation now follows the paper and reports W's gradient status each
+   epoch rather than inventing a training signal. See `DEVIATIONS.md` §1a.
 
 4. **A trained W was discarded at checkpoint time.** `save()` wrote only the
    model and tokenizer, so a resumed run silently restarted from a fresh
    initialization. Fixed by serializing `projection.pt`
-   (`LGSELAPTrainer.save` / `load_projection`).
+   (`LGSELAPTrainer.save` / `load_projection`). This matters for any run that
+   does train W, and costs nothing for runs that do not.
 
 `tests/test_learned_projection_pipeline.py` covers all four; 28 tests pass.
-`test_w_is_updated_by_a_lapt_step` is the load-bearing one -- every other
-assertion in that file still passes when W is frozen in practice.
+`test_paper_objectives_give_w_no_gradient` is the load-bearing one: it
+asserts the documented gap and fails loudly if a future change adds a loss
+term the paper does not describe.
 
 ## Provenance recorded per run
 

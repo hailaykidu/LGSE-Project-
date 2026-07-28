@@ -3,47 +3,70 @@
 # PROVENANCE
 # Every value carries a `source` marker:
 #
-#   paper        stated in the paper text available to this reproduction
+#   paper        stated in the paper text (arXiv:2603.22629)
 #   release      taken from the original code release
-#   unavailable  the paper places it in Table 1, which was not available;
-#                the value here is a conventional default and is NOT the
-#                paper's. Any result produced with it is a reproduction
-#                under documented substitutions, not a replication.
+#   unavailable  not stated in the paper or the release; the value here is a
+#                conventional default. Any result produced with it is a
+#                reproduction under documented substitutions.
 #
-# The paper states "complete training configurations and hyperparameter
-# settings are presented in Table 1". Table 1 could not be recovered from
-# the paper text or the released artifacts, so the fine-tuning and LAPT
-# optimisation values below are marked `unavailable`. They must be replaced
-# with Table 1's values before any number here is compared against the
-# paper's Table 2.
+# Table 1 ("Hyperparameter settings used for further pretraining with
+# morpheme-aware tokenization and fine-tuning") is recovered from the paper
+# and applied below. The paper gives one shared table for both LAPT and
+# fine-tuning and states hyperparameters are "consistent" across Amharic and
+# Tigrinya, so the same values populate both sections.
+#
+# One value remains `unavailable`: the regularization strength lambda, which
+# the paper introduces in Sec 4.2 but never assigns. See DEVIATIONS.md #8.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
 
 lgse:
-  # The projection W (FastText 300-dim -> model embedding space) is learned:
-  # trained jointly with the new token embeddings and saved with the
-  # checkpoint. It is not a config option -- see src/lgse/projection.py.
+  # W is a square learned linear map (d x d), paper Sec 4.1. FastText must
+  # therefore be trained at the model's embedding width, not 300-dim --
+  # build_projection refuses a rectangular map. See DEVIATIONS.md section 1.
   ngram_min: 3                      # source: release
   ngram_max: 5                      # source: release
-  reg_lambda: 1.0                   # source: release
-  fasttext_dim: 300                 # source: FastText standard release
+  reg_lambda: 1.0                   # source: unavailable -- the paper defines
+                                    #   L_reg = lambda*||e_new - mu||^2 (Sec 4.2)
+                                    #   but never gives lambda, and Table 1 does
+                                    #   not list it. Carried over from the
+                                    #   release. The only optimisation-relevant
+                                    #   value here not taken from the paper.
+  fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
+                                    #   so FastText dim must equal the model's
 
 lapt:                               # language-adaptive pretraining
-  freeze_backbone: true             # source: paper -- only new embeddings train
-  max_length: 128                   # source: release
-  mlm_probability: 0.15             # source: unavailable (standard MLM default)
-  learning_rate: 5.0e-5             # source: unavailable
-  batch_size: 16                    # source: unavailable
-  epochs: 1                         # source: unavailable
+  freeze_backbone: true             # source: paper (Sec 5) -- encoder preserved,
+                                    #   only the embedding layer adapts
+  max_length: 256                   # source: paper Table 1
+  mlm_probability: 0.15             # source: paper Table 1
+  learning_rate: 5.0e-5             # source: paper Table 1
+  lr_scheduler_type: constant       # source: paper Table 1
+  batch_size: 32                    # source: paper Table 1
+  epochs: 10                        # source: paper Table 1
+  weight_decay: 0.01                # source: paper Table 1
+  optimizer: adamw                  # source: paper Table 1 ("Adam"; AdamW is
+                                    #   used since weight decay is specified)
+  adam_epsilon: 1.0e-8              # source: paper Table 1
+  adam_beta1: 0.9                   # source: paper Table 1
+  adam_beta2: 0.999                 # source: paper Table 1
+  fp16: true                        # source: paper Table 1
 
 finetune:                           # downstream task fine-tuning
-  learning_rate: 2.0e-5             # source: unavailable
-  batch_size: 16                    # source: unavailable
-  epochs: 5                         # source: unavailable
-  max_length: 256                   # source: unavailable
-  warmup_ratio: 0.1                 # source: unavailable
-  weight_decay: 0.01                # source: unavailable
+  # Table 1 covers "further pretraining ... and fine-tuning" in one table.
+  learning_rate: 5.0e-5             # source: paper Table 1
+  lr_scheduler_type: constant       # source: paper Table 1
+  batch_size: 32                    # source: paper Table 1
+  epochs: 10                        # source: paper Table 1
+  max_length: 256                   # source: paper Table 1
+  weight_decay: 0.01                # source: paper Table 1
+  adam_epsilon: 1.0e-8              # source: paper Table 1
+  adam_beta1: 0.9                   # source: paper Table 1
+  adam_beta2: 0.999                 # source: paper Table 1
+  fp16: true                        # source: paper Table 1
+  warmup_ratio: 0.0                 # source: paper Table 1 (constant schedule,
+                                    #   no warmup stated)
 
 evaluation:
   seeds: [42, 43, 44, 45, 46]       # source: paper -- "repeated five times

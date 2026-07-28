@@ -6,9 +6,31 @@ implementation differs from the published release
 it is recorded here. Nothing in this list is a claim about which is correct
 -- only about what differs.
 
-## 1. Projection W is learned
+## 1. Projection W is learned, and square
 
-**Paper:** W is learned, trained jointly with the new token embeddings.
+**Paper (Sec 4.1):** "To align the FastText embedding space with the
+pretrained model embedding space, a learned linear projection
+`W ∈ R^{d×d}` is applied, i.e. `e_aligned_t = W e_t`."
+
+Two consequences, both implemented:
+
+**W is square.** The paper aligns two spaces of the same dimension `d`; it
+describes no dimensionality change. `build_projection` enforces this and
+raises on a mismatch rather than substituting a rectangular map, which would
+be a different method than the published one. In practice this means
+FastText must be trained at the model's embedding width (768 for
+xlm-roberta-base), not the standard 300 — `configs/base.yaml` sets
+`fasttext_dim: 768` accordingly. **The 300-dim CC vectors referenced under
+`data.fasttext` cannot be used with the paper's W without retraining or
+reducing at dimension 768; this is a data prerequisite, not something the
+code can resolve.**
+
+**W is identity-initialized.** Alignment between same-dimension spaces
+starts from "no change", so the initial embeddings are exactly the FastText
+morpheme averages Sec 4.1 defines. A random init would scramble those
+vectors before training saw them, defeating the point of grounding the
+initialization lexically. (The original release's scaled-Gaussian init was
+tied to its rectangular map and does not carry over.)
 
 **Original release:** `lgse/morpheme_embeddings.py:24-31` builds a fixed,
 seeded Johnson-Lindenstrauss projection with `np.random.default_rng`. It is
@@ -17,50 +39,63 @@ updated. The code comment states the rationale: bridging 300-dim FastText to
 768-dim XLM-R "without requiring extra training data to fit a learned
 projection."
 
-**This branch implements the paper's learned W as the only supported
-projection.** `src/lgse/projection.py` defines `LearnedProjection` (230,400
-trainable parameters for 300->768). There is no fixed-projection path and no
-`projection:` config key to select one. When FastText and the model share a
-width, `build_projection` returns `None` and the vectors are used directly --
-there is nothing to map between. A dimension mismatch with no W raises rather
-than substituting an untrained map, so a run cannot silently fall back to the
-released behaviour while still reporting as LGSE.
+**This branch implements the paper's W as the only supported projection.**
+`src/lgse/projection.py` defines `LearnedProjection` as a square `d×d`
+trainable map. There is no fixed-projection path and no `projection:` config
+key. The release's rectangular Johnson–Lindenstrauss map is removed, not
+retained as a fallback.
 
-### 1a. Making "learned" true required a change to the regularizer
+### 1a. Under the paper's stated objectives, W receives no gradient
 
-Putting W in the optimizer is necessary but **not sufficient**, and the
-insufficiency is invisible in the reported numbers.
+**This is an open discrepancy in the paper, recorded rather than resolved.**
 
-The initializer writes W's output into the embedding matrix through `.data`
-(`src/lgse/initializer.py:60-63`), which severs the autograd graph. That
-in-place write is deliberate: replacing the `Parameter` would break weight
-tying with the MLM head. But if the regularizer's anchor is then a detached
-constant, **no LAPT loss term is a function of W at all**. W sits in the
-optimizer, reports as trainable, receives `grad = None` on every step, and
-never moves -- an end state identical to a frozen random map, reached by a
-different route.
+The paper calls W "learned" (Sec 4.1; and in the systems list, "aligned via
+a learned projection layer"). But no objective it states is a function of W:
 
-This branch therefore recomputes the regularizer anchor through W on every
-step (`src/lgse/regularization.py`, `anchor_is_live`). The penalty
-`lambda*||E_new - W(f)||^2` is live on both sides, so it pulls the new
-embeddings toward their lexically grounded targets and simultaneously adapts
-W toward the representations the LM is learning -- "trained jointly with the
-new embeddings" in fact, not merely in the optimizer's parameter list.
+- **Initialization** (Sec 4.2) sets `e_new` to the average of projected
+  morpheme embeddings. In code this value is written into the embedding
+  matrix via `.data` (`src/lgse/initializer.py:60-63`), which severs the
+  autograd graph. That in-place write is deliberate — replacing the
+  `Parameter` would break weight tying with the MLM head.
 
-The baselines have no projection; their anchor remains a fixed tensor and
-their behaviour is unchanged.
+- **The regularizer** (Sec 4.2) is `L_reg = λ‖e_new − μ‖²`, "where μ is the
+  **initial** embedding vector". μ is a constant; the term measures drift
+  from initialization and trains `e_new`, not W.
 
-`tests/test_learned_projection_pipeline.py` asserts both directions:
-`test_w_is_updated_by_a_lapt_step` fails if W stops moving, and
-`test_detached_anchor_leaves_w_without_gradient` pins the reason the live
-anchor is required.
+- **LAPT** (Sec 5) applies MLM with the encoder frozen, updating "only the
+  new embeddings". It reads the embedding matrix, not W.
 
-**Scope note.** The paper specifies that W is learned jointly with the new
-embeddings; it does not spell out which loss term carries W's gradient.
-Routing it through the existing regularization term is the smallest
-formulation consistent with that description -- it introduces no new loss
-term and no new hyperparameter. It is an implementation choice the paper
-does not dictate, recorded here as such.
+So W is initialized, its output is copied into the embeddings, and it is
+never differentiated again. Verified empirically:
+
+```
+W is square      : torch.Size([768, 768])
+identity init    : True
+emb grad         : True
+W grad under paper formulation: None
+```
+
+**What this implementation does.** W is registered with the optimizer, so
+any objective that is a function of it would train it — but none is, so W
+remains at its identity initialization throughout LAPT. This is faithful to
+the paper's equations. Constructing a gradient path for W would require
+inventing a loss term the paper does not state, which would be implementing
+a different method.
+
+`LGSELAPTrainer.projection_receives_gradient()` reports the actual situation
+after each epoch, so the gap is visible per run rather than only in this
+document. `test_paper_objectives_give_w_no_gradient` asserts it, and is
+written to fail loudly if a future change silently adds such a term.
+
+**To resolve this, the paper's authors would need to state which objective
+trains W.** Until then, "learned" describes W's declared type, not its
+observed behaviour under the published equations.
+
+An earlier revision of this branch made the regularizer anchor a live
+function of W, which does give W a gradient. That was reverted on reading
+Sec 4.2: it contradicts "μ is the initial embedding vector". The capability
+remains in `LGSERegularizer` (`anchor_is_live`) for deliberate
+departures-from-paper experiments, but is not used by any configured run.
 
 ### 1b. W is part of the checkpoint
 
@@ -201,21 +236,43 @@ states the experiments were "repeated five times with different random
 seeds" but does not say which, so these are ours and are recorded in every
 run record.
 
-## 8. Table 1 hyperparameters not recovered
+## 8. Table 1 hyperparameters — recovered and applied
 
-The paper states that "complete training configurations and hyperparameter
-settings are presented in Table 1". Table 1 was not recoverable from the
-paper text available to this reproduction, nor from the released artifacts:
-the release has no config file, no logs and no checkpoints from which
-optimiser settings could be read back.
+Table 1 ("Hyperparameter settings used for further pretraining with
+morpheme-aware tokenization and fine-tuning") has been recovered from the
+paper and applied to `configs/base.yaml`:
 
-Ten values in `configs/base.yaml` are therefore marked `source: unavailable`
--- LAPT learning rate, batch size, epochs and MLM probability, and the six
-downstream fine-tuning settings. The values in place are conventional
-defaults for XLM-R, **not the paper's**.
+| Hyperparameter | Value |
+|---|---|
+| Maximum sequence length | 256 |
+| Batch size | 32 |
+| Number of training epochs | 10 |
+| Learning rate | 5 × 10⁻⁵ |
+| Learning rate schedule | Constant |
+| MLM probability | 0.15 |
+| Weight decay | 0.01 |
+| Optimizer | Adam |
+| Adam ε | 1 × 10⁻⁸ |
+| Adam β₁ | 0.9 |
+| Adam β₂ | 0.999 |
+| Mixed precision (fp16) | True |
 
-`scripts/aggregate_results.py` reads that marker and prefixes any generated
-table with a "Not a replication" notice naming the count, so a produced
-number can never be mistaken for a replication of the published Table 2.
-Replacing those ten values with Table 1's is the single remaining
-requirement for a faithful comparison.
+The values previously marked `source: unavailable` are now `source: paper`.
+Two notes on how the table was applied:
+
+- The paper gives **one** table covering both further pretraining and
+  fine-tuning, so the same values populate the `lapt:` and `finetune:`
+  sections. Sec 5 states hyperparameters are "consistent" across Amharic and
+  Tigrinya, so no per-language variation is introduced.
+
+- Table 1 says "Adam" while also specifying weight decay 0.01. The config
+  uses AdamW, since decoupled weight decay is what a nonzero `weight_decay`
+  means in the HuggingFace/PyTorch stack the release targets. Recorded here
+  because it is an interpretation, not a quotation.
+
+The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
+
+**Still `source: unavailable`:** the regularization strength λ in
+`L_reg = λ‖e_new − μ‖²`. The paper introduces λ but does not give its value,
+and Table 1 does not list it. `reg_lambda: 1.0` is carried over from the
+release. This is now the only optimisation-relevant value not from the paper.

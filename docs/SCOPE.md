@@ -33,10 +33,10 @@ Changed, deliberately:
 projection. The release's fixed Johnson-Lindenstrauss map is not retained,
 not selectable, and has no config key. See DEVIATIONS.md §1.
 
-**`regularization.py`** accepts a live anchor recomputed through W, in
-addition to the release's fixed-tensor anchor (still used by the baselines,
-which have no projection). This is what gives W a gradient path during LAPT;
-with a detached anchor W would be frozen in practice. See DEVIATIONS.md §1a.
+**`regularization.py`** implements the paper's `L_reg = λ‖e_new − μ‖²` with
+μ a constant (Sec 4.2: "μ is the initial embedding vector"). It additionally
+accepts a live anchor, unused by any configured run and retained only for
+deliberate departures-from-paper experiments. See DEVIATIONS.md §1a.
 
 **`morpheme_embeddings.py`** applies W to FastText vectors and averages in
 the tensor's own framework so W stays on the autograd graph. A dimension
@@ -50,7 +50,7 @@ serializes it with the checkpoint.
 
 | Addition | Location | Touches the method? |
 |---|---|---|
-| Learned projection W | `src/lgse/projection.py`, `regularization.py` | **Yes -- deliberately.** Implements the paper's learned W as the only projection; the release's fixed random map is removed, not retained as a fallback. The regularizer anchor is recomputed through W so W actually trains. See DEVIATIONS.md §1, §1a |
+| Projection W | `src/lgse/projection.py` | **Yes -- deliberately.** Implements the paper's square `d×d` W as the only projection; the release's rectangular random map is removed. Under the paper's own objectives W receives no gradient — documented, not worked around. See DEVIATIONS.md §1, §1a |
 | Table 2 baselines | `src/baselines/` | New systems the paper compares against; LGSE itself untouched |
 | Evaluation harness | `src/evaluation/` | Implements the metrics the paper reports; no metric redefined |
 | Dataset preparation | `data/scripts/` | Fetches the datasets the paper names; splits follow the paper's stated policy |

@@ -1,27 +1,28 @@
 """
 projection.py -- the learned projection W of the LGSE method.
 
-FastText vectors are 300-dimensional; the target model's embedding space is
-wider (768 for xlm-roberta-base). W bridges the two.
+Paper Sec 4.1:
 
-W is a *learned* parameter. It is initialized once and then optimized jointly
-with the new token embeddings during LAPT, so the mapping adapts to the
-geometry of the target embedding space instead of merely preserving relative
-distances between FastText vectors. This is the method LGSE describes, and it
-is the only projection this package supports.
+    "To align the FastText embedding space with the pretrained model
+     embedding space, a learned linear projection W in R^{d x d} is
+     applied, i.e. e_aligned_t = W e_t."
 
-Three properties are load-bearing, and each is covered by a regression test in
-tests/test_learned_projection_pipeline.py:
+Two things follow directly from that line, and both are load-bearing:
 
-  1. W carries trainable parameters (`requires_grad`).
-  2. Those parameters reach the optimizer, and gradients flow back through
-     the morpheme-averaging path into W.
-  3. W is serialized with the checkpoint, so a restored run continues with
-     the trained mapping rather than a fresh initialization.
+  * **W is square** (d x d). The paper aligns two spaces of the same
+    dimension d; it does not describe a rectangular map that changes
+    dimensionality. Running with 300-dim FastText against 768-dim XLM-R
+    therefore requires FastText vectors trained at d=768, not a 300->768
+    rectangular W. `build_projection` enforces the square shape and reports
+    the mismatch rather than silently reshaping the method.
 
-A projection that fails any one of these is indistinguishable, at the level
-of reported numbers, from a fixed random map -- which is why they are
-asserted rather than assumed.
+  * **W is learned.** It is a trainable parameter, saved with the
+    checkpoint and restored on resume.
+
+What the paper does *not* do is give W a gradient path through the
+regularization term: L_reg anchors to a constant mu (Sec 4.2), so it
+trains the embeddings, not W. See DEVIATIONS.md section 1a for where W's
+gradient comes from and what remains underdetermined.
 """
 
 from typing import Optional
@@ -32,26 +33,25 @@ import torch.nn as nn
 
 
 class LearnedProjection(nn.Module):
-    """Trainable W: FastText space -> the model's embedding space.
+    """Trainable square W (d x d), aligning FastText space to the model's.
 
-    Initialized as a scaled Gaussian (std 1/sqrt(source_dim)), which keeps
-    the initial mapping approximately norm-preserving so training starts
-    from a well-conditioned point rather than one that inflates or crushes
-    the projected vectors.
+    Initialized to the identity: alignment between two spaces of the same
+    dimension starts from "no change", so the initial embeddings are exactly
+    the FastText morpheme averages the paper's Sec 4.1 defines, and W then
+    learns the alignment away from there. A random initialization would
+    instead scramble those vectors before training ever sees them, which
+    would defeat the point of grounding the initialization lexically.
     """
 
-    def __init__(self, source_dim: int, target_dim: int, seed: int = 42,
-                 bias: bool = False):
+    def __init__(self, dim: int, seed: int = 42, bias: bool = False):
         super().__init__()
-        self.source_dim = source_dim
-        self.target_dim = target_dim
-        self.linear = nn.Linear(source_dim, target_dim, bias=bias)
-        generator = torch.Generator().manual_seed(seed)
+        self.dim = dim
+        # Retained for checkpoint compatibility and shape assertions.
+        self.source_dim = dim
+        self.target_dim = dim
+        self.linear = nn.Linear(dim, dim, bias=bias)
         with torch.no_grad():
-            self.linear.weight.copy_(
-                torch.randn(target_dim, source_dim, generator=generator)
-                / np.sqrt(source_dim)
-            )
+            self.linear.weight.copy_(torch.eye(dim))
             if bias:
                 self.linear.bias.zero_()
 
@@ -64,13 +64,20 @@ class LearnedProjection(nn.Module):
 
 
 def build_projection(source_dim: int, target_dim: int,
-                     seed: int = 42) -> Optional[nn.Module]:
-    """Return the learned projection W, or None when the dims already match.
+                     seed: int = 42) -> nn.Module:
+    """Return the learned square projection W (paper Sec 4.1).
 
-    None is not a silent fallback to identity-by-accident: when FastText and
-    the model share a width there is nothing for W to map between, and the
-    vectors are used directly.
+    Raises on a dimension mismatch. The paper's W is square, so unequal
+    dimensions mean the FastText model does not match the target embedding
+    width -- a data problem to fix by training or fetching FastText at
+    dimension d, not something to paper over with a rectangular map. A
+    rectangular W would be a different method than the one published.
     """
-    if source_dim == target_dim:
-        return None
-    return LearnedProjection(source_dim, target_dim, seed=seed)
+    if source_dim != target_dim:
+        raise ValueError(
+            f"LGSE's projection W is square (d x d, paper Sec 4.1), but "
+            f"FastText is {source_dim}-dim and the embedding space is "
+            f"{target_dim}-dim. Use FastText vectors trained at "
+            f"dimension {target_dim}; a {source_dim}->{target_dim} "
+            f"rectangular map is not the published method.")
+    return LearnedProjection(source_dim, seed=seed)
