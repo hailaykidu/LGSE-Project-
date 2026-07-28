@@ -1,0 +1,11 @@
+{
+  "tigrinya": {
+    "language": "tigrinya",
+    "path": "/homes/neumann/teklehaymanot/.cache/huggingface/hub/models--Hailay--fasttext-tigrinya/snapshots/ae8c5030e332eb545cf03c81a237aeed650d5700/fasttext_tigrinya.bin",
+    "dimension": 300,
+    "vocab_size": 156687,
+    "sha256": "f8b1f97f76dd5516553ed3314e180069cfcbc4c6c9983f14f3e511578460f3f7",
+    "size_bytes": 2779784524,
+    "source": "https://huggingface.co/Hailay/fasttext-tigrinya"
+  }
+}

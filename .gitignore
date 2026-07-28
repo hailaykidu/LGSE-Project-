@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+# Real FastText models are ~2.6 GB / ~2.8 GB and are downloaded on demand
+# by data/scripts/download_fasttext.py, which records dimensions, vocab
+# size and sha256 in data/fasttext_manifest.json.
+*.bin

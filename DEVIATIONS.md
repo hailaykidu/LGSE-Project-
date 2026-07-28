@@ -60,8 +60,19 @@ Loading either raises `ValueError: ... has wrong file format!`
 `scripts/run_lgse_lap.py` is two hardcoded sentences, self-documented as a
 smoke test.
 
-**This branch:** documented download and preparation scripts under
-`data/scripts/`, with checksums. No large binaries are committed.
+**This branch:** the placeholder files are removed and
+`data/scripts/download_fasttext.py` fetches the real models on demand:
+
+| | Source | Dim | Vocab |
+|---|---|---|---|
+| Amharic | `cc.am.300.bin` (Grave et al., 2018) | 300 | -- |
+| Tigrinya | `Hailay/fasttext-tigrinya` | 300 | 156,687 |
+
+The script loads each model and refuses to continue if it is empty; it never
+substitutes random vectors, because a placeholder would silently reduce LGSE
+to its own character-n-gram fallback while still reporting as LGSE.
+Dimensions, vocabulary size and sha256 are recorded in
+`data/fasttext_manifest.json`. The binaries themselves are gitignored.
 
 ## 5. TIGQA is abstractive, not extractive
 
@@ -137,4 +148,27 @@ PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
 The release sets `seed=42` in one place with no CLI override, so
 mean +/- standard deviation over multiple runs cannot be produced.
 
-**This branch:** seed is a config field and CLI argument.
+**This branch:** seed is a config field and CLI argument, and
+`configs/base.yaml` sets the paper's five runs as seeds 42-46. The paper
+states the experiments were "repeated five times with different random
+seeds" but does not say which, so these are ours and are recorded in every
+run record.
+
+## 8. Table 1 hyperparameters not recovered
+
+The paper states that "complete training configurations and hyperparameter
+settings are presented in Table 1". Table 1 was not recoverable from the
+paper text available to this reproduction, nor from the released artifacts:
+the release has no config file, no logs and no checkpoints from which
+optimiser settings could be read back.
+
+Ten values in `configs/base.yaml` are therefore marked `source: unavailable`
+-- LAPT learning rate, batch size, epochs and MLM probability, and the six
+downstream fine-tuning settings. The values in place are conventional
+defaults for XLM-R, **not the paper's**.
+
+`scripts/aggregate_results.py` reads that marker and prefixes any generated
+table with a "Not a replication" notice naming the count, so a produced
+number can never be mistaken for a replication of the published Table 2.
+Replacing those ten values with Table 1's is the single remaining
+requirement for a faithful comparison.

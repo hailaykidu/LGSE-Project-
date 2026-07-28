@@ -1,48 +1,65 @@
 # Base experiment configuration.
 #
-# NOTE ON HYPERPARAMETERS
-# The paper states that "complete training configurations and hyperparameter
-# settings are presented in Table 1". Table 1 was not available when this
-# branch was written, so the fine-tuning values below are conventional
-# defaults for XLM-R on low-resource sequence-labelling and QA, not the
-# paper's. They are marked `source: assumed` and must be replaced with
-# Table 1's values before any result is compared against the paper.
+# PROVENANCE
+# Every value carries a `source` marker:
 #
-# Values taken from the paper or the original release are marked
-# `source: paper` / `source: release`.
+#   paper        stated in the paper text available to this reproduction
+#   release      taken from the original code release
+#   unavailable  the paper places it in Table 1, which was not available;
+#                the value here is a conventional default and is NOT the
+#                paper's. Any result produced with it is a reproduction
+#                under documented substitutions, not a replication.
+#
+# The paper states "complete training configurations and hyperparameter
+# settings are presented in Table 1". Table 1 could not be recovered from
+# the paper text or the released artifacts, so the fine-tuning and LAPT
+# optimisation values below are marked `unavailable`. They must be replaced
+# with Table 1's values before any number here is compared against the
+# paper's Table 2.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
 
 lgse:
   projection: learned               # source: paper -- learned W, trained jointly
-                                    # (the release used a fixed random projection;
-                                    #  set to `random` to reproduce that)
+                                    #   set to `random` to reproduce the release
   ngram_min: 3                      # source: release
   ngram_max: 5                      # source: release
   reg_lambda: 1.0                   # source: release
   fasttext_dim: 300                 # source: FastText standard release
 
 lapt:                               # language-adaptive pretraining
-  mlm_probability: 0.15             # source: assumed (standard MLM)
-  learning_rate: 5.0e-5             # source: assumed
-  batch_size: 16                    # source: assumed
-  epochs: 1                         # source: assumed
-  max_length: 128                   # source: release
   freeze_backbone: true             # source: paper -- only new embeddings train
+  max_length: 128                   # source: release
+  mlm_probability: 0.15             # source: unavailable (standard MLM default)
+  learning_rate: 5.0e-5             # source: unavailable
+  batch_size: 16                    # source: unavailable
+  epochs: 1                         # source: unavailable
 
 finetune:                           # downstream task fine-tuning
-  learning_rate: 2.0e-5             # source: assumed
-  batch_size: 16                    # source: assumed
-  epochs: 5                         # source: assumed
-  max_length: 256                   # source: assumed
-  warmup_ratio: 0.1                 # source: assumed
-  weight_decay: 0.01                # source: assumed
+  learning_rate: 2.0e-5             # source: unavailable
+  batch_size: 16                    # source: unavailable
+  epochs: 5                         # source: unavailable
+  max_length: 256                   # source: unavailable
+  warmup_ratio: 0.1                 # source: unavailable
+  weight_decay: 0.01                # source: unavailable
 
 evaluation:
-  seeds: [42, 43, 44, 45, 46]       # source: paper -- "repeated five times"
+  seeds: [42, 43, 44, 45, 46]       # source: paper -- "repeated five times
+                                    #   with different random seeds"; the paper
+                                    #   does not state which seeds, so these are
+                                    #   ours and are recorded per run
   metric: f1                        # source: paper -- F1 for NER, QA, classification
   model_selection: dev              # source: paper -- selection on dev, report test
+
+data:
+  fasttext:
+    amharic:
+      source: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz
+      citation: Grave et al. (2018), FastText CC vectors
+    tigrinya:
+      source: https://huggingface.co/Hailay/fasttext-tigrinya
+      citation: project-released Tigrinya FastText model
 
 output:
   results_dir: results
