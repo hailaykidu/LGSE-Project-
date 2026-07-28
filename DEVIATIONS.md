@@ -117,7 +117,22 @@ Two caveats remain for strict reproduction:
   paragraph, so none resolve.
 * Tigrinya QA is scored on 86 test items against Amharic's 285.
 
-## 6. Single seed
+## 6. MasakhaNER source
+
+The paper uses MasakhaNER (Adelani et al., 2021) for Amharic NER. The
+HuggingFace mirrors -- `masakhane/masakhaner`, `masakhane/masakhaner2`,
+`Davlan/masakhanerV1` -- are all script-based datasets, which current
+`datasets` refuses to load ("Dataset scripts are no longer supported"), and
+none carries data files for Amharic.
+
+`data/scripts/prepare_ner.py --language amharic` therefore takes the CoNLL
+files directly from the project's own repository,
+`masakhane-io/masakhane-ner/data/amh/{train,dev,test}.txt`. These are the
+official splits, used as released -- no partition is derived. Counts:
+1,750 / 250 / 500 sentences (25,819 / 3,749 / 7,449 tokens), tag set
+PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
+
+## 7. Single seed
 
 The release sets `seed=42` in one place with no CLI override, so
 mean +/- standard deviation over multiple runs cannot be produced.

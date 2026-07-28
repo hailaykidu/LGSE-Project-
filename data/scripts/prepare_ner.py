@@ -21,6 +21,13 @@ from pathlib import Path
 TIGRINYA_URL = ("https://raw.githubusercontent.com/mehari-eng/"
                 "Tigrinya-NER/main/Tigrinya-NER-Dataset.txt")
 
+# MasakhaNER ships official train/dev/test splits, so no partition is
+# derived for Amharic -- the released files are used as-is. The HuggingFace
+# mirrors are script-based datasets, which current `datasets` refuses to
+# load, so the CoNLL files are taken from the project's own repository.
+MASAKHANER_BASE = ("https://raw.githubusercontent.com/masakhane-io/"
+                   "masakhane-ner/main/data/amh")
+
 # A handful of tags in the Tigrinya release are typos for a valid tag
 # ('B-DATe' for 'B-DATE') or malformed entirely ('IO', 'BO', 'B-LO').
 # Mapping the typo and dropping the rest keeps the label set well formed.
@@ -96,10 +103,36 @@ def main():
     args = p.parse_args()
 
     if args.language == "amharic":
-        raise SystemExit(
-            "Amharic NER uses MasakhaNER's official splits. Load them with\n"
-            "  datasets.load_dataset('masakhane/masakhaner2', 'amh')\n"
-            "rather than re-deriving a partition here.")
+        import urllib.request
+        out = args.out_dir / "amharic"
+        out.mkdir(parents=True, exist_ok=True)
+        cache = Path.home() / ".cache" / "lgse"
+        cache.mkdir(parents=True, exist_ok=True)
+
+        manifest = {
+            "source": MASAKHANER_BASE,
+            "citation": "Adelani et al. (2021), MasakhaNER",
+            "split": "official MasakhaNER splits, used as released",
+            "files": {},
+        }
+        for name in ("train", "dev", "test"):
+            local = cache / f"masakhaner_amh_{name}.txt"
+            if not local.exists():
+                url = f"{MASAKHANER_BASE}/{name}.txt"
+                print(f"downloading {url}")
+                urllib.request.urlretrieve(url, local)
+            sentences = read_conll(local)
+            write_split(sentences, out / f"{name}.conll")
+            manifest["files"][name] = {
+                "sha256": sha256(local),
+                "sentences": len(sentences),
+                "tokens": sum(len(s) for s in sentences),
+            }
+            print(f"  {name:5} {len(sentences):5} sentences")
+        with open(out / "manifest.json", "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2, ensure_ascii=False)
+        print(f"manifest -> {out / 'manifest.json'}")
+        return
 
     raw = args.raw
     if raw is None:
