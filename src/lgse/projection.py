@@ -46,7 +46,7 @@ objective, but nothing in this repository sets it, and setting it does not
 by itself create a gradient path.
 
 Resolving this requires the authors to state which objective trains W.
-See DEVIATIONS.md section 1a.
+See IMPLEMENTATION_NOTES.md section 1a.
 """
 
 from typing import Optional
@@ -76,7 +76,7 @@ class AlignmentProjection(nn.Module):
 
     W is **frozen**: `requires_grad=False`, excluded from the optimizer.
     This is not an oversight but the documented consequence of the paper
-    specifying no objective that trains it (see DEVIATIONS.md section 1a).
+    specifying no objective that trains it (see IMPLEMENTATION_NOTES.md section 1a).
     Marking it trainable while nothing differentiates it would report a
     capability the run does not have.
 
@@ -98,7 +98,7 @@ class AlignmentProjection(nn.Module):
             raise MissingAlignmentMatrix(
                 "AlignmentProjection requires an explicit weight matrix; "
                 "there is no default. See build_projection() for the "
-                "user-facing error and DEVIATIONS.md section 1a.")
+                "user-facing error and IMPLEMENTATION_NOTES.md section 1a.")
         if tuple(weight.shape) != (dim, dim):
             raise ValueError(
                 f"alignment matrix W must be square {dim}x{dim}, got "
@@ -210,7 +210,7 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
         f"\n"
         f"Reshaping, truncating, zero-padding or rectangularly projecting "
         f"the {fasttext_dim}-dim vectors would silently change the method "
-        f"and is deliberately not implemented. See DEVIATIONS.md section 1.")
+        f"and is deliberately not implemented. See IMPLEMENTATION_NOTES.md section 1.")
 
 
 def build_projection(source_dim: int, target_dim: int,
@@ -258,7 +258,7 @@ def build_projection(source_dim: int, target_dim: int,
             f"file holding a {source_dim}x{source_dim} matrix.\n"
             f"\n"
             f"Any result produced without an author-provided W is NOT\n"
-            f"faithful to the published method. See DEVIATIONS.md 1a.")
+            f"faithful to the published method. See IMPLEMENTATION_NOTES.md 1a.")
 
     weight = load_alignment_matrix(alignment_matrix_path, source_dim)
     return AlignmentProjection(source_dim, weight=weight,

@@ -55,7 +55,7 @@ F1 is 0.00 in this validation. That is expected and is **not** a result: the
 run uses a 60-line LAPT corpus and ~20 NER sentences for one epoch, purely to
 exercise the code path. No conclusion about LGSE follows from it. Real numbers
 require the full corpora and the hyperparameters the paper places in Table 1
-(see `DEVIATIONS.md` section 8).
+(see `IMPLEMENTATION_NOTES.md` section 8).
 
 ## Failures this validation caught
 
@@ -66,7 +66,7 @@ separately:
    the paper showed the deeper issue: no stated objective trains W at all,
    so an optimizer entry would have advertised a capability the run does not
    have. W is now an externally supplied, frozen alignment matrix — see
-   `DEVIATIONS.md` §1a.
+   `IMPLEMENTATION_NOTES.md` §1a.
 
 2. **The projection crashed on real vectors.**
    `word_from_morphemes` averaged with `np.mean`, which cannot consume a
@@ -83,7 +83,7 @@ separately:
    this implementation** — it follows from the paper's own equations, which
    call W "learned" while specifying no objective that depends on it. The
    implementation now follows the paper and reports W's gradient status each
-   epoch rather than inventing a training signal. See `DEVIATIONS.md` §1a.
+   epoch rather than inventing a training signal. See `IMPLEMENTATION_NOTES.md` §1a.
 
 4. **A trained W was discarded at checkpoint time.** `save()` wrote only the
    model and tokenizer, so a resumed run silently restarted from a fresh

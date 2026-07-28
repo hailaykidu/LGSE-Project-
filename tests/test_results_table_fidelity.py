@@ -2,7 +2,7 @@
 The generated results table must state its own fidelity.
 
 A reader should be able to look at Table 2 and see whether each system's
-numbers came from a faithful run, without opening DEVIATIONS.md. Two
+numbers came from a faithful run, without opening IMPLEMENTATION_NOTES.md. Two
 mechanisms carry that, and both are asserted here:
 
   * a notice above the table naming any system whose runs lacked an
@@ -80,7 +80,7 @@ def test_run_without_author_supplied_w_is_flagged(tmp_path):
     assert "Not faithful to the published method" in table   # the notice
     assert "lgse_lapt" in table                              # names the system
     assert "**not faithful -- no author-supplied W**" in table  # the row
-    assert "DEVIATIONS.md" in table
+    assert "IMPLEMENTATION_NOTES.md" in table
 
 
 def test_run_with_author_supplied_w_is_not_flagged(tmp_path):

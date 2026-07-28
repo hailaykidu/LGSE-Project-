@@ -73,7 +73,7 @@ class LGSEConfig:
     # one fail; see build_projection() for the full explanation.
     #
     # W is frozen regardless: no objective in the paper trains it.
-    # See src/lgse/projection.py and DEVIATIONS.md section 1a.
+    # See src/lgse/projection.py and IMPLEMENTATION_NOTES.md section 1a.
     alignment_matrix_path: str = ""
 
     # Training
@@ -103,7 +103,7 @@ class LGSEConfig:
                 "\n"
                 "Set it explicitly, e.g. LGSEConfig(reg_lambda=1.0, ...) or "
                 "`lgse.reg_lambda` in the run config. The value is recorded "
-                "with every result. See DEVIATIONS.md section 8.")
+                "with every result. See IMPLEMENTATION_NOTES.md section 8.")
         if self.reg_lambda < 0:
             raise ValueError(
                 f"reg_lambda must be non-negative, got {self.reg_lambda}")

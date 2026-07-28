@@ -31,7 +31,7 @@ time rather than hours into a run. `--expect-dim` sets the target width.
 Nothing synthetic is generated, and nothing is reshaped: if a model cannot
 be downloaded the script fails rather than substituting random vectors, and
 mismatched vectors are never truncated or padded to fit. Either would
-silently change the method -- see DEVIATIONS.md section 1.
+silently change the method -- see IMPLEMENTATION_NOTES.md section 1.
 """
 
 import argparse
@@ -122,7 +122,7 @@ def verify(path: Path, language: str, expected_dim: int) -> dict:
             f"  !!    fasttext skipgram -input <corpus> -output <model> "
             f"-dim {expected_dim}\n"
             f"  !!\n"
-            f"  !!  See DEVIATIONS.md section 1.\n")
+            f"  !!  See IMPLEMENTATION_NOTES.md section 1.\n")
 
     return record
 
@@ -171,7 +171,7 @@ def main():
             f"{', '.join(unusable)}.\n"
             f"They are downloaded and recorded, but LGSE will refuse to run "
             f"with them.\nSee the dimension requirement in this script's "
-            f"docstring and DEVIATIONS.md section 1.")
+            f"docstring and IMPLEMENTATION_NOTES.md section 1.")
 
 
 if __name__ == "__main__":

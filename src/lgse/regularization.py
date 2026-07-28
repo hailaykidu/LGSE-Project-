@@ -26,7 +26,7 @@ class LGSERegularizer:
     A live anchor recomputed through W would change what this term
     measures -- and would additionally give W a gradient path it does not
     have under the paper's formulation. That path is not part of the
-    method; see DEVIATIONS.md section 1a.
+    method; see IMPLEMENTATION_NOTES.md section 1a.
     """
 
     def __init__(self,

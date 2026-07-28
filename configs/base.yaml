@@ -3,11 +3,11 @@
 # PROVENANCE
 # Every value carries a `source` marker:
 #
-#   paper        stated in the paper text (arXiv:2603.22629)
-#   release      taken from the original code release
-#   unavailable  not stated in the paper or the release; the value here is a
-#                conventional default. Any result produced with it is a
-#                reproduction under documented substitutions.
+#   paper           stated in the paper text (arXiv:2603.22629)
+#   implementation  not stated in the paper; chosen here and recorded as
+#                   this repository's choice
+#   unavailable     not stated in the paper and with no defensible default.
+#                   These are MANDATORY: runs fail rather than guess.
 #
 # Table 1 ("Hyperparameter settings used for further pretraining with
 # morpheme-aware tokenization and fine-tuning") is recovered from the paper
@@ -16,7 +16,7 @@
 # Tigrinya, so the same values populate both sections.
 #
 # One value remains `unavailable`: the regularization strength lambda, which
-# the paper introduces in Sec 4.2 but never assigns. See DEVIATIONS.md #8.
+# the paper introduces in Sec 4.2 but never assigns. See IMPLEMENTATION_NOTES.md #8.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
@@ -24,14 +24,14 @@ model:
 lgse:
   # W is a square learned linear map (d x d), paper Sec 4.1. FastText must
   # therefore be trained at the model's embedding width, not 300-dim --
-  # build_projection refuses a rectangular map. See DEVIATIONS.md section 1.
-  ngram_min: 3                      # source: release
-  ngram_max: 5                      # source: release
+  # build_projection refuses a rectangular map. See IMPLEMENTATION_NOTES.md section 1.
+  ngram_min: 3                      # source: implementation (not in the paper)
+  ngram_max: 5                      # source: implementation (not in the paper)
   # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
   # source: unavailable -- the paper introduces lambda but never assigns it,
   # and Table 1 does not list it. There is no published value to default to,
   # so this must be set explicitly and is recorded with every result. The
-  # value below is carried over from the original release, NOT the paper's.
+  # value below is this repository's choice, NOT the paper's.
   # Removing this key makes runs fail rather than fall back to a default.
   reg_lambda: 1.0
 
@@ -44,7 +44,7 @@ lgse:
   # claim W exists to avoid making. Leaving this empty makes LGSE runs FAIL.
   #
   # Any result produced without an author-provided W is NOT faithful to the
-  # published method. See DEVIATIONS.md 1a.
+  # published method. See IMPLEMENTATION_NOTES.md 1a.
   alignment_matrix_path: ""
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
@@ -97,7 +97,7 @@ data:
   #   fasttext skipgram -input <corpus> -output <model> -dim 768
   #
   # The code refuses mismatched vectors rather than reshaping them; see
-  # DEVIATIONS.md section 1.
+  # IMPLEMENTATION_NOTES.md section 1.
   fasttext:
     amharic:
       source: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz

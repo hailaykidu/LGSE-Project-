@@ -1,10 +1,17 @@
-# Deviations from the paper and the original release
+# Implementation notes: what the paper specifies, and what it does not
 
-This branch implements the LGSE method as described in the paper. Where the
-implementation differs from the published release
-(`published-release-77987c5`), or where the paper underdetermines a choice,
-it is recorded here. Nothing in this list is a claim about which is correct
--- only about what differs.
+This repository implements the LGSE method described in the paper. This file
+records every point where the paper underdetermines the implementation --
+where a value, an artifact, or a procedure had to come from somewhere other
+than the paper text.
+
+Each entry states what the paper says, what the implementation does, and
+which of the two the choice belongs to. Where an earlier version of the code
+did something different, that is noted so the reason for the current
+behaviour is not lost.
+
+Nothing here is a claim that the paper is wrong. It is a record of what a
+reader would need in order to reproduce these results exactly.
 
 > ## Fidelity prerequisites
 >
@@ -91,26 +98,22 @@ All three raise `IncompatibleFastTextDimension`, a distinct exception type,
 with a message naming both dimensions, the reason, the required width, and
 the `fasttext -dim 768` command that produces it.
 
-**W defaults to the identity.** Alignment between same-dimension spaces
-starts from "no change", so the initial embeddings are exactly the FastText
-morpheme averages Sec 4.1 defines. An arbitrary W would distort those
-vectors before training saw them, defeating the point of grounding the
-initialization lexically. (The original release's scaled-Gaussian init was
-tied to its rectangular map and does not carry over.) An author-supplied
-matrix replaces the identity — see §1a-i.
+**W has no default.** It is supplied by the author via
+`lgse.alignment_matrix_path`; a run without one fails. See §1a-i for why no
+default — including the identity — is substituted.
 
-**Original release:** `lgse/morpheme_embeddings.py:24-31` builds a fixed,
-seeded Johnson-Lindenstrauss projection with `np.random.default_rng`. It is
-never a `torch.nn.Parameter`, never passed to an optimizer, and never
-updated. The code comment states the rationale: bridging 300-dim FastText to
-768-dim XLM-R "without requiring extra training data to fit a learned
-projection."
+**W is the only supported projection.** `src/lgse/projection.py` defines
+`AlignmentProjection` as a square `d×d` matrix, externally supplied and
+frozen. There is no alternative projection path and no `projection:` config
+key.
 
-**This branch implements the paper's W as the only supported projection.**
-`src/lgse/projection.py` defines `AlignmentProjection` as a square `d×d`
-matrix, externally supplied and frozen. There is no fixed-projection path
-and no `projection:` config key. The release's rectangular
-Johnson–Lindenstrauss map is removed, not retained as a fallback.
+*Earlier code note.* A previous implementation
+(`lgse/morpheme_embeddings.py:24-31`) built a fixed, seeded
+Johnson–Lindenstrauss projection with `np.random.default_rng` — never a
+`torch.nn.Parameter`, never optimized, rectangular (300→768). Its comment
+gave the rationale: bridging the two widths "without requiring extra
+training data to fit a learned projection." That map is not retained: it is
+rectangular, where Sec 4.1 specifies `W ∈ R^{d×d}`.
 
 ### 1a. Under the paper's stated objectives, W receives no gradient
 
@@ -159,7 +162,7 @@ under three assumptions recorded here as assumptions, not findings:
 
 **There is no default W — not even the identity.**
 
-An earlier revision of this branch defaulted to the identity, on the
+An earlier revision of this code defaulted to the identity, on the
 reasoning that it "adds nothing". That reasoning was wrong. The identity is
 not a neutral choice: it asserts that the FastText and model embedding
 spaces are *already aligned*, which is precisely the claim Sec 4.1
@@ -174,7 +177,7 @@ Every candidate default fails the same test:
 | Identity | Asserts the two spaces are already aligned — the claim W exists to avoid |
 | Random / seeded | An alignment strategy the paper does not describe |
 | Fitted (Procrustes, CCA, …) | A method the paper does not describe, requiring anchor data it never mentions |
-| Release's Johnson–Lindenstrauss map | Rectangular, and tied to the release's 300→768 setup |
+| A rectangular Johnson–Lindenstrauss map | Rectangular, where Sec 4.1 specifies `d×d` |
 
 So the implementation refuses. `build_projection` raises
 `MissingAlignmentMatrix` — a distinct type, because this marks a genuinely
@@ -201,7 +204,7 @@ setting it alone does not create a gradient path.
 Candidates exist — a live regularizer anchor, a reconstruction loss, an
 alignment loss against anchor translations — and any of them would make W
 train and produce numbers. None is in the paper, so none is implemented.
-An earlier revision of this branch did make the regularizer anchor a live
+An earlier revision of this code did make the regularizer anchor a live
 function of W; that was reverted on reading Sec 4.2, since it contradicts
 "μ is the initial embedding vector". The capability remains in
 `LGSERegularizer` (`anchor_is_live`), unused by any configured run.
@@ -250,13 +253,12 @@ from the one that produced the numbers. It also keeps the checkpoint correct
 if W is ever trained under an author-supplied objective, where it could not
 be recomputed at all.
 
-## 2. Baselines absent from the release
+## 2. Comparison baselines
 
-Table 2 compares five systems. The published release implements only the
-LGSE path; the string "FOCUS" does not appear anywhere in it, and there is no
-random-initialization or no-expansion baseline.
+Table 2 compares five systems, and the paper describes them in prose rather
+than specifying their implementation.
 
-**This branch:** `src/baselines/strategies.py` adds `default` (+LAPT),
+`src/baselines/strategies.py` provides `default` (+LAPT),
 `random` (+Random+LAPT) and `focus` (+FOCUS+LAPT), each exposing the same
 interface as `LGSEInitializer` so the trainer swaps between them with no
 other change.
@@ -267,28 +269,20 @@ auxiliary signal -- the same external signal LGSE uses, so the two differ
 only in how they use it. **This is a reimplementation, not the authors'
 code**, and has not been validated against their published results.
 
-## 3. Evaluation absent from the release
+## 3. Table 2 evaluation
 
-The published release contains no evaluation code: no occurrence of
-`evaluate`, `f1`, or `accuracy` in any Python file. Table 2 reports QA, NER
-and text classification.
+Table 2 reports QA, NER and text classification. The evaluation harness is
+in `src/evaluation/` (entity-level NER F1, SQuAD QA F1, mean/stdev over
+seeds).
 
-**This branch:** pending. The datasets, splits, metrics and hyperparameters
-are to be taken from the paper's experimental section; they are not
-guessable from the release, and nothing here claims to reproduce Table 2
-until they are wired in and run.
+**Status:** the full Table 2 sweep has not been run. It is blocked on the
+prerequisites above -- an author-supplied W and a λ value -- so no number in
+this repository should be read as reproducing the published Table 2.
 
-## 4. Data placeholders
+## 4. FastText model acquisition
 
-`data/fasttext_Amharic.bin` and `data/fasttext_Tigriyna.bin` in the release
-are 208-byte text files containing download URLs, not FastText binaries.
-Loading either raises `ValueError: ... has wrong file format!`
-(`lgse/lap_trainer.py:60`). The training corpus in
-`scripts/run_lgse_lap.py` is two hardcoded sentences, self-documented as a
-smoke test.
-
-**This branch:** the placeholder files are removed and
-`data/scripts/download_fasttext.py` fetches the real models on demand:
+FastText binaries are 2--3 GB and are not committed.
+`data/scripts/download_fasttext.py` fetches them on demand:
 
 | | Source | Dim | Vocab |
 |---|---|---|---|
@@ -375,7 +369,7 @@ PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
 The release sets `seed=42` in one place with no CLI override, so
 mean +/- standard deviation over multiple runs cannot be produced.
 
-**This branch:** seed is a config field and CLI argument, and
+**Implemented here:** seed is a config field and CLI argument, and
 `configs/base.yaml` sets the paper's five runs as seeds 42-46. The paper
 states the experiments were "repeated five times with different random
 seeds" but does not say which, so these are ours and are recorded in every
@@ -412,7 +406,7 @@ Two notes on how the table was applied:
 
 - Table 1 says "Adam" while also specifying weight decay 0.01. The config
   uses AdamW, since decoupled weight decay is what a nonzero `weight_decay`
-  means in the HuggingFace/PyTorch stack the release targets. Recorded here
+  means in the HuggingFace/PyTorch stack this code targets. Recorded here
   because it is an interpretation, not a quotation.
 
 The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
@@ -435,9 +429,8 @@ choice in a dataclass field, and every result would then carry a value that
 experiment states λ, and the value is recorded in the run record alongside
 `reg_lambda_source: "unavailable -- not stated in the paper"`.
 
-`configs/base.yaml` ships `reg_lambda: 1.0`, carried over from the original
-release and marked `source: unavailable`. **That value is the release's, not
-the paper's**, and λ is a plausible candidate for sensitivity analysis: it
+`configs/base.yaml` ships `reg_lambda: 1.0`, marked `source: unavailable`.
+**That value is not the paper's**, and λ is a plausible candidate for sensitivity analysis: it
 sets the balance between preserving the lexically grounded initialization
 and adapting to the target language, which is the trade-off the method turns
 on. Deleting the key from a config makes runs fail rather than fall back.

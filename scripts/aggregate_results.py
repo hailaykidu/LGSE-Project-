@@ -71,7 +71,7 @@ def main():
 
     # W cannot be derived from the paper. A run that used one the authors
     # did not provide is not faithful to the published method, and the
-    # generated table must say so rather than leaving it to DEVIATIONS.md.
+    # generated table must say so rather than leaving it to IMPLEMENTATION_NOTES.md.
     unfaithful = sorted({
         r.get("system", "?") for records in runs.values() for r in records
         if isinstance(r.get("projection"), dict)
@@ -83,7 +83,7 @@ def main():
             f"author-provided alignment matrix W: {', '.join(unfaithful)}. "
             "The paper introduces W (Sec 4.1) but never states how it is "
             "obtained, so any W used here is a substitution. See "
-            "`DEVIATIONS.md` section 1a.",
+            "`IMPLEMENTATION_NOTES.md` section 1a.",
             "",
         ]
 

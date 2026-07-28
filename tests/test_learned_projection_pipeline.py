@@ -16,7 +16,7 @@ LAPT.
 
 That is a gap in the paper, and these tests assert it rather than papering
 over it -- inventing a loss term to make W train would be implementing a
-different method than the published one. See DEVIATIONS.md section 1a.
+different method than the published one. See IMPLEMENTATION_NOTES.md section 1a.
 
 Two real bugs previously reached the full pipeline unnoticed because every
 unit test exercised these components separately:
@@ -127,7 +127,7 @@ def test_dimension_error_is_actionable():
     assert "square" in msg                            # why
     assert "Sec 4.1" in msg                           # where in the paper
     assert f"-dim {DIM}" in msg                       # how to fix it
-    assert "DEVIATIONS.md" in msg                     # where to read more
+    assert "IMPLEMENTATION_NOTES.md" in msg                     # where to read more
 
 
 def test_mismatched_fasttext_is_refused_at_builder_construction():
@@ -186,7 +186,7 @@ def test_missing_matrix_error_explains_the_gap():
     assert "identity" in msg                        # why not defaulted
     assert "alignment_matrix_path" in msg           # how to proceed
     assert "NOT" in msg and "faithful" in msg       # fidelity warning
-    assert "DEVIATIONS.md" in msg
+    assert "IMPLEMENTATION_NOTES.md" in msg
 
 
 def test_a_supplied_identity_still_works_but_is_flagged(tmp_path):
@@ -307,7 +307,7 @@ def test_paper_objectives_give_w_no_gradient(projection):
     assert projection.linear.weight.grad is None, (
         "W has a gradient under the paper's objectives -- if this starts "
         "passing, the implementation has added a loss term the paper does "
-        "not describe, and DEVIATIONS.md section 1a must be revisited")
+        "not describe, and IMPLEMENTATION_NOTES.md section 1a must be revisited")
 
 
 # --- initialization writes rows in place -----------------------------
@@ -492,7 +492,7 @@ def test_reg_lambda_error_explains_why_there_is_no_default():
 
     assert "Sec 4.2" in msg                    # where it comes from
     assert "never states its value" in msg     # why no default
-    assert "DEVIATIONS.md" in msg              # where to read more
+    assert "IMPLEMENTATION_NOTES.md" in msg              # where to read more
 
 
 def test_reg_lambda_accepts_an_explicit_value():

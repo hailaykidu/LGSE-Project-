@@ -46,7 +46,7 @@ The baselines (`xlmr`, `lapt`, `random_lapt`) use no FastText, need no W,
 and run normally — the prerequisite applies only to the LGSE/FOCUS systems
 that consume FastText.
 
-See `DEVIATIONS.md` §1, §1a and §8a.
+See `IMPLEMENTATION_NOTES.md` §1, §1a and §8a.
 
 ---
 
@@ -149,7 +149,7 @@ never reaches training:
 **Mismatched vectors are never truncated, zero-padded, or rectangularly
 projected to fit.** Any of those would change the method into one the paper
 does not describe, and would do so invisibly in the reported numbers. See
-`DEVIATIONS.md` §1.
+`IMPLEMENTATION_NOTES.md` §1.
 
 ### FastText Embeddings
 
@@ -267,7 +267,7 @@ the method.
 >
 > W is frozen in all cases — no gradient path is manufactured for it.
 > Resolving this requires the authors to state both how W is obtained and
-> which objective, if any, trains it. See `DEVIATIONS.md` §1a.
+> which objective, if any, trains it. See `IMPLEMENTATION_NOTES.md` §1a.
 
 ```yaml
 lgse:
