@@ -196,18 +196,19 @@ placed W in the optimizer on the reasoning that "any objective which is a
 function of it would train it". But nothing differentiates W, so that
 optimizer entry advertised a capability the run did not have — a reader
 inspecting the parameter groups would conclude W was being learned.
-`AlignmentProjection` still accepts `trainable=True` for a future run under
-an author-supplied objective; nothing in this repository sets it, and
-setting it alone does not create a gradient path.
+W now carries `requires_grad=False` with no switch to change it:
+`AlignmentProjection` takes no `trainable` argument, and the optimizer
+contains the embedding matrix alone.
 
 **What is *not* done.** No loss term is invented to give W a gradient.
 Candidates exist — a live regularizer anchor, a reconstruction loss, an
 alignment loss against anchor translations — and any of them would make W
-train and produce numbers. None is in the paper, so none is implemented.
-An earlier revision of this code did make the regularizer anchor a live
-function of W; that was reverted on reading Sec 4.2, since it contradicts
-"μ is the initial embedding vector". The capability remains in
-`LGSERegularizer` (`anchor_is_live`), unused by any configured run.
+train and produce numbers. None is in the paper, so none is implemented,
+and none is kept as a dormant alternative. An earlier revision did make the
+regularizer anchor a live function of W; that was reverted on reading
+Sec 4.2, since it contradicts "μ is the initial embedding vector", and the
+capability has since been removed rather than left in place unused.
+`LGSERegularizer` takes a fixed anchor tensor and nothing else.
 
 ### 1a-ii. How the status is surfaced
 

@@ -1,10 +1,13 @@
-# LGSE: Linguistically-Guided Subword Embeddings for Amharic & Tigrinya
+# LGSE: Lexically Grounded Subword Embedding Initialization
 
-### Official Code Release — Accepted at LREC 2026
+### Official implementation — LREC 2026
 
-This repository accompanies our paper accepted for publication at **LREC 2026**.
+This is the official repository for **LGSE: Lexically Grounded Subword
+Embedding Initialization for Low-Resource Language Adaptation**
+(Teklehaymanot, Fazlija & Nejdl, LREC 2026; arXiv:2603.22629).
 
-It provides a complete implementation of **LGSE (Linguistically-Guided Subword Embedding Initialization)** adapted for **Amharic** and **Tigrinya**, two morphologically rich Ethio-Semitic languages.
+It implements the method described in the paper for **Amharic** and
+**Tigrinya**, two morphologically rich Ethio-Semitic languages.
 
 LGSE improves multilingual pretrained language models (e.g., Hugging Face Transformers such as XLM-RoBERTa) by initializing newly introduced vocabulary tokens using:
 
@@ -42,11 +45,34 @@ table states this per row, so fidelity is readable from the table itself:
 | +FOCUS+LAPT | … | 5 | author-supplied W |
 | +LGSE+LAPT | … | 5 | **not faithful — no author-supplied W** |
 
+(The `F1` column above is illustrative — see *Experimental results* below.)
+
 The baselines (`xlmr`, `lapt`, `random_lapt`) use no FastText, need no W,
 and run normally — the prerequisite applies only to the LGSE/FOCUS systems
 that consume FastText.
 
 See `IMPLEMENTATION_NOTES.md` §1, §1a and §8a.
+
+---
+
+## 📊 Experimental results
+
+**This repository contains no experimental results.**
+
+The paper's Table 2 numbers are deliberately not reproduced here. They were
+produced under the authors' full experimental conditions — including the
+alignment matrix W and the λ value, neither of which the paper states — and
+copying them into this repository would present them as outputs of this code
+when they are not.
+
+`scripts/aggregate_results.py` builds a results table from runs you perform
+yourself. Every figure in it comes from a completed run in your own
+`results/` directory, carries the commit, config hash, dataset manifest,
+seeds and environment that produced it, and is labelled with its fidelity
+status per row.
+
+Nothing under `results/` or `checkpoints/` is committed (see `.gitignore`),
+so no number in this repository can be mistaken for a published one.
 
 ---
 

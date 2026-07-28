@@ -215,25 +215,23 @@ def test_frozen_projection_is_excluded_from_the_optimizer(projection):
     """The optimizer must contain the embeddings only."""
     embedding = torch.nn.Embedding(120, DIM)
 
-    trainable = [embedding.weight]
-    if projection.is_trainable:
-        trainable += [p for p in projection.parameters() if p.requires_grad]
-
-    assert trainable == [embedding.weight]
+    assert not projection.is_trainable
+    assert [p for p in projection.parameters() if p.requires_grad] == []
 
 
-def test_trainable_flag_exists_for_a_future_objective():
-    """`trainable=True` is reachable but unused by any configured run.
+def test_w_cannot_be_made_trainable():
+    """There is no switch that makes W trainable.
 
-    It makes W *eligible* for a gradient; it does not create one.
+    The paper states no objective that trains W, so an implementation
+    offering a trainable mode would be offering a method the paper does not
+    describe.
     """
     from lgse.projection import AlignmentProjection
 
-    projection = AlignmentProjection(DIM, weight=torch.eye(DIM),
-                                     trainable=True)
-    assert projection.is_trainable
-    assert sum(p.numel() for p in projection.parameters()
-               if p.requires_grad) == DIM * DIM
+    projection = AlignmentProjection(DIM, weight=torch.eye(DIM))
+    assert not projection.is_trainable
+    with pytest.raises(TypeError):
+        AlignmentProjection(DIM, weight=torch.eye(DIM), trainable=True)
 
 
 # --- autograd: W stays on the graph through morpheme averaging -------
@@ -259,24 +257,6 @@ def test_no_gradient_is_created_for_a_frozen_w(projection):
     assert projection.linear.weight.grad is None
 
 
-def test_a_trainable_w_would_be_differentiable():
-    """W's mechanics are sound: were an objective supplied, it would train.
-
-    This isolates the mechanism from the separate fact that the paper
-    supplies no such objective (test_paper_objectives_give_w_no_gradient).
-    """
-    from lgse.projection import AlignmentProjection
-
-    projection = AlignmentProjection(DIM, weight=torch.eye(DIM),
-                                     trainable=True)
-    vec = _builder(projection).build_embedding_for_token("ኣይመፀን")
-    vec.sum().backward()
-
-    weight = projection.linear.weight
-    assert weight.grad is not None
-    assert torch.any(weight.grad != 0)
-
-
 # --- the paper's objectives leave W without a gradient ---------------
 
 def test_paper_objectives_give_w_no_gradient(projection):
@@ -284,8 +264,8 @@ def test_paper_objectives_give_w_no_gradient(projection):
 
     Sec 4.2's L_reg anchors to a constant mu, and the MLM loss reads the
     embedding matrix that initialization wrote into via `.data`. Neither is
-    a function of W, so W stays at its identity initialization for the whole
-    of LAPT even though the paper calls it "learned".
+    a function of W, so the supplied W is unchanged for the whole of LAPT
+    even though the paper calls it "learned".
     """
     from lgse.regularization import LGSERegularizer
 
@@ -299,7 +279,6 @@ def test_paper_objectives_give_w_no_gradient(projection):
 
     regularizer = LGSERegularizer(init_embeddings=init_matrix,
                                   token_ids=token_to_id, lambda_reg=1.0)
-    assert not regularizer.anchor_is_live, "paper's mu is a constant"
 
     loss = embedding(torch.tensor([100])).sum() + regularizer.loss(embedding)
     loss.backward()

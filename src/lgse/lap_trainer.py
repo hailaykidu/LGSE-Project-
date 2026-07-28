@@ -36,7 +36,7 @@ class LGSELAPTrainer:
     initializing new vocabulary embeddings. During LAPT, embedding
     regularization preserves the initialized semantic structure while
     adapting the new representations to target language data.
-"""
+    """
 
 
     def __init__(self, config: LGSEConfig, dataset):
@@ -187,11 +187,8 @@ class LGSELAPTrainer:
         # If an author later supplies a training objective for W, both this
         # list and the objective itself must change together; see
         # IMPLEMENTATION_NOTES.md section 1a.
-        trainable = [embedding_layer.weight]
-        if self.projection is not None and self.projection.is_trainable:
-            trainable += [p for p in self.projection.parameters()
-                          if p.requires_grad]
-        self.optimizer = AdamW(trainable, lr=config.learning_rate)
+        self.optimizer = AdamW([embedding_layer.weight],
+                               lr=config.learning_rate)
 
         self.collator = DataCollatorForLanguageModeling(
             tokenizer=self.tokenizer, mlm=True, mlm_probability=config.mlm_probability
@@ -232,7 +229,7 @@ class LGSELAPTrainer:
         """Whether any gradient actually reached W in the last backward pass.
 
         Reported rather than assumed. Under the paper's stated objectives
-        this is False: W is frozen, and even were it trainable no loss term
+        this is False: W is frozen, and no loss term the paper states
         is a function of it. Surfacing it keeps the gap checkable instead of
         resting on the claim in this docstring.
 
@@ -258,7 +255,7 @@ class LGSELAPTrainer:
             "source": self.projection.source,
             "author_supplied": True,   # build_projection raises otherwise
             "is_identity": self.projection.is_identity,
-            "trainable": self.projection.is_trainable,
+            "trainable": False,
             "received_gradient": self.projection_receives_gradient(),
             "training_status": "author-required / unspecified in paper",
         }
@@ -284,7 +281,7 @@ class LGSELAPTrainer:
                 "source_dim": self.projection.source_dim,
                 "target_dim": self.projection.target_dim,
                 "source": self.projection.source,
-                "trainable": self.projection.is_trainable,
+                "trainable": False,
                 "training_status": "author-required / unspecified in paper",
             }, path)
             print(f"Saved alignment matrix W to {path}")

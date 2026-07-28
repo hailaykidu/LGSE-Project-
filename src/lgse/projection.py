@@ -40,10 +40,7 @@ W is frozen -- excluded from the optimizer and carrying
 
 No gradient path is manufactured for W. Constructing one would require
 inventing a loss term the paper does not state, which would be implementing
-a different method while reporting it as LGSE. `AlignmentProjection`
-accepts `trainable=True` for a future run under an author-supplied
-objective, but nothing in this repository sets it, and setting it does not
-by itself create a gradient path.
+a different method while reporting it as LGSE.
 
 Resolving this requires the authors to state which objective trains W.
 See IMPLEMENTATION_NOTES.md section 1a.
@@ -76,17 +73,13 @@ class AlignmentProjection(nn.Module):
 
     W is **frozen**: `requires_grad=False`, excluded from the optimizer.
     This is not an oversight but the documented consequence of the paper
-    specifying no objective that trains it (see IMPLEMENTATION_NOTES.md section 1a).
-    Marking it trainable while nothing differentiates it would report a
-    capability the run does not have.
-
-    `trainable=True` exists only for a future run under an author-supplied
-    objective. Nothing in this repository sets it, and setting it alone does
-    not create a gradient path -- it only makes W eligible for one.
+    specifying no objective that trains it (see IMPLEMENTATION_NOTES.md
+    section 1a). Marking it trainable while nothing differentiates it would
+    report a capability the run does not have.
     """
 
     def __init__(self, dim: int, weight: torch.Tensor,
-                 trainable: bool = False, source: str = "unspecified"):
+                 source: str = "unspecified"):
         super().__init__()
         self.dim = dim
         # Retained for checkpoint compatibility and shape assertions.
@@ -108,7 +101,7 @@ class AlignmentProjection(nn.Module):
         self.linear = nn.Linear(dim, dim, bias=False)
         with torch.no_grad():
             self.linear.weight.copy_(w)
-        self.linear.weight.requires_grad = bool(trainable)
+        self.linear.weight.requires_grad = False
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.linear(x)
@@ -214,13 +207,12 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
 
 
 def build_projection(source_dim: int, target_dim: int,
-                     alignment_matrix_path=None,
-                     trainable: bool = False) -> nn.Module:
+                     alignment_matrix_path=None) -> nn.Module:
     """Return the square alignment matrix W (paper Sec 4.1).
 
-    `alignment_matrix_path` supplies an author-provided W; without one, W is
-    the identity. W is frozen unless `trainable=True`, which no configured
-    run sets -- see this module's docstring for why.
+    `alignment_matrix_path` supplies the author-provided W and is required:
+    without it this raises `MissingAlignmentMatrix`. The returned W is
+    frozen -- see this module's docstring for why.
 
     Raises `IncompatibleFastTextDimension` on a dimension mismatch: W is
     square, so unequal dimensions mean the FastText model does not match the
@@ -262,5 +254,4 @@ def build_projection(source_dim: int, target_dim: int,
 
     weight = load_alignment_matrix(alignment_matrix_path, source_dim)
     return AlignmentProjection(source_dim, weight=weight,
-                               trainable=trainable,
                                source=str(alignment_matrix_path))
