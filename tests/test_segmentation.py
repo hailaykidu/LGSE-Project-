@@ -2,7 +2,7 @@ import os
 import sys
 import tempfile
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from lgse.segmentation import MorphologicalSegmenter
 
 REAL_LEXICON_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "morph_lexicon.txt")

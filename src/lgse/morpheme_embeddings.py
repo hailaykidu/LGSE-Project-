@@ -3,32 +3,24 @@ import numpy as np
 
 
 class MorphemeEmbeddingBuilder:
-    def __init__(self, fasttext_model, segmenter, embedding_dim: int, seed: int = 42):
+    def __init__(self, fasttext_model, segmenter, embedding_dim: int,
+                 seed: int = 42, projection=None):
         self.fasttext_model = fasttext_model
         self.segmenter = segmenter
         self.embedding_dim = embedding_dim
 
-        # FastText models are essentially always 300-dim (the standard
-        # Facebook release / the fasttext.cc default), but the target
-        # model's embedding space can be any width -- 768 for
-        # xlm-roberta-base, for instance. Raw FastText vectors were being
-        # written directly into the embedding matrix with no dimension
-        # check at all, which crashes the moment the two widths differ (as
-        # they did on the very first real run against xlm-roberta-base: a
-        # 300 vs 768 mismatch). A fixed, seeded random projection maps
-        # FastText-space vectors into the target space; per the
-        # Johnson-Lindenstrauss lemma a random linear projection
-        # approximately preserves relative distances, which is a
-        # defensible way to bridge the two spaces without requiring extra
-        # training data to fit a learned projection.
-        self._projection = None
+        # LGSE's W is square (paper Sec 4.1), so FastText and the model's
+        # embedding space must share a dimension. Verify that here rather
+        # than waiting for a shape error deep in a forward pass, and use the
+        # same check as build_projection so the two cannot disagree.
+        #
+        # There is deliberately no fallback: reshaping or rectangularly
+        # projecting mismatched vectors would leave the run reporting as
+        # LGSE while computing something the paper does not describe.
+        self.projection = projection
         if fasttext_model is not None:
-            ft_dim = fasttext_model.get_dimension()
-            if ft_dim != embedding_dim:
-                rng = np.random.default_rng(seed)
-                self._projection = rng.normal(
-                    scale=1.0 / np.sqrt(ft_dim), size=(ft_dim, embedding_dim)
-                ).astype(np.float32)
+            from .projection import check_dimensions
+            check_dimensions(fasttext_model.get_dimension(), embedding_dim)
 
     def _fasttext_vec(self, text: str) -> Optional[np.ndarray]:
         if self.fasttext_model is None:
@@ -37,8 +29,12 @@ class MorphemeEmbeddingBuilder:
             vec = self.fasttext_model.get_word_vector(text)
         except Exception:
             return None
-        if self._projection is not None:
-            vec = vec @ self._projection
+        if self.projection is not None:
+            import torch
+            device = next(self.projection.parameters()).device
+            with torch.set_grad_enabled(self.projection.training):
+                t = torch.as_tensor(vec, dtype=torch.float32, device=device)
+                return self.projection(t)
         return vec
 
     def word_from_morphemes(self, morphemes: List[str]) -> Optional[np.ndarray]:
@@ -51,6 +47,14 @@ class MorphemeEmbeddingBuilder:
         morpheme_vecs = [v for m in morphemes if (v := self._fasttext_vec(m)) is not None]
         if not morpheme_vecs:
             return None
+        # With a trainable W these are torch tensors carrying
+        # gradients, and np.mean would try to convert them -- which raises
+        # "Can't call numpy() on Tensor that requires grad". Averaging in the
+        # tensor's own framework keeps W on the autograd graph, which is the
+        # whole point of learning it.
+        import torch
+        if isinstance(morpheme_vecs[0], torch.Tensor):
+            return torch.stack(morpheme_vecs, dim=0).mean(dim=0)
         return np.mean(morpheme_vecs, axis=0)
 
     def build_embedding_for_token(self, token: str) -> Optional[np.ndarray]:

@@ -1,0 +1,34 @@
+# The five systems compared in Table 2. They differ only in vocabulary
+# expansion and how new-token embeddings are initialized; everything else --
+# backbone, LAPT procedure, fine-tuning, seeds -- is held fixed.
+
+systems:
+  xlmr:
+    description: XLM-R baseline, no vocabulary expansion, no LAPT
+    expand_vocab: false
+    lapt: false
+    initializer: null
+
+  lapt:
+    description: "+LAPT: vocabulary expanded, model's default init for new rows"
+    expand_vocab: true
+    lapt: true
+    initializer: default
+
+  random_lapt:
+    description: "+Random+LAPT: Gaussian init at the pretrained embedding scale"
+    expand_vocab: true
+    lapt: true
+    initializer: random
+
+  focus_lapt:
+    description: "+FOCUS+LAPT: similarity-weighted combination of existing embeddings"
+    expand_vocab: true
+    lapt: true
+    initializer: focus
+
+  lgse_lapt:
+    description: "+LGSE+LAPT: morpheme -> FastText -> char n-gram (this paper)"
+    expand_vocab: true
+    lapt: true
+    initializer: lgse

@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import torch
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from lgse.char_ngrams import CharNgramEncoder
 from lgse.initializer import LGSEInitializer
 from lgse.morpheme_embeddings import MorphemeEmbeddingBuilder

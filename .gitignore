@@ -1,3 +1,30 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Real FastText models are ~2.6 GB / ~2.8 GB and are downloaded on demand
+# by data/scripts/download_fasttext.py, which records dimensions, vocab
+# size and sha256 in data/fasttext_manifest.json.
+*.bin
+
+# Run artifacts. The repository holds code, configuration and the datasets
+# the paper names -- never the output of a run. A committed checkpoint or
+# results file would also make the tree look like it carries results that
+# no longer correspond to the current code.
+results/
+checkpoints/
+outputs/
+logs/
+wandb/
+
+# Model weights and serialized tensors, including the alignment matrix W.
+# W is an author-supplied artifact (DEVIATIONS.md 1a): it is referenced by
+# path from the config and must not be committed, or the repository would
+# be shipping an alignment matrix the authors never specified.
+*.pt
+*.pth
+*.npy
+*.npz
+*.ckpt
+*.safetensors
+*.h5
