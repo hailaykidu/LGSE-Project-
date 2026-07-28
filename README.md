@@ -9,419 +9,194 @@ Embedding Initialization for Low-Resource Language Adaptation**
 It implements the method described in the paper for **Amharic** and
 **Tigrinya**, two morphologically rich Ethio-Semitic languages.
 
-LGSE improves multilingual pretrained language models (e.g., Hugging Face Transformers such as XLM-RoBERTa) by initializing newly introduced vocabulary tokens using:
+---
 
-* Morpheme-aware decomposition
-* FastText subword representations
-* Character n-gram fallback embeddings
-* Regularized Language-Adaptive Pretraining (LAP)
+## Overview
+
+Adapting pretrained multilingual language models to low-resource,
+morphologically rich languages is limited by how new vocabulary is
+initialized. Standard vocabulary expansion relies on arbitrary subword
+units, which fragment morphological structure and degrade semantic
+alignment.
+
+LGSE initializes new token embeddings from linguistic structure rather than
+from random vectors:
+
+1. **Morphological decomposition** — words are segmented into meaningful
+   morphemes using a supervised lexicon.
+2. **Morpheme-averaged embeddings** — each new token's embedding is the
+   average of its morphemes' FastText representations, aligned into the
+   model's embedding space by a linear projection `W ∈ R^(d×d)` (Sec 4.1).
+3. **Character n-gram fallback** — tokens with no usable segmentation fall
+   back to character n-gram representations.
+4. **Regularized LAPT** — during language-adaptive pretraining the encoder
+   is frozen and only the new embeddings are updated, with
+
+   ```
+   L_total = L_MLM + λ · ‖e_new − μ‖²
+   ```
+
+   penalizing drift from the initialized values (Sec 4.2).
+
+### Pipeline
+
+| Stage | Module |
+|---|---|
+| Token selection | `src/lgse/token_selection.py` |
+| Morphological segmentation | `src/lgse/segmentation.py` |
+| Morpheme embeddings + projection W | `src/lgse/morpheme_embeddings.py`, `src/lgse/projection.py` |
+| Character n-gram fallback | `src/lgse/char_ngrams.py` |
+| Embedding initialization | `src/lgse/initializer.py` |
+| Regularization | `src/lgse/regularization.py` |
+| Language-adaptive pretraining | `src/lgse/lap_trainer.py` |
+| Downstream evaluation | `src/evaluation/` |
 
 ---
 
-## ⚠️ Prerequisites you must supply
-
-Three artifacts cannot be derived from the paper. **The implementation fails
-rather than substituting a value for any of them** — explicit incompleteness
-is preferred to a silent choice the authors never described.
-
-| Required | Where | Why it has no default |
-|---|---|---|
-| **Alignment matrix W** | `lgse.alignment_matrix_path` | Sec 4.1 introduces W but never says how it is obtained |
-| **Regularization strength λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but never assigns it |
-| **FastText at dim 768** | `data/fasttext_manifest.json` | W is square, so FastText must match the model's width |
-
-> **Any result produced without an author-provided W is not faithful to the
-> published method.** It may still be a useful experiment, but it is one run
-> under a documented substitution — and the substitution is yours, recorded
-> in the run record.
-
-A run either satisfies all three prerequisites, or it reports itself as a
-**partial reproduction / implementation validation**. The generated results
-table states this per row, so fidelity is readable from the table itself:
-
-| System | F1 | seeds | Alignment matrix W |
-|---|---|---|---|
-| XLM-R | … | 5 | n/a — no alignment matrix required |
-| +FOCUS+LAPT | … | 5 | author-supplied W |
-| +LGSE+LAPT | … | 5 | **not faithful — no author-supplied W** |
-
-(The `F1` column above is illustrative — see *Experimental results* below.)
-
-The baselines (`xlmr`, `lapt`, `random_lapt`) use no FastText, need no W,
-and run normally — the prerequisite applies only to the LGSE/FOCUS systems
-that consume FastText.
-
-See `IMPLEMENTATION_NOTES.md` §1, §1a and §8a.
-
----
-
-## 📊 Experimental results
-
-**This repository contains no experimental results.**
-
-The paper's Table 2 numbers are deliberately not reproduced here. They were
-produced under the authors' full experimental conditions — including the
-alignment matrix W and the λ value, neither of which the paper states — and
-copying them into this repository would present them as outputs of this code
-when they are not.
-
-`scripts/aggregate_results.py` builds a results table from runs you perform
-yourself. Every figure in it comes from a completed run in your own
-`results/` directory, carries the commit, config hash, dataset manifest,
-seeds and environment that produced it, and is labelled with its fidelity
-status per row.
-
-Nothing under `results/` or `checkpoints/` is committed (see `.gitignore`),
-so no number in this repository can be mistaken for a published one.
-
----
-
-## 📌 Motivation
-
-Adapting pretrained multilingual language models to **low-resource, morphologically rich languages** remains challenging.
-Standard vocabulary expansion methods rely on arbitrary subword units, which fragment morphological structure and degrade semantic alignment.
-
-LGSE addresses this by:
-
-1. Decomposing words into linguistically meaningful morphemes.
-2. Constructing semantically coherent embeddings via morpheme representation averaging.
-3. Applying embedding regularization during LAP to preserve alignment with the original embedding space.
-
----
-
-## 🚀 Project Structure
-
-```
-LGSE-Project/
-│
-├── data/
-│   ├── morph_lexicon.txt
-│   ├── new_tokens.txt
-│   ├── fasttext_Amharic.bin       # https://fasttext.cc/docs/en/crawl-vectors.html /download  FastText Models
-│   └── fasttext_Tigriyna.bin      # https://huggingface.co/Hailay/fasttext-tigrinya/ download FastText Models
-│
-├── lgse/
-│   ├── config.py
-│   ├── lap_trainer.py
-│   ├── segmentation.py
-│   ├── morpheme_embeddings.py
-│   ├── initializer.py
-│   ├── regularization.py
-│   ├── char_ngrams.py
-│   └── token_selection.py
-│
-├── lgse_tokenizers/                # unrelated helper utilities, not used by
-│   ├── __init__.py                 # the LAP pipeline; see Implementation
-│   ├── spm_utils.py                # Notes below for why it isn't named
-│   └── vocab_expansion.py          # `tokenizers/`
-│
-└── scripts/
-    ├── run_lgse_lap.py
-    └── analyze_tokens.py
-```
-
----
-
-## 📦 Installation
-
-Clone the repository and install dependencies:
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Core Dependencies
-
-* transformers
-* torch
-* fasttext
-* numpy
-* sentencepiece
+Core dependencies: `torch`, `transformers`, `fasttext`, `numpy`,
+`sentencepiece`.
 
 ---
 
-## 🌍 FastText Models
+## Usage
 
-LGSE uses FastText embeddings for morpheme and fallback representations.
+### Requirements
 
-### ⚠️ Required embedding dimension
+Three artifacts are supplied by the experimenter. The paper does not specify
+values for them, so the implementation requires them explicitly rather than
+choosing on the authors' behalf:
 
-> **FastText vectors must have the same dimension as the model's embedding
-> space — 768 for `xlm-roberta-base`, the model used in the paper.**
->
-> LGSE aligns the two spaces with a **square** learned projection
-> `W ∈ R^(d×d)` (paper Sec 4.1). W performs an alignment, not a change of
-> dimensionality, so both spaces must already be of width `d`.
->
-> **The standard 300-dimensional FastText vectors cannot be used with a
-> 768-dim model under the published method.** LGSE will refuse to start
-> rather than reshape them.
+| Requirement | Where | Why it is not defaulted |
+|---|---|---|
+| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 introduces W but does not state how it is obtained |
+| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but does not give its value |
+| FastText at the model's width | `data/fasttext_manifest.json` | W is square (`d×d`), so FastText must match the model's embedding width |
 
-Train FastText at the required width:
+A run missing any of these stops with an explanatory error rather than
+substituting a value. See [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md)
+§1, §1a and §8a for the reasoning.
+
+### FastText models
+
+FastText binaries are 2–3 GB and are not committed. Fetch them with:
 
 ```bash
-fasttext skipgram -input <corpus> -output fasttext_amharic_768 -dim 768
+python data/scripts/download_fasttext.py --language both
 ```
 
-The dimension is checked in three places, earliest first, so a mismatch
-never reaches training:
+- **Amharic** — FastText Common Crawl vectors (Grave et al., 2018)
+- **Tigrinya** — https://huggingface.co/Hailay/fasttext-tigrinya
 
-| Where | When |
-|---|---|
-| `data/scripts/download_fasttext.py` | at download — warns and exits non-zero |
-| `LGSEConfig.fasttext_path` | at config resolution — before the model is loaded |
-| `build_projection` / `MorphemeEmbeddingBuilder` | at construction — authoritative |
-
-**Mismatched vectors are never truncated, zero-padded, or rectangularly
-projected to fit.** Any of those would change the method into one the paper
-does not describe, and would do so invisibly in the reported numbers. See
-`IMPLEMENTATION_NOTES.md` §1.
-
-### FastText Embeddings
-
-The LGSE framework initializes token embeddings using pretrained FastText
-models to provide morphology-aware semantic representations.
-
-- **Tigrinya:** Pretrained FastText model released with this project:
-  https://huggingface.co/Hailay/fasttext-tigrinya
-- **Amharic:** Official FastText Common Crawl vectors:
-  https://fasttext.cc/docs/en/crawl-vectors.html
-
-Both sources above are **300-dimensional** and therefore require retraining
-at dimension 768 before use with XLM-R — see the requirement above.
-
-These pretrained models are used during vocabulary initialization to obtain
-word-level embeddings. For out-of-vocabulary items, LGSE automatically falls
-back to FastText's subword (character n-gram) representations, ensuring that
-embeddings can still be generated for unseen words without requiring explicit
-vocabulary entries.
-
-### 🔹 Amharic FastText
-
-Download from Facebook FastText:
-https://fasttext.cc/
-
-```
-cc.am.300.bin        # 300-dim: NOT usable with 768-dim XLM-R as-is
-```
-
-Rename to:
-
-```
-fasttext_amharic.bin
-```
-
----
-
-### 🔹 Tigrinya FastText
-
-Download from Hugging Face:
-https://huggingface.co/Hailay/fasttext-tigrinya
-
-Rename to:
-
-```
-fasttext_tigrinya.bin
-```
-
-Place both models inside:
-
-```
-data/
-```
-
----
-
-## 🔧 Running LGSE Language-Adaptive Pretraining (LAP)
+Both are released at 300 dimensions. Because W is square, they must be
+trained at the model's embedding width (768 for `xlm-roberta-base`) before
+use:
 
 ```bash
-python scripts/run_lgse_lap.py --language ti --corpus_file /path/to/tigrinya_corpus.txt
+fasttext skipgram -input <corpus> -output <model> -dim 768
 ```
 
-`--language` is `am` or `ti` (selects which FastText model + config
-defaults to use). `--corpus_file` is a plain-text file, one sentence per
-line; without it, the script runs on a 2-sentence placeholder just to
-smoke-test that the pipeline runs end to end -- nowhere near enough data
-for a real experiment. Model, lexicon, and FastText paths come from
-`lgse.config.LGSEConfig` rather than separate CLI flags (see
-`lgse/config.py`); pass a custom `LGSEConfig` in Python if you need to
-override them for your setup.
+Mismatched vectors are never truncated, padded, or rectangularly projected
+to fit; the dimension is checked at download, at config resolution, and at
+construction.
 
----
+### Language-adaptive pretraining
 
-## ✅ Implementation Notes
-
-## Implementation Notes
-
-This implementation provides a complete end-to-end realization of
-the LGSE framework described in the paper. It integrates morpheme-based
-embedding initialization, FastText representations, character n-gram
-fallback embeddings, embedding regularization, and frozen-backbone
-language-adaptive pretraining.
-
-The implementation has been validated with XLM-RoBERTa and Tigrinya, Amharic 
-FastText embeddings. During training, pretrained vocabulary embeddings
-remain fixed while newly introduced vocabulary embeddings are optimized
-through the LGSE-guided objective.
-
-To align the FastText embedding space with the pretrained model's, LGSE
-applies a linear projection **W ∈ R^(d×d)** (paper Sec 4.1). W is square, so
-FastText must be trained at the model's embedding width (768 for XLM-R base)
-— `build_projection` refuses a rectangular map rather than silently changing
-the method.
-
-### ⚠️ W must be supplied — there is no default
-
-> The paper introduces W (Sec 4.1) but **never states how it is obtained**:
-> no initialization, no fitting procedure, and no training objective
-> anywhere in the paper is a function of W. `L_reg` anchors to a constant μ
-> (Sec 4.2), and LAPT's MLM loss reads the embedding matrix, not W.
->
-> W is therefore an **author-supplied artifact**. LGSE runs **fail** unless
-> `lgse.alignment_matrix_path` points at a `.pt`/`.npy` file holding a `d×d`
-> matrix.
->
-> **No default is substituted — not even the identity.** The identity is not
-> neutral: it asserts the FastText and model embedding spaces are already
-> aligned, which is exactly the claim W exists to avoid making. A random or
-> fitted W would be an alignment strategy the paper does not describe.
-> Either would materially affect results while the run still looked
-> faithful.
->
-> **Any result produced without an author-provided W is not faithful to the
-> published method.**
->
-> W is frozen in all cases — no gradient path is manufactured for it.
-> Resolving this requires the authors to state both how W is obtained and
-> which objective, if any, trains it. See `IMPLEMENTATION_NOTES.md` §1a.
-
-```yaml
-lgse:
-  alignment_matrix_path: path/to/W.pt   # required; d x d
+```bash
+python scripts/run_lgse_lap.py \
+    --language ti \
+    --corpus_file /path/to/tigrinya_corpus.txt
 ```
 
-W is saved with the checkpoint, and its source, `author_supplied` flag, and
-training status are recorded in every run record. A *supplied* identity is
-fine — that is the author's documented choice, and the trainer flags it.
+`--language` is `am` or `ti`. Model, lexicon, FastText and W paths come from
+`configs/base.yaml` via `src/lgse/config.py`.
 
-### `reg_lambda` is mandatory
+### Downstream evaluation
 
-`lgse.reg_lambda` — λ in `L_reg = λ‖e_new − μ‖²` (Sec 4.2) — **has no
-default and must be set explicitly.** The paper introduces λ but never
-states its value, so any setting is the experimenter's choice; a silent
-default would make every result look as if it followed a published one. Runs
-fail with an explanatory error if it is absent. `configs/base.yaml` ships
-`1.0`, carried over from the original release and marked
-`source: unavailable`.
+```bash
+python src/training/run_experiment.py \
+    --system lgse_lapt --task ner --language tigrinya --seed 42 \
+    --data-dir <split> --corpus <LAPT corpus>
 
----
-
-## 🧠 LGSE Pipeline Overview
-
-1. **Token Selection**
-   Identify new vocabulary items for expansion.
-
-2. **Morphological Decomposition**
-   Use Amharic + Tigrinya lexicon for segmentation.
-
-3. **Embedding Initialization**
-
-   * Morpheme averaging (FastText or pretrained subwords)
-   * Character n-gram fallback
-
-4. **Regularized LAP**
-
-Loss formulation:
-
-```
-L_total = L_MLM + lambda * ||E_new − E_init||^2
+python scripts/aggregate_results.py        # build the results table
 ```
 
-5. **Evaluation**
-
-   * Question Answering
-   * Named Entity Recognition
-   * Text Classification
+Systems: `xlmr`, `lapt`, `random_lapt`, `focus_lapt`, `lgse_lapt`. The
+baselines use no FastText and need no alignment matrix.
 
 ---
 
-## 📊 Experimental Findings
+## Repository structure
 
-LGSE consistently:
-
-* Outperforms random initialization
-* Outperforms subword averaging baselines
-* Preserves embedding space alignment
-* Improves downstream performance in low-resource settings
-
-Best improvements observed in:
-
-* Morphologically productive suffixes
-* Derivational morphology
-* Negation constructions
-
----
-
-## 📚 Supported Languages
-
-* Amharic
-* Tigrinya
-
-Designed for extension to:
-
-* Oromo
-* Geez-script languages
-* Other Semitic languages
+```
+LGSE-Project/
+├── configs/          base.yaml, systems.yaml
+├── data/
+│   ├── morph_lexicon.txt, new_tokens.txt
+│   └── scripts/      download_fasttext.py, prepare_ner.py, prepare_qa.py
+├── src/
+│   ├── lgse/         the method (segmentation, projection, initializer,
+│   │                 regularization, lap_trainer, ...)
+│   ├── baselines/    comparison systems
+│   ├── evaluation/   NER / QA metrics and runners
+│   └── training/     run_experiment.py
+├── scripts/          run_lgse_lap.py, run_table2.sh, aggregate_results.py
+├── tests/
+└── IMPLEMENTATION_NOTES.md
+```
 
 ---
 
-## 🏛 Conference
+## Reproducibility
 
-This repository accompanies our paper accepted at:
+Results are produced by running the pipeline; none are committed to this
+repository. `scripts/aggregate_results.py` builds a table from your own runs
+in `results/`, recording for each figure the commit, configuration hash,
+dataset manifest, seeds and environment that produced it, and labelling
+whether the run used an author-supplied alignment matrix.
 
-**LREC 2026**
+The paper's reported numbers are not copied into this repository, since they
+were produced under the authors' full experimental conditions and are not
+outputs of a run performed here.
 
----
-
-## 📄 License
-
-* Code follows the license of the original LGSE / FOCUS implementation.
-* FastText models follow their respective licenses.
-* Morphological lexicons are released for research use.
-
----
-
-## 🤝 Citation
-
-If you use this code or lexicon, please cite our LREC 2026 paper.
-
- Teklehaymanot, H., Fazlija, D., & Nejdl, W. (2026). LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation. arXiv preprint arXiv:2603.22629.
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records every point
+where the paper underdetermines the implementation, and
+[`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
+validation.
 
 ---
 
-## 🔮 Future Extensions
+## Supported languages
 
-* Hybrid neural + rule-based morphological analyzer
-* LGSE + LoRA integration
-* Joint tokenization learning
-* Automatic morpheme discovery
-* Open benchmark for Ethio-Semitic NLP
+Amharic and Tigrinya, with the method designed to extend to other
+Ge'ez-script and Semitic languages where morphological segmentation
+resources exist.
 
 ---
 
-## 👩‍🔬 Authors
-Teklehaymanot, H., Fazlija, D., & Nejdl, W. (2026). LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation. arXiv preprint arXiv:2603.22629.
+## License
+
+- Code follows the license of the original LGSE / FOCUS implementation.
+- FastText models follow their respective licenses.
+- Morphological lexicons are released for research use.
 
 ---
 
-## ⭐ Acknowledgements
+## Citation
 
-We thank the open-source NLP community and contributors to multilingual pretrained models and low-resource language research.
-
----
-
-## 📬 Contact
-
-For questions, collaborations, or contributions, please open an issue or contact the authors.
-
----
+```bibtex
+@inproceedings{teklehaymanot2026lgse,
+  title     = {LGSE: Lexically Grounded Subword Embedding Initialization
+               for Low-Resource Language Adaptation},
+  author    = {Teklehaymanot, Hailay and Fazlija, Dren and Nejdl, Wolfgang},
+  booktitle = {Proceedings of LREC 2026},
+  year      = {2026},
+  eprint    = {2603.22629},
+  archivePrefix = {arXiv}
+}
+```
