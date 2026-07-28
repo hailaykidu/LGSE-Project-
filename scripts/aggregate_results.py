@@ -111,21 +111,41 @@ def main():
                          f"vocab {rec.get('vocab_size'):,}, "
                          f"sha256 `{(rec.get('sha256') or '')[:12]}` |")
 
-        seen_datasets = set()
+        # Group by language/task and prefer a record that carries a
+        # manifest: a pair is only undocumented if *no* run of it had one.
+        # An absent manifest is rendered as a gap, never omitted -- a missing
+        # row would let a hand-assembled data directory look documented.
+        by_pair = defaultdict(list)
         for r in records:
-            manifest = r["provenance"].get("dataset_manifest") or {}
-            key = (r["language"], r["task"])
-            if not manifest or key in seen_datasets:
+            by_pair[(r["language"], r["task"])].append(r)
+
+        undocumented = []
+        for key in sorted(by_pair):
+            language, task = key
+            group = by_pair[key]
+            documented = [
+                r for r in group
+                if (m := r["provenance"].get("dataset_manifest"))
+                and m.get("status") != "unavailable"
+            ]
+            label = f"Dataset ({language} {task.upper()})"
+
+            if not documented:
+                undocumented.append(key)
+                lines.append(f"| {label} | **manifest unavailable -- "
+                             f"splits not traceable** |")
                 continue
-            seen_datasets.add(key)
-            source = manifest.get("source", "unavailable")
-            split = manifest.get("split", "")
-            detail = f"{source}"
-            if split:
-                detail += f" -- {split}"
+
+            manifest = documented[0]["provenance"]["dataset_manifest"]
+            detail = manifest.get("source", "unavailable")
+            if manifest.get("split"):
+                detail += f" -- {manifest['split']}"
             if "seed" in manifest:
                 detail += f" (split seed {manifest['seed']})"
-            lines.append(f"| Dataset ({r['language']} {r['task'].upper()}) | {detail} |")
+            if len(documented) < len(group):
+                detail += (f" -- **{len(group) - len(documented)} of "
+                           f"{len(group)} runs had no manifest**")
+            lines.append(f"| {label} | {detail} |")
 
         lines.append(f"| Unavailable hyperparameters | {unavailable} |")
         lines.append("")
@@ -136,6 +156,13 @@ def main():
         if dirty:
             lines += ["> **Some runs were made with uncommitted changes.** The "
                       "commit hash alone does not identify the code used.", ""]
+        if undocumented:
+            pairs = ", ".join(f"{l} {t.upper()}" for l, t in sorted(undocumented))
+            lines += [f"> **Dataset manifest unavailable for: {pairs}.** Those "
+                      "splits cannot be traced to a source, checksum or split "
+                      "seed. Prepare data with `data/scripts/prepare_ner.py` "
+                      "or `prepare_qa.py`, or rerun with `--require-manifest` "
+                      "to refuse untraceable data outright.", ""]
 
     body = "\n".join(lines)
     print(body)

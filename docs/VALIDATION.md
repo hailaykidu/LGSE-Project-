@@ -83,3 +83,16 @@ from such runs says so.
 `scripts/aggregate_results.py` surfaces the commit and config hash behind any
 table it generates, and warns when runs span more than one commit or when any
 was made with a dirty tree.
+
+## Dataset manifest checks
+
+A missing dataset manifest is never silent. Three cases, all verified:
+
+| Case | Behaviour |
+|---|---|
+| `--require-manifest` and no manifest | the run refuses to start, naming the directory and the script that writes one |
+| no manifest, flag not passed | the run proceeds; the table renders **manifest unavailable -- splits not traceable** and a warning naming the affected language/task |
+| some runs documented, others not | the table shows the source and split seed, followed by **N of M runs had no manifest** |
+
+Use `--require-manifest` for official experiment runs so no reported figure
+can rest on splits that cannot be traced to a source, checksum and seed.

@@ -62,10 +62,21 @@ def provenance(config_path: Path, data_dir: Path, corpus: Path) -> dict:
     made with uncommitted changes cannot be recovered from the commit hash
     alone, so it is recorded rather than assumed clean.
     """
-    dataset = {}
+    # A missing manifest must be visible, not silent: a hand-assembled data
+    # directory would otherwise render as fully documented while nothing
+    # records where its splits came from.
     manifest = data_dir / "manifest.json"
     if manifest.exists():
         dataset = json.load(open(manifest, encoding="utf-8"))
+        dataset_available = True
+    else:
+        dataset = {"status": "unavailable",
+                   "reason": f"no manifest.json in {data_dir}",
+                   "note": ("splits cannot be traced to a source; prepare data "
+                            "with data/scripts/prepare_{ner,qa}.py, which "
+                            "writes a manifest recording source URL, raw "
+                            "checksum and split seed")}
+        dataset_available = False
 
     versions = {}
     for module in ("torch", "transformers", "fasttext", "numpy"):
@@ -92,6 +103,7 @@ def provenance(config_path: Path, data_dir: Path, corpus: Path) -> dict:
         "config_sha256": _sha256(config_path) if config_path.exists() else None,
         "data_dir": str(data_dir),
         "dataset_manifest": dataset,
+        "dataset_manifest_available": dataset_available,
         "lapt_corpus": str(corpus) if corpus else None,
         "lapt_corpus_sha256": _sha256(corpus) if corpus and corpus.exists() else None,
         "fasttext": embeddings,
@@ -187,7 +199,17 @@ def main():
     p.add_argument("--config", type=Path, default=ROOT / "configs/base.yaml")
     p.add_argument("--systems", type=Path, default=ROOT / "configs/systems.yaml")
     p.add_argument("--results-dir", type=Path, default=ROOT / "results")
+    p.add_argument("--require-manifest", action="store_true",
+                   help="refuse to run without a dataset manifest; use for "
+                        "official experiment runs so no reported figure can "
+                        "rest on untraceable splits")
     args = p.parse_args()
+
+    if args.require_manifest and not (args.data_dir / "manifest.json").exists():
+        raise SystemExit(
+            f"--require-manifest: no manifest.json in {args.data_dir}.\n"
+            "Prepare the data with data/scripts/prepare_ner.py or "
+            "prepare_qa.py, which record the source, checksum and split seed.")
 
     cfg, systems = load_configs(args.config, args.systems)
     if args.system not in systems:
