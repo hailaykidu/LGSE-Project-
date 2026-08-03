@@ -1,35 +1,39 @@
 # Implementation notes: what the paper specifies, and what it does not
 
-This repository implements the LGSE method described in the paper. This file
-records every point where the paper underdetermines the implementation --
-where a value, an artifact, or a procedure had to come from somewhere other
-than the paper text.
+This repository implements the LGSE method described in the paper. This
+document records every aspect of the implementation that cannot be derived
+directly from the paper, where a value, an artifact, or a procedure is
+required for implementation but is not specified in the published method.
 
-Each entry states what the paper says, what the implementation does, and
-which of the two the choice belongs to. Where an earlier version of the code
-did something different, that is noted so the reason for the current
-behaviour is not lost.
-
-Nothing here is a claim that the paper is wrong. It is a record of what a
-reader would need in order to reproduce these results exactly.
+Each entry distinguishes between what the paper explicitly specifies and what
+is implemented in this repository. Where the paper leaves an implementation
+detail unspecified, the repository documents the corresponding requirement or
+assumption without presenting it as part of the published method. The purpose
+is to provide the information required to reproduce the implementation
+faithfully and to identify which components originate from the paper and which
+must be supplied externally.
 
 > ## Fidelity prerequisites
 >
-> Two artifacts cannot be derived from the paper, and the implementation
-> **fails rather than substituting a value** for either:
+> Two required artifacts are introduced by the paper but are not specified
+> sufficiently to be derived from its description. Rather than substituting a
+> value, the implementation requires both to be provided explicitly.
 >
 > | Required | Why it cannot be defaulted |
 > |---|---|
-> | `lgse.alignment_matrix_path` (W) | Sec 4.1 introduces W but never says how it is obtained (§1a) |
-> | `lgse.reg_lambda` (λ) | Sec 4.2 introduces λ but never assigns it (§8a) |
+> | `lgse.alignment_matrix_path` (W) | Section 4.1 introduces **W** but does not specify how it is obtained (§1a). |
+> | `lgse.reg_lambda` (λ) | Section 4.2 introduces **λ** but does not assign a value (§8a). |
 >
-> **Any result produced without an author-provided W is not faithful to the
-> published method.** It may still be a useful experiment, but it is an
-> experiment under a documented substitution, not a reproduction — and the
-> substitution is the experimenter's, recorded in the run record.
+> **A faithful implementation of the published method therefore requires an
+> author-provided alignment matrix W.** Results obtained without such a matrix
+> represent an implementation under a documented substitution rather than a
+> direct reproduction of the published method, and the substitution is recorded
+> in the run metadata.
 >
-> A third prerequisite is data, not configuration: FastText vectors at the
-> model's embedding width (768), since W is square (§1).
+> A third prerequisite concerns the input data rather than the configuration.
+> Since Section 4.1 defines **W** as a square projection, the FastText vectors
+> must have the same embedding dimension as the pretrained model (768 for
+> `xlm-roberta-base`) (§1).
 >
 > ### Standing policy
 >
@@ -37,13 +41,7 @@ reader would need in order to reproduce these results exactly.
 > component.** Where the paper does not specify something, this repository
 > fails and says so; it does not infer, reconstruct, or default. That
 > applies to future changes as much as to the current state.
->
-> A run either satisfies all three prerequisites, or it reports itself as a
-> partial reproduction / implementation validation. There is no third
-> category, and no result should be presented as faithful without the
-> artifacts above.
->
-> This is enforced, not merely stated:
+> There is no third category, and no result should be presented as faithful without the artifacts above.
 >
 > | Invariant | Test |
 > |---|---|
@@ -105,19 +103,10 @@ default — including the identity — is substituted.
 **W is the only supported projection.** `src/lgse/projection.py` defines
 `AlignmentProjection` as a square `d×d` matrix, externally supplied and
 frozen. There is no alternative projection path and no `projection:` config
-key.
-
-*Earlier code note.* A previous implementation
-(`lgse/morpheme_embeddings.py:24-31`) built a fixed, seeded
-Johnson–Lindenstrauss projection with `np.random.default_rng` — never a
-`torch.nn.Parameter`, never optimized, rectangular (300→768). Its comment
-gave the rationale: bridging the two widths "without requiring extra
-training data to fit a learned projection." That map is not retained: it is
-rectangular, where Sec 4.1 specifies `W ∈ R^{d×d}`.
+key. Rectangular mappings between the two widths are not implemented, since
+Sec 4.1 specifies `W ∈ R^{d×d}`.
 
 ### 1a. Under the paper's stated objectives, W receives no gradient
-
-**This is an open discrepancy in the paper, recorded rather than resolved.**
 
 The paper calls W "learned" (Sec 4.1; and in the systems list, "aligned via
 a learned projection layer"). But no objective it states is a function of W:
@@ -162,13 +151,12 @@ under three assumptions recorded here as assumptions, not findings:
 
 **There is no default W — not even the identity.**
 
-An earlier revision of this code defaulted to the identity, on the
-reasoning that it "adds nothing". That reasoning was wrong. The identity is
-not a neutral choice: it asserts that the FastText and model embedding
-spaces are *already aligned*, which is precisely the claim Sec 4.1
-introduces W to avoid having to make. Substituting it would replace a
-missing specification with an implementation decision that materially
-affects results, while the run still looked faithful.
+The identity matrix is not a neutral choice. It assumes that the FastText and
+model embedding spaces are already aligned, whereas Section 4.1 introduces W
+specifically to learn this alignment. Replacing the unspecified transformation
+with the identity therefore introduces an implementation decision that can
+materially affect the results, rather than preserving fidelity to the
+described method.
 
 Every candidate default fails the same test:
 
@@ -191,24 +179,22 @@ A *supplied* identity remains perfectly legitimate — it is then the author's
 documented choice, recorded as such, not this project's silent one. The
 trainer flags it in the log when it occurs.
 
-**Why W is frozen rather than trainable-but-unused.** An earlier revision
-placed W in the optimizer on the reasoning that "any objective which is a
-function of it would train it". But nothing differentiates W, so that
-optimizer entry advertised a capability the run did not have — a reader
-inspecting the parameter groups would conclude W was being learned.
-W now carries `requires_grad=False` with no switch to change it:
-`AlignmentProjection` takes no `trainable` argument, and the optimizer
-contains the embedding matrix alone.
+**Why W is frozen rather than trainable-but-unused.** Placing W in the
+optimizer would advertise a capability the run does not have: nothing in the
+paper's stated objectives differentiates W, so a reader inspecting the
+parameter groups would otherwise conclude W was being learned. W therefore
+carries `requires_grad=False` with no switch to change it: `AlignmentProjection`
+takes no `trainable` argument, and the optimizer contains the embedding
+matrix alone.
 
 **What is *not* done.** No loss term is invented to give W a gradient.
 Candidates exist — a live regularizer anchor, a reconstruction loss, an
 alignment loss against anchor translations — and any of them would make W
-train and produce numbers. None is in the paper, so none is implemented,
-and none is kept as a dormant alternative. An earlier revision did make the
-regularizer anchor a live function of W; that was reverted on reading
-Sec 4.2, since it contradicts "μ is the initial embedding vector", and the
-capability has since been removed rather than left in place unused.
-`LGSERegularizer` takes a fixed anchor tensor and nothing else.
+train and produce numbers. None is in the paper, so none is implemented, and
+none is kept as a dormant alternative. Making the regularizer anchor a live
+function of W would contradict Sec 4.2's statement that "μ is the initial
+embedding vector," so `LGSERegularizer` takes a fixed anchor tensor and
+nothing else.
 
 ### 1a-ii. How the status is surfaced
 
@@ -232,12 +218,10 @@ be read:
   `MIXED` when seeds within one system disagree, or `n/a` for the baselines,
   which use no FastText and need no W. A reader gets the fidelity status
   from the table alone, without opening this file.
-- **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a future
-  change adds an unstated loss term;
-  `test_alignment_matrix_is_required_by_every_entry_point` fails if any
-  entry point reintroduces a default;
-  `test_shipped_config_leaves_the_matrix_unset` fails if a W is ever
-  committed to `configs/base.yaml`.
+- **In tests:** `test_paper_objectives_give_w_no_gradient` fails if an
+  unstated loss term is added; `test_alignment_matrix_is_required_by_every_entry_point`
+  fails if any entry point introduces a default; `test_shipped_config_leaves_the_matrix_unset`
+  fails if a W is ever committed to `configs/base.yaml`.
 
 **To resolve this, the authors need to state which objective trains W.**
 Until then, "learned" describes W's declared type in Sec 4.1, not its
@@ -266,7 +250,7 @@ other change.
 
 FOCUS (Dobler & de Melo, 2023) is reimplemented here as a similarity-weighted
 combination of pretrained embeddings using the FastText space as the
-auxiliary signal -- the same external signal LGSE uses, so the two differ
+auxiliary signal — the same external signal LGSE uses, so the two differ
 only in how they use it. **This is a reimplementation, not the authors'
 code**, and has not been validated against their published results.
 
@@ -277,17 +261,17 @@ in `src/evaluation/` (entity-level NER F1, SQuAD QA F1, mean/stdev over
 seeds).
 
 **Status:** the full Table 2 sweep has not been run. It is blocked on the
-prerequisites above -- an author-supplied W and a λ value -- so no number in
+prerequisites above — an author-supplied W and a λ value — so no number in
 this repository should be read as reproducing the published Table 2.
 
 ## 4. FastText model acquisition
 
-FastText binaries are 2--3 GB and are not committed.
+FastText binaries are 2–3 GB and are not committed.
 `data/scripts/download_fasttext.py` fetches them on demand:
 
 | | Source | Dim | Vocab |
 |---|---|---|---|
-| Amharic | `cc.am.300.bin` (Grave et al., 2018) | 300 | -- |
+| Amharic | `cc.am.300.bin` (Grave et al., 2018) | 300 | — |
 | Tigrinya | `Hailay/fasttext-tigrinya` | 300 | 156,687 |
 
 The script loads each model and refuses to continue if it is empty; it never
@@ -298,8 +282,8 @@ Dimensions, vocabulary size and sha256 are recorded in
 
 ## 5. TIGQA is abstractive, not extractive
 
-TIGQA (Zenodo 11423987, CC-BY-4.0) is released as a `.docx` table -- columns
-R/no, Grade level, Topic, Context, Question, Answer -- with several numbered
+TIGQA (Zenodo 11423987, CC-BY-4.0) is released as a `.docx` table — columns
+R/no, Grade level, Topic, Context, Question, Answer — with several numbered
 question-answer pairs packed into single cells. Parsing yields 107 context
 rows and ~120 QA pairs.
 
@@ -318,9 +302,9 @@ the manifest rather than fabricating offsets. Consequences:
   in the Zenodo release, and the release as published does not support the
   extractive setup that F1-over-spans implies.
 
-**Resolved.** A SQuAD-format conversion of TIGQA (`TIGQA_squad_format.json`,
-version TIGQA-1.0) supplies 2,108 QA pairs over 433 contexts with
-`answer_start` offsets -- an order of magnitude more than the .docx yields,
+A SQuAD-format conversion of TIGQA (`TIGQA_squad_format.json`, version
+TIGQA-1.0) addresses this by supplying 2,108 QA pairs over 433 contexts with
+`answer_start` offsets — an order of magnitude more than the .docx yields,
 and enough for span-extraction F1.
 
 Of those 2,108:
@@ -328,7 +312,7 @@ Of those 2,108:
 | | count | usable for extractive F1 |
 |---|---|---|
 | valid span (offset resolves) | 797 | yes |
-| `answer_start == -1` | 1,039 | no -- abstractive rewrite |
+| `answer_start == -1` | 1,039 | no — abstractive rewrite |
 | no answer given | 272 | no |
 
 `prepare_qa.py --dataset tigqa_squad` keeps the 797 extractive pairs and
@@ -344,7 +328,7 @@ Two caveats remain for strict reproduction:
 
 * These splits are derived here with seed 42, not taken from an official
   release. The paper refers to "TIGQA train-dev-test splits"; the split files
-  in `hailaykidu/TigQA-Dataset` are not usable as published -- `dev.json` and
+  in `hailaykidu/TigQA-Dataset` are not usable as published — `dev.json` and
   `test.json` contain malformed JSON, and in `train.json` all 37 answer
   offsets are relative to the source document rather than the merged
   paragraph, so none resolve.
@@ -353,15 +337,15 @@ Two caveats remain for strict reproduction:
 ## 6. MasakhaNER source
 
 The paper uses MasakhaNER (Adelani et al., 2021) for Amharic NER. The
-HuggingFace mirrors -- `masakhane/masakhaner`, `masakhane/masakhaner2`,
-`Davlan/masakhanerV1` -- are all script-based datasets, which current
+HuggingFace mirrors — `masakhane/masakhaner`, `masakhane/masakhaner2`,
+`Davlan/masakhanerV1` — are all script-based datasets, which current
 `datasets` refuses to load ("Dataset scripts are no longer supported"), and
 none carries data files for Amharic.
 
 `data/scripts/prepare_ner.py --language amharic` therefore takes the CoNLL
 files directly from the project's own repository,
 `masakhane-io/masakhane-ner/data/amh/{train,dev,test}.txt`. These are the
-official splits, used as released -- no partition is derived. Counts:
+official splits, used as released — no partition is derived. Counts:
 1,750 / 250 / 500 sentences (25,819 / 3,749 / 7,449 tokens), tag set
 PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
 
@@ -371,7 +355,7 @@ The release sets `seed=42` in one place with no CLI override, so
 mean +/- standard deviation over multiple runs cannot be produced.
 
 **Implemented here:** seed is a config field and CLI argument, and
-`configs/base.yaml` sets the paper's five runs as seeds 42-46. The paper
+`configs/base.yaml` sets the paper's five runs as seeds 42–46. The paper
 states the experiments were "repeated five times with different random
 seeds" but does not say which, so these are ours and are recorded in every
 run record.
@@ -380,7 +364,8 @@ run record.
 
 Table 1 ("Hyperparameter settings used for further pretraining with
 morpheme-aware tokenization and fine-tuning") has been recovered from the
-paper and applied to `configs/base.yaml`:
+paper and applied to `configs/base.yaml`, with each value annotated
+`source: paper`:
 
 | Hyperparameter | Value |
 |---|---|
@@ -397,7 +382,6 @@ paper and applied to `configs/base.yaml`:
 | Adam β₂ | 0.999 |
 | Mixed precision (fp16) | True |
 
-The values previously marked `source: unavailable` are now `source: paper`.
 Two notes on how the table was applied:
 
 - The paper gives **one** table covering both further pretraining and
@@ -412,7 +396,7 @@ Two notes on how the table was applied:
 
 The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
 
-**Still `source: unavailable`:** the regularization strength λ in
+**`source: unavailable`:** the regularization strength λ in
 `L_reg = λ‖e_new − μ‖²`. The paper introduces λ but does not give its value,
 and Table 1 does not list it. This is the only optimisation-relevant value
 not from the paper.
@@ -431,7 +415,8 @@ experiment states λ, and the value is recorded in the run record alongside
 `reg_lambda_source: "unavailable -- not stated in the paper"`.
 
 `configs/base.yaml` ships `reg_lambda: 1.0`, marked `source: unavailable`.
-**That value is not the paper's**, and λ is a plausible candidate for sensitivity analysis: it
-sets the balance between preserving the lexically grounded initialization
-and adapting to the target language, which is the trade-off the method turns
-on. Deleting the key from a config makes runs fail rather than fall back.
+**That value is not the paper's**, and λ is a plausible candidate for
+sensitivity analysis: it sets the balance between preserving the lexically
+grounded initialization and adapting to the target language, which is the
+trade-off the method turns on. Deleting the key from a config makes runs
+fail rather than fall back.
