@@ -1,0 +1,26 @@
+{
+  "source": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/amh",
+  "citation": "Adelani et al. (2021), MasakhaNER",
+  "split": "official MasakhaNER splits, used as released",
+  "files": {
+    "train": {
+      "raw_file": "train.txt",
+      "raw_sha256": "44d6e06d6bedd2b902578ae658fc3ad6548b8876166a821893d081393a92afe4",
+      "sentences": 1750,
+      "tokens": 25819
+    },
+    "dev": {
+      "raw_file": "dev.txt",
+      "raw_sha256": "f7561345b55d41ccf472c1306e0a0a8f8bc3d46ac535f5dee3d1da3f1a0bb816",
+      "sentences": 250,
+      "tokens": 3749
+    },
+    "test": {
+      "raw_file": "test.txt",
+      "raw_sha256": "3968ef19c31c480859364f927ac6370ae5c33c9557437e87c0b6f7801df461b6",
+      "sentences": 500,
+      "tokens": 7449
+    }
+  },
+  "checksums": "raw_sha256 is the checksum of the file downloaded from `source`. The .conll files in this directory are re-serialized from that download by data/scripts/prepare_ner.py and therefore have different checksums; sentence and token counts above describe the stored files."
+}

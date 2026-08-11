@@ -69,8 +69,7 @@ Core dependencies: `torch`, `transformers`, `fasttext`, `numpy`,
 ### Requirements
 
 Three artifacts are supplied by the experimenter. The paper does not specify
-values for them, so the implementation requires them explicitly rather than
-choosing on the authors' behalf:
+values for them, so the implementation requires them explicitly:
 
 | Requirement | Where | Why it is not defaulted |
 |---|---|---|
@@ -78,9 +77,8 @@ choosing on the authors' behalf:
 | Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but does not give its value |
 | FastText at the model's width | `data/fasttext_manifest.json` | W is square (`d×d`), so FastText must match the model's embedding width |
 
-A run missing any of these stops with an explanatory error rather than
-substituting a value. See [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md)
-§1, §1a and §8a for the reasoning.
+A run missing any of these stops with an explanatory error. See
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) §1, §1a and §8a.
 
 ### FastText models
 
@@ -160,13 +158,12 @@ in `results/`, recording for each figure the commit, configuration hash,
 dataset manifest, seeds and environment that produced it, and labelling
 whether the run used an author-supplied alignment matrix.
 
-The paper's reported numbers are not copied into this repository, since they
-were produced under the authors' full experimental conditions and are not
-outputs of a run performed here.
+The paper's reported numbers are not copied into this repository; the tables
+here are built from runs performed in this repository.
 
-[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records every point
-where the paper underdetermines the implementation, and
-[`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records each point where
+an implementation choice is supplied alongside the published specification,
+and [`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
 validation.
 
 ---

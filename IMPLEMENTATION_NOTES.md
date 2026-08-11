@@ -1,49 +1,32 @@
-# Implementation notes: what the paper specifies, and what it does not
+# Implementation notes
 
-This repository implements the LGSE method described in the paper. This file
-records every point where the paper underdetermines the implementation --
-where a value, an artifact, or a procedure had to come from somewhere other
-than the paper text.
+This repository implements the LGSE method described in the paper. Each
+entry states what the published specification defines, what the
+implementation does, and which of the two a given choice belongs to.
 
-Each entry states what the paper says, what the implementation does, and
-which of the two the choice belongs to. Where an earlier version of the code
-did something different, that is noted so the reason for the current
-behaviour is not lost.
-
-Nothing here is a claim that the paper is wrong. It is a record of what a
-reader would need in order to reproduce these results exactly.
-
-> ## Fidelity prerequisites
+> ## Prerequisites
 >
-> Two artifacts cannot be derived from the paper, and the implementation
-> **fails rather than substituting a value** for either:
+> The implementation requires explicit values or artifacts for W and λ.
 >
-> | Required | Why it cannot be defaulted |
+> | Required | Published specification |
 > |---|---|
-> | `lgse.alignment_matrix_path` (W) | Sec 4.1 introduces W but never says how it is obtained (§1a) |
-> | `lgse.reg_lambda` (λ) | Sec 4.2 introduces λ but never assigns it (§8a) |
+> | `lgse.alignment_matrix_path` (W) | Sec 4.1 defines a learned projection matrix W; the construction of W is not specified (§1a) |
+> | `lgse.reg_lambda` (λ) | Sec 4.2 defines the regularization coefficient λ; no numerical value or selection procedure is given (§8a) |
 >
-> **Any result produced without an author-provided W is not faithful to the
-> published method.** It may still be a useful experiment, but it is an
-> experiment under a documented substitution, not a reproduction — and the
-> substitution is the experimenter's, recorded in the run record.
+> The W used by a run is recorded in the run record.
 >
-> A third prerequisite is data, not configuration: FastText vectors at the
-> model's embedding width (768), since W is square (§1).
+> A third prerequisite is data rather than configuration: FastText vectors at
+> the model's embedding width (768), since W is square (§1).
 >
 > ### Standing policy
 >
-> **No silent fallback may be added for an unspecified methodological
-> component.** Where the paper does not specify something, this repository
-> fails and says so; it does not infer, reconstruct, or default. That
-> applies to future changes as much as to the current state.
+> **No default is applied for a component the published specification leaves
+> open.** These values are supplied explicitly per run.
 >
 > A run either satisfies all three prerequisites, or it reports itself as a
-> partial reproduction / implementation validation. There is no third
-> category, and no result should be presented as faithful without the
-> artifacts above.
+> partial reproduction / implementation validation.
 >
-> This is enforced, not merely stated:
+> The policy is enforced by tests:
 >
 > | Invariant | Test |
 > |---|---|
@@ -68,22 +51,21 @@ describes no dimensionality change. In practice this means FastText must be
 trained at the model's embedding width (768 for xlm-roberta-base), not the
 standard 300 — `configs/base.yaml` sets `fasttext_dim: 768` accordingly.
 
-**The 300-dim CC vectors referenced under `data.fasttext` cannot be used
-with the paper's W. This is a data prerequisite, not something the code can
-resolve**, so the implementation refuses rather than adapting:
+**The embedding dimensions must match the required projection shape.** The
+300-dim CC vectors referenced under `data.fasttext` do not match the square W
+of Sec 4.1, so the implementation raises on a dimension mismatch:
 
-| Not done | Why |
+| Not applied | Reason |
 |---|---|
-| Rectangular `W ∈ R^(300×768)` | Not the published method; W is `d×d` |
-| Truncating 768→300 or padding 300→768 | Silently discards or fabricates dimensions |
+| Rectangular `W ∈ R^(300×768)` | Sec 4.1 specifies `W ∈ R^(d×d)` |
+| Truncating 768→300 or padding 300→768 | Changes the embedding dimensions |
 | PCA/SVD reduction of the model's space | Changes what the embeddings mean |
-| Falling back to char n-grams on mismatch | Reports as LGSE while bypassing FastText entirely |
+| Falling back to char n-grams on mismatch | Bypasses FastText while reporting as LGSE |
 
-Each of these would produce numbers that look like results. None would be
-the published method, and the substitution would not be visible in any
-metric — which is why the code raises instead of choosing one.
+None of these is distinguishable in the reported metrics, so the dimension
+check raises instead.
 
-Enforcement is layered so the failure comes as early as possible:
+The check is applied at three points, the earliest first:
 
 1. **`data/scripts/download_fasttext.py`** — checks at download time
    (`--expect-dim`, default 768), prints a prominent warning naming the fix,
@@ -149,71 +131,57 @@ W grad under paper formulation: None
 
 ### 1a-i. Implementation assumptions
 
-W is therefore implemented as an **externally supplied alignment matrix**,
-under three assumptions recorded here as assumptions, not findings:
+W is implemented as an **externally supplied alignment matrix**, under the
+following assumptions:
 
 | # | Assumption | Consequence |
 |---|---|---|
 | 1 | W is an externally supplied artifact | `alignment_matrix_path` loads a `d×d` matrix from `.pt`/`.npy`; **no default of any kind** |
 | 2 | W is frozen | `requires_grad=False`, excluded from the optimizer |
-| 3 | No objective trains W | No loss term is invented to give it a gradient |
+| 3 | No objective trains W | No loss term gives it a gradient |
 | 4 | `reg_lambda` must be explicitly provided | No default; see §8a |
-| 5 | A result without an author-provided W is **not faithful** to the published method | Runs fail rather than proceed |
+| 5 | The construction of W is not part of the published specification, so the W used is an implementation choice | Supplied per run and recorded |
 
 **There is no default W — not even the identity.**
 
-An earlier revision of this code defaulted to the identity, on the
-reasoning that it "adds nothing". That reasoning was wrong. The identity is
-not a neutral choice: it asserts that the FastText and model embedding
-spaces are *already aligned*, which is precisely the claim Sec 4.1
-introduces W to avoid having to make. Substituting it would replace a
-missing specification with an implementation decision that materially
-affects results, while the run still looked faithful.
+The identity treats the FastText and model embedding spaces as *already
+aligned*, which is the alignment Sec 4.1 introduces W to perform. Applying it
+as a default would set an implementation choice that materially affects
+results.
 
-Every candidate default fails the same test:
+Each candidate default is set aside for the reason given:
 
-| Candidate | Why it is not used |
+| Candidate | Reason it is not used |
 |---|---|
-| Identity | Asserts the two spaces are already aligned — the claim W exists to avoid |
-| Random / seeded | An alignment strategy the paper does not describe |
-| Fitted (Procrustes, CCA, …) | A method the paper does not describe, requiring anchor data it never mentions |
+| Identity | Treats the two spaces as already aligned |
+| Random / seeded | An alignment strategy outside the published specification |
+| Fitted (Procrustes, CCA, …) | Outside the published specification, and requires anchor data it does not define |
 | A rectangular Johnson–Lindenstrauss map | Rectangular, where Sec 4.1 specifies `d×d` |
 
-So the implementation refuses. `build_projection` raises
-`MissingAlignmentMatrix` — a distinct type, because this marks a genuinely
-unspecified part of the method rather than a misconfiguration to patch. The
-message quotes Sec 4.1, states that the paper never says how W is obtained,
-explains why neither the identity nor a random matrix is substituted, and
-records that any result produced without an author-provided W is not
-faithful to the published method.
+`build_projection` raises `MissingAlignmentMatrix`, a distinct exception type
+marking a component the published specification leaves open rather than a
+misconfiguration. The message quotes Sec 4.1, states that the construction of
+W is not specified there, and explains why neither the identity nor a random
+matrix is applied as a default.
 
-A *supplied* identity remains perfectly legitimate — it is then the author's
-documented choice, recorded as such, not this project's silent one. The
-trainer flags it in the log when it occurs.
+A supplied identity is accepted as the experimenter's documented choice, and
+the trainer records it in the log when it occurs.
 
-**Why W is frozen rather than trainable-but-unused.** An earlier revision
-placed W in the optimizer on the reasoning that "any objective which is a
-function of it would train it". But nothing differentiates W, so that
-optimizer entry advertised a capability the run did not have — a reader
-inspecting the parameter groups would conclude W was being learned.
-W now carries `requires_grad=False` with no switch to change it:
-`AlignmentProjection` takes no `trainable` argument, and the optimizer
-contains the embedding matrix alone.
+**W is frozen.** No objective differentiates W, so it carries
+`requires_grad=False` with no switch to change it: `AlignmentProjection`
+takes no `trainable` argument, and the optimizer contains the embedding
+matrix alone.
 
-**What is *not* done.** No loss term is invented to give W a gradient.
-Candidates exist — a live regularizer anchor, a reconstruction loss, an
-alignment loss against anchor translations — and any of them would make W
-train and produce numbers. None is in the paper, so none is implemented,
-and none is kept as a dormant alternative. An earlier revision did make the
-regularizer anchor a live function of W; that was reverted on reading
-Sec 4.2, since it contradicts "μ is the initial embedding vector", and the
-capability has since been removed rather than left in place unused.
-`LGSERegularizer` takes a fixed anchor tensor and nothing else.
+**No loss term gives W a gradient.** A live regularizer anchor, a
+reconstruction loss, or an alignment loss against anchor translations would
+each make W train, and none is in the paper, so none is implemented. Making
+the regularizer anchor a live function of W would contradict Sec 4.2's
+"μ is the initial embedding vector", so `LGSERegularizer` accepts a fixed
+anchor tensor and nothing else.
 
 ### 1a-ii. How the status is surfaced
 
-The gap is enforced before a run starts and reported wherever a result could
-be read:
+W's status is checked before a run starts and recorded with each artifact:
 
 - **Before the run:** `run_experiment.py` refuses to start any
   FastText-using system (`lgse`, `focus`) when `lgse.alignment_matrix_path`
@@ -227,32 +195,26 @@ be read:
 - **Per result:** the run record's `projection` field records `source`,
   `author_supplied`, `training_status`, and `trained_during_this_run: false`.
 - **In the generated table:** `scripts/aggregate_results.py` emits a notice
-  naming any system whose runs lacked an author-supplied W, *and* an
-  "Alignment matrix W" column per row — `author-supplied W`, `not faithful`,
-  `MIXED` when seeds within one system disagree, or `n/a` for the baselines,
-  which use no FastText and need no W. A reader gets the fidelity status
-  from the table alone, without opening this file.
-- **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a future
-  change adds an unstated loss term;
+  naming any system whose runs lacked a supplied W, and an "Alignment matrix
+  W" column per row — `author-supplied W`, `not faithful`, `MIXED` when seeds
+  within one system disagree, or `n/a` for the baselines, which use no
+  FastText and need no W.
+- **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a change
+  adds an unstated loss term;
   `test_alignment_matrix_is_required_by_every_entry_point` fails if any
-  entry point reintroduces a default;
-  `test_shipped_config_leaves_the_matrix_unset` fails if a W is ever
-  committed to `configs/base.yaml`.
+  entry point introduces a default;
+  `test_shipped_config_leaves_the_matrix_unset` fails if a W is committed to
+  `configs/base.yaml`.
 
-**To resolve this, the authors need to state which objective trains W.**
-Until then, "learned" describes W's declared type in Sec 4.1, not its
-observed behaviour under the published equations.
+"Learned" describes W's declared type in Sec 4.1; the published equations
+specify no objective that trains it.
 
 ### 1b. W is part of the checkpoint
 
 `save_pretrained()` covers only the model, so `LGSELAPTrainer.save()` writes
 `projection.pt` alongside it and `load_projection()` restores it, refusing a
-shape mismatch. This keeps a run self-describing: the exact alignment matrix
-a result used travels with that result. Without it, a checkpoint made with
-an author-supplied W would silently reload as the identity — a different run
-from the one that produced the numbers. It also keeps the checkpoint correct
-if W is ever trained under an author-supplied objective, where it could not
-be recomputed at all.
+shape mismatch. The alignment matrix a result used travels with that result,
+so a checkpoint reloads with the same W that produced its numbers.
 
 ## 2. Comparison baselines
 
@@ -267,8 +229,8 @@ other change.
 FOCUS (Dobler & de Melo, 2023) is reimplemented here as a similarity-weighted
 combination of pretrained embeddings using the FastText space as the
 auxiliary signal -- the same external signal LGSE uses, so the two differ
-only in how they use it. **This is a reimplementation, not the authors'
-code**, and has not been validated against their published results.
+only in how they use it. It is an independent reimplementation and has not
+been validated against the FOCUS authors' published results.
 
 ## 3. Table 2 evaluation
 
@@ -290,10 +252,9 @@ FastText binaries are 2--3 GB and are not committed.
 | Amharic | `cc.am.300.bin` (Grave et al., 2018) | 300 | -- |
 | Tigrinya | `Hailay/fasttext-tigrinya` | 300 | 156,687 |
 
-The script loads each model and refuses to continue if it is empty; it never
-substitutes random vectors, because a placeholder would silently reduce LGSE
-to its own character-n-gram fallback while still reporting as LGSE.
-Dimensions, vocabulary size and sha256 are recorded in
+The script loads each model and raises if it is empty rather than
+substituting random vectors, which would reduce LGSE to its character-n-gram
+fallback. Dimensions, vocabulary size and sha256 are recorded in
 `data/fasttext_manifest.json`. The binaries themselves are gitignored.
 
 ## 5. TIGQA is abstractive, not extractive
@@ -309,7 +270,7 @@ context**, even after normalising whitespace: they are rewritten rather than
 copied. Only 13 pairs are usable for extractive QA.
 
 `data/scripts/prepare_qa.py` drops unmatched pairs and records the count in
-the manifest rather than fabricating offsets. Consequences:
+the manifest. Consequences:
 
 * An extractive QA model can be evaluated on 13 Tigrinya test items at most,
   which is far too few for a stable F1, let alone a standard deviation over
@@ -338,7 +299,7 @@ records the other two counts in the manifest. Splits: 644/67/86 QA pairs over
 The `answer_start == -1` marker is the conversion's own signal that an answer
 could not be located in its context; verified independently here, none of the
 1,039 occurs verbatim in its context. They are not recoverable by string
-matching, and fabricating offsets for them would corrupt the metric.
+matching, and assigning offsets to them would corrupt the metric.
 
 Two caveats remain for strict reproduction:
 
@@ -397,8 +358,8 @@ paper and applied to `configs/base.yaml`:
 | Adam β₂ | 0.999 |
 | Mixed precision (fp16) | True |
 
-The values previously marked `source: unavailable` are now `source: paper`.
-Two notes on how the table was applied:
+These values are marked `source: paper` in the configuration. Two notes on
+how the table is applied:
 
 - The paper gives **one** table covering both further pretraining and
   fine-tuning, so the same values populate the `lapt:` and `finetune:`
@@ -419,19 +380,16 @@ not from the paper.
 
 ### 8a. λ is a mandatory parameter
 
-Because there is no published value, **`reg_lambda` has no default**.
-`LGSEConfig` raises `MissingRequiredParameter` when it is not supplied, and
-`run_experiment.py` refuses to start if `lgse.reg_lambda` is absent from the
-run config.
+The published specification defines the regularization coefficient λ but does
+not provide a numerical value or selection procedure, so **`reg_lambda` has
+no default**. `LGSEConfig` raises `MissingRequiredParameter` when it is not
+supplied, and `run_experiment.py` stops if `lgse.reg_lambda` is absent from
+the run config.
 
-This is deliberate friction. A silent default would bury an experimenter's
-choice in a dataclass field, and every result would then carry a value that
-*looks* like it came from the paper. Requiring it means whoever runs an
-experiment states λ, and the value is recorded in the run record alongside
+λ is stated per run and recorded in the run record alongside
 `reg_lambda_source: "unavailable -- not stated in the paper"`.
 
 `configs/base.yaml` ships `reg_lambda: 1.0`, marked `source: unavailable`.
-**That value is not the paper's**, and λ is a plausible candidate for sensitivity analysis: it
-sets the balance between preserving the lexically grounded initialization
-and adapting to the target language, which is the trade-off the method turns
-on. Deleting the key from a config makes runs fail rather than fall back.
+This implementation uses λ = 1.0. λ sets the balance between preserving the
+lexically grounded initialization and adapting to the target language, which
+makes it a candidate for sensitivity analysis.

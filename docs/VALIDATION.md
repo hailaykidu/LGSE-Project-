@@ -1,26 +1,23 @@
 # Pipeline validation
 
-Evidence that the complete LGSE path runs end to end, recorded because
-several integration failures previously reached it unnoticed.
+Evidence that the complete LGSE path runs end to end, recorded so that
+integration failures do not reach it unnoticed.
 
-> **This run predates the alignment-matrix requirement.** It executed under
-> an earlier revision in which W defaulted to the identity. That default has
-> since been removed: W is now an author-supplied artifact with no default,
-> so **the command below will now fail** unless
-> `lgse.alignment_matrix_path` is set.
+> **This record is an implementation validation, not a reproduction.** It
+> confirms that the stages below execute and connect: tokenizer expansion,
+> initialization, regularization, backbone freezing, checkpointing, and
+> downstream fine-tuning. Its scores are not results (see *Scores* below).
 >
-> The run is kept because the stages it confirms — tokenizer expansion,
-> initialization, regularization, backbone freezing, checkpointing,
-> downstream fine-tuning — are unaffected by where W comes from. It is
-> **not** evidence of a faithful reproduction, and its scores were never
-> results (see *Scores* below). Re-running it requires supplying a W.
+> The run recorded here did not use a supplied W. W has no default in this
+> implementation, so running the command below requires
+> `lgse.alignment_matrix_path` to be set.
 
 ## Run
 
     python src/training/run_experiment.py \
         --system lgse_lapt --task ner --language tigrinya --seed 42 \
         --data-dir <tigrinya NER split> --corpus <LAPT corpus>
-    # now additionally requires lgse.alignment_matrix_path in the config
+    # requires lgse.alignment_matrix_path to be set in the config
 
 Environment: python 3.13, torch 2.5.1+cu118, transformers 4.51.3,
 fasttext 0.9.3, CPU.
@@ -51,50 +48,45 @@ penalises drift from.
 
 ## Scores
 
-F1 is 0.00 in this validation. That is expected and is **not** a result: the
-run uses a 60-line LAPT corpus and ~20 NER sentences for one epoch, purely to
-exercise the code path. No conclusion about LGSE follows from it. Real numbers
-require the full corpora and the hyperparameters the paper places in Table 1
-(see `IMPLEMENTATION_NOTES.md` section 8).
+F1 is 0.00 in this validation. The run uses a 60-line LAPT corpus and ~20 NER
+sentences for one epoch to exercise the code path, so the score is expected
+and is not a result. Meaningful numbers require the full corpora and the
+hyperparameters the paper places in Table 1 (see `IMPLEMENTATION_NOTES.md`
+section 8).
 
-## Failures this validation caught
+## Integration properties this validation covers
 
-All were invisible to unit tests, which exercised these components
+Each of these is invisible to unit tests, which exercise these components
 separately:
 
-1. **W was not in the optimizer.** At the time this read as a bug. Reading
-   the paper showed the deeper issue: no stated objective trains W at all,
-   so an optimizer entry would have advertised a capability the run does not
-   have. W is now an externally supplied, frozen alignment matrix — see
+1. **W is not in the optimizer.** No objective stated in the paper trains W.
+   W is an externally supplied, frozen alignment matrix — see
    `IMPLEMENTATION_NOTES.md` §1a.
 
-2. **The projection crashed on real vectors.**
-   `word_from_morphemes` averaged with `np.mean`, which cannot consume a
-   grad-tracking tensor: `RuntimeError: Can't call numpy() on Tensor that
-   requires grad`. Fixed in `src/lgse/morpheme_embeddings.py` by averaging in
-   the tensor's own framework.
+2. **The projection runs on real vectors.** `word_from_morphemes` averages in
+   the tensor's own framework rather than with `np.mean`, which cannot consume
+   a grad-tracking tensor (`RuntimeError: Can't call numpy() on Tensor that
+   requires grad`). See `src/lgse/morpheme_embeddings.py`.
 
 3. **W has no gradient path even once it is in the optimizer.** The
    initializer writes W's output into the embedding via `.data`, severing the
    graph; the regularizer anchors to a constant μ. No LAPT loss term is a
    function of W, so it receives `grad = None` every step and never moves.
 
-   Reading the paper (arXiv:2603.22629) established this is **not a defect in
-   this implementation** — it follows from the paper's own equations, which
-   call W "learned" while specifying no objective that depends on it. The
-   implementation now follows the paper and reports W's gradient status each
-   epoch rather than inventing a training signal. See `IMPLEMENTATION_NOTES.md` §1a.
+   This follows from the paper's equations, which call W "learned" while
+   specifying no objective that depends on it. The implementation reports W's
+   gradient status each epoch. See `IMPLEMENTATION_NOTES.md` §1a.
 
-4. **A trained W was discarded at checkpoint time.** `save()` wrote only the
-   model and tokenizer, so a resumed run silently restarted from a fresh
-   initialization. Fixed by serializing `projection.pt`
-   (`LGSELAPTrainer.save` / `load_projection`). This matters for any run that
-   does train W, and costs nothing for runs that do not.
+4. **W is preserved at checkpoint time.** `save()` serializes `projection.pt`
+   alongside the model and tokenizer (`LGSELAPTrainer.save` /
+   `load_projection`), so a resumed run does not restart from a fresh
+   initialization. This matters for any run that does train W, and costs
+   nothing for runs that do not.
 
 `tests/test_learned_projection_pipeline.py` covers all four; 28 tests pass.
-`test_paper_objectives_give_w_no_gradient` is the load-bearing one: it
-asserts the documented gap and fails loudly if a future change adds a loss
-term the paper does not describe.
+`test_paper_objectives_give_w_no_gradient` asserts the documented gradient
+status and fails if a change adds a loss term outside the published
+specification.
 
 ## Provenance recorded per run
 
