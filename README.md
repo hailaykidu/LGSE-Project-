@@ -187,13 +187,16 @@ resources exist.
 ## Citation
 
 ```bibtex
-@inproceedings{teklehaymanot2026lgse,
-  title     = {LGSE: Lexically Grounded Subword Embedding Initialization
-               for Low-Resource Language Adaptation},
-  author    = {Teklehaymanot, Hailay and Fazlija, Dren and Nejdl, Wolfgang},
-  booktitle = {Proceedings of LREC 2026},
-  year      = {2026},
-  eprint    = {2603.22629},
-  archivePrefix = {arXiv}
-}
+@@inproceedings{teklehaymanot-etal-2026-lgse,
+  title = {LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation},
+  author = {Teklehaymanot, Hailay Kidu and Fazlija, Dren and Nejdl, Wolfgang},
+  booktitle = {Proceedings of the Fifteenth Language Resources and Evaluation Conference (LREC 2026)},
+  month = {May},
+  year = {2026},
+  pages = {10341--10352},
+  address = {Palma, Mallorca, Spain},
+  publisher = {European Language Resources Association (ELRA)},
+  editor = {Piperidis, Stelios and Bel, Núria and van den Heuvel, Henk and Ide, Nancy and Krek, Simon and Toral, Antonio},
+  doi = {10.63317/5i7acx7v348w},
+   }
 ```
