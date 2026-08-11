@@ -86,23 +86,13 @@ default — including the identity — is substituted.
 
 **W is the only supported projection.** `src/lgse/projection.py` defines
 `AlignmentProjection` as a square `d×d` matrix, externally supplied and
-frozen. There is no alternative projection path and no `projection:` config
+frozen. It is the single projection path; there is no `projection:` config
 key.
-
-*Earlier code note.* A previous implementation
-(`lgse/morpheme_embeddings.py:24-31`) built a fixed, seeded
-Johnson–Lindenstrauss projection with `np.random.default_rng` — never a
-`torch.nn.Parameter`, never optimized, rectangular (300→768). Its comment
-gave the rationale: bridging the two widths "without requiring extra
-training data to fit a learned projection." That map is not retained: it is
-rectangular, where Sec 4.1 specifies `W ∈ R^{d×d}`.
 
 ### 1a. Under the paper's stated objectives, W receives no gradient
 
-**This is an open discrepancy in the paper, recorded rather than resolved.**
-
-The paper calls W "learned" (Sec 4.1; and in the systems list, "aligned via
-a learned projection layer"). But no objective it states is a function of W:
+Sec 4.1 describes W as a learned projection layer. The objectives given in
+the published specification are not functions of W:
 
 - **Initialization** (Sec 4.2) sets `e_new` to the average of projected
   morpheme embeddings. In code this value is written into the embedding
@@ -127,7 +117,8 @@ emb grad         : True
 W grad under paper formulation: None
 ```
 
-**Status: author-required / unspecified in paper.**
+**Status:** W is supplied externally and is not trained by any objective in
+the published specification.
 
 ### 1a-i. Implementation assumptions
 
@@ -187,18 +178,17 @@ W's status is checked before a run starts and recorded with each artifact:
   FastText-using system (`lgse`, `focus`) when `lgse.alignment_matrix_path`
   is unset — checked before the backbone and the multi-GB FastText model are
   loaded. `build_projection` is the authoritative check.
-- **Per run:** `[LGSELAPTrainer] W training status: author-required /
-  unspecified in paper -- W is frozen`. A supplied identity is additionally
-  flagged.
+- **Per run:** the trainer logs W's source and frozen status each run. A
+  supplied identity is additionally noted.
 - **Per checkpoint:** `projection.pt` carries `source`, `trainable` and
   `training_status`; `projection_status.json` sits beside it.
 - **Per result:** the run record's `projection` field records `source`,
   `author_supplied`, `training_status`, and `trained_during_this_run: false`.
 - **In the generated table:** `scripts/aggregate_results.py` emits a notice
   naming any system whose runs lacked a supplied W, and an "Alignment matrix
-  W" column per row — `author-supplied W`, `not faithful`, `MIXED` when seeds
-  within one system disagree, or `n/a` for the baselines, which use no
-  FastText and need no W.
+  W" column per row recording the W each run used, `MIXED` when seeds within
+  one system disagree, or `n/a` for the baselines, which use no FastText and
+  need no W.
 - **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a change
   adds an unstated loss term;
   `test_alignment_matrix_is_required_by_every_entry_point` fails if any
@@ -238,9 +228,8 @@ Table 2 reports QA, NER and text classification. The evaluation harness is
 in `src/evaluation/` (entity-level NER F1, SQuAD QA F1, mean/stdev over
 seeds).
 
-**Status:** the full Table 2 sweep has not been run. It is blocked on the
-prerequisites above -- an author-supplied W and a λ value -- so no number in
-this repository should be read as reproducing the published Table 2.
+**Status:** the full Table 2 sweep has not been run. It requires the
+prerequisites above — a supplied W and a λ value.
 
 ## 4. FastText model acquisition
 
@@ -337,11 +326,11 @@ states the experiments were "repeated five times with different random
 seeds" but does not say which, so these are ours and are recorded in every
 run record.
 
-## 8. Table 1 hyperparameters — recovered and applied
+## 8. Table 1 hyperparameters
 
 Table 1 ("Hyperparameter settings used for further pretraining with
-morpheme-aware tokenization and fine-tuning") has been recovered from the
-paper and applied to `configs/base.yaml`:
+morpheme-aware tokenization and fine-tuning") is applied to
+`configs/base.yaml`:
 
 | Hyperparameter | Value |
 |---|---|

@@ -30,7 +30,7 @@ fasttext 0.9.3, CPU.
 | Morphological lexicon | `Loaded morphological lexicon: 210 words` |
 | Vocabulary expansion | `Added 198/198 new tokens to the tokenizer` |
 | Alignment matrix W | `[LGSELAPTrainer] alignment matrix: W 768x768 from <supplied path> (frozen)` |
-| W training status | `[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen` |
+| W training status | the trainer logs W as externally supplied and frozen |
 | Morpheme composition | init vectors written for all 198 tokens |
 | LGSE regularization | `avg loss this epoch: 9.8771 (mlm=9.8710 reg=0.0000)` |
 | Frozen backbone | only the embedding matrix and W receive gradients |
