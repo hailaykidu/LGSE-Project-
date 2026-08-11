@@ -3,7 +3,8 @@
 # PROVENANCE
 # Every value carries a `source` marker:
 #
-#   paper           stated in the paper text (arXiv:2603.22629)
+#   paper           stated in the paper text
+#                   (https://aclanthology.org/2026.lrec-1.812/)
 #   implementation  not stated in the paper; chosen here and recorded as
 #                   this repository's choice
 #   unavailable     not stated in the paper. These are mandatory and must

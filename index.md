@@ -1,7 +1,7 @@
 # LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation
 
 [![GitHub](https://img.shields.io/badge/Code-Ready%20to%20go!-green?logo=github)](https://github.com/hailaykidu/LGSE-Project-)
-![arXiv](https://img.shields.io/badge/Preprint-Coming%20soon!-%23B31B1B?logo=arxiv)
+[![ACL Anthology](https://img.shields.io/badge/Paper-ACL%20Anthology-%23B31B1B)](https://aclanthology.org/2026.lrec-1.812/)
 
 ### 📣 Accepted at LREC 2026!
 

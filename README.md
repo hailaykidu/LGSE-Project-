@@ -4,7 +4,8 @@
 
 This is the official repository for **LGSE: Lexically Grounded Subword
 Embedding Initialization for Low-Resource Language Adaptation**
-(Teklehaymanot, Fazlija & Nejdl, LREC 2026; arXiv:2603.22629).
+(Teklehaymanot, Fazlija & Nejdl, LREC 2026).
+Paper: https://aclanthology.org/2026.lrec-1.812/
 
 It implements the method described in the paper for **Amharic** and
 **Tigrinya**, two morphologically rich Ethio-Semitic languages.
