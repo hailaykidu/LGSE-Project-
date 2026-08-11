@@ -68,13 +68,12 @@ Core dependencies: `torch`, `transformers`, `fasttext`, `numpy`,
 
 ### Requirements
 
-Three artifacts are supplied by the experimenter. The paper does not specify
-values for them, so the implementation requires them explicitly:
+Three artifacts are supplied per run:
 
-| Requirement | Where | Why it is not defaulted |
+| Requirement | Where | Published specification |
 |---|---|---|
-| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 introduces W but does not state how it is obtained |
-| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but does not give its value |
+| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 defines W; its construction is not specified |
+| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 defines λ; no value is given |
 | FastText at the model's width | `data/fasttext_manifest.json` | W is square (`d×d`), so FastText must match the model's embedding width |
 
 A run missing any of these stops with an explanatory error. See
@@ -99,8 +98,8 @@ use:
 fasttext skipgram -input <corpus> -output <model> -dim 768
 ```
 
-Mismatched vectors are never truncated, padded, or rectangularly projected
-to fit; the dimension is checked at download, at config resolution, and at
+Mismatched vectors are not truncated, padded, or rectangularly projected to
+fit; the dimension is checked at download, at config resolution, and at
 construction.
 
 ### Language-adaptive pretraining
@@ -155,8 +154,8 @@ LGSE-Project/
 Results are produced by running the pipeline; none are committed to this
 repository. `scripts/aggregate_results.py` builds a table from your own runs
 in `results/`, recording for each figure the commit, configuration hash,
-dataset manifest, seeds and environment that produced it, and labelling
-whether the run used an author-supplied alignment matrix.
+dataset manifest, seeds and environment that produced it, and which alignment
+matrix the run used.
 
 The paper's reported numbers are not copied into this repository; the tables
 here are built from runs performed in this repository.

@@ -23,8 +23,7 @@ implementation does, and which of the two a given choice belongs to.
 > **No default is applied for a component the published specification leaves
 > open.** These values are supplied explicitly per run.
 >
-> A run either satisfies all three prerequisites, or it reports itself as a
-> partial reproduction / implementation validation.
+> A run records which of the three prerequisites it satisfied.
 >
 > The policy is enforced by tests:
 >
@@ -33,10 +32,10 @@ implementation does, and which of the two a given choice belongs to.
 > | No entry point defaults W | `test_alignment_matrix_is_required_by_every_entry_point` |
 > | No W is committed to the shipped config | `test_shipped_config_leaves_the_matrix_unset` |
 > | λ has no default | `test_reg_lambda_is_mandatory` |
-> | No dimension is silently reshaped | `test_no_silent_reshaping_of_mismatched_vectors` |
+> | Mismatched dimensions are not reshaped | `test_no_silent_reshaping_of_mismatched_vectors` |
 > | No unstated loss term trains W | `test_paper_objectives_give_w_no_gradient` |
-> | Unfaithful runs are flagged in the table | `tests/test_results_table_fidelity.py` |
-> | Baselines are *not* falsely flagged | `test_baselines_are_not_flagged_as_unfaithful` |
+> | Runs without a supplied W are marked in the table | `tests/test_results_table_fidelity.py` |
+> | Baselines are not marked | `test_baselines_are_not_flagged_as_unfaithful` |
 
 ## 1. Projection W is square, and externally supplied
 
@@ -62,9 +61,6 @@ of Sec 4.1, so the implementation raises on a dimension mismatch:
 | PCA/SVD reduction of the model's space | Changes what the embeddings mean |
 | Falling back to char n-grams on mismatch | Bypasses FastText while reporting as LGSE |
 
-None of these is distinguishable in the reported metrics, so the dimension
-check raises instead.
-
 The check is applied at three points, the earliest first:
 
 1. **`data/scripts/download_fasttext.py`** — checks at download time
@@ -80,9 +76,8 @@ All three raise `IncompatibleFastTextDimension`, a distinct exception type,
 with a message naming both dimensions, the reason, the required width, and
 the `fasttext -dim 768` command that produces it.
 
-**W has no default.** It is supplied by the author via
-`lgse.alignment_matrix_path`; a run without one fails. See §1a-i for why no
-default — including the identity — is substituted.
+**W has no default.** It is supplied via `lgse.alignment_matrix_path`; a run
+without one raises. See §1a-i for the candidates considered and not used.
 
 **W is the only supported projection.** `src/lgse/projection.py` defines
 `AlignmentProjection` as a square `d×d` matrix, externally supplied and
@@ -97,8 +92,8 @@ the published specification are not functions of W:
 - **Initialization** (Sec 4.2) sets `e_new` to the average of projected
   morpheme embeddings. In code this value is written into the embedding
   matrix via `.data` (`src/lgse/initializer.py:60-63`), which severs the
-  autograd graph. That in-place write is deliberate — replacing the
-  `Parameter` would break weight tying with the MLM head.
+  autograd graph. The in-place write preserves weight tying with the MLM
+  head.
 
 - **The regularizer** (Sec 4.2) is `L_reg = λ‖e_new − μ‖²`, "where μ is the
   **initial** embedding vector". μ is a constant; the term measures drift
@@ -133,14 +128,9 @@ following assumptions:
 | 4 | `reg_lambda` must be explicitly provided | No default; see §8a |
 | 5 | The construction of W is not part of the published specification, so the W used is an implementation choice | Supplied per run and recorded |
 
-**There is no default W — not even the identity.**
+**There is no default W, including the identity.**
 
-The identity treats the FastText and model embedding spaces as *already
-aligned*, which is the alignment Sec 4.1 introduces W to perform. Applying it
-as a default would set an implementation choice that materially affects
-results.
-
-Each candidate default is set aside for the reason given:
+Candidates considered and not used:
 
 | Candidate | Reason it is not used |
 |---|---|
@@ -149,35 +139,29 @@ Each candidate default is set aside for the reason given:
 | Fitted (Procrustes, CCA, …) | Outside the published specification, and requires anchor data it does not define |
 | A rectangular Johnson–Lindenstrauss map | Rectangular, where Sec 4.1 specifies `d×d` |
 
-`build_projection` raises `MissingAlignmentMatrix`, a distinct exception type
-marking a component the published specification leaves open rather than a
-misconfiguration. The message quotes Sec 4.1, states that the construction of
-W is not specified there, and explains why neither the identity nor a random
-matrix is applied as a default.
+`build_projection` raises `MissingAlignmentMatrix`, a distinct exception
+type. The message quotes Sec 4.1 and states that the construction of W is not
+specified there.
 
-A supplied identity is accepted as the experimenter's documented choice, and
-the trainer records it in the log when it occurs.
+A supplied identity is accepted and recorded in the trainer log.
 
 **W is frozen.** No objective differentiates W, so it carries
 `requires_grad=False` with no switch to change it: `AlignmentProjection`
 takes no `trainable` argument, and the optimizer contains the embedding
 matrix alone.
 
-**No loss term gives W a gradient.** A live regularizer anchor, a
-reconstruction loss, or an alignment loss against anchor translations would
-each make W train, and none is in the paper, so none is implemented. Making
-the regularizer anchor a live function of W would contradict Sec 4.2's
-"μ is the initial embedding vector", so `LGSERegularizer` accepts a fixed
-anchor tensor and nothing else.
+**No loss term gives W a gradient.** No reconstruction or alignment loss is
+implemented. Sec 4.2 defines μ as the initial embedding vector, so
+`LGSERegularizer` accepts a fixed anchor tensor.
 
 ### 1a-ii. How the status is surfaced
 
 W's status is checked before a run starts and recorded with each artifact:
 
-- **Before the run:** `run_experiment.py` refuses to start any
-  FastText-using system (`lgse`, `focus`) when `lgse.alignment_matrix_path`
-  is unset — checked before the backbone and the multi-GB FastText model are
-  loaded. `build_projection` is the authoritative check.
+- **Before the run:** `run_experiment.py` raises for any FastText-using
+  system (`lgse`, `focus`) when `lgse.alignment_matrix_path` is unset —
+  checked before the backbone and the multi-GB FastText model are loaded.
+  `build_projection` performs the check.
 - **Per run:** the trainer logs W's source and frozen status each run. A
   supplied identity is additionally noted.
 - **Per checkpoint:** `projection.pt` carries `source`, `trainable` and
@@ -195,9 +179,6 @@ W's status is checked before a run starts and recorded with each artifact:
   entry point introduces a default;
   `test_shipped_config_leaves_the_matrix_unset` fails if a W is committed to
   `configs/base.yaml`.
-
-"Learned" describes W's declared type in Sec 4.1; the published equations
-specify no objective that trains it.
 
 ### 1b. W is part of the checkpoint
 
@@ -241,9 +222,8 @@ FastText binaries are 2--3 GB and are not committed.
 | Amharic | `cc.am.300.bin` (Grave et al., 2018) | 300 | -- |
 | Tigrinya | `Hailay/fasttext-tigrinya` | 300 | 156,687 |
 
-The script loads each model and raises if it is empty rather than
-substituting random vectors, which would reduce LGSE to its character-n-gram
-fallback. Dimensions, vocabulary size and sha256 are recorded in
+The script loads each model and raises if it is empty. Dimensions,
+vocabulary size and sha256 are recorded in
 `data/fasttext_manifest.json`. The binaries themselves are gitignored.
 
 ## 5. TIGQA is abstractive, not extractive
@@ -264,9 +244,8 @@ the manifest. Consequences:
 * An extractive QA model can be evaluated on 13 Tigrinya test items at most,
   which is far too few for a stable F1, let alone a standard deviation over
   five seeds.
-* The paper reports F1 on "TIGQA train-dev-test splits". Those splits are not
-  in the Zenodo release, and the release as published does not support the
-  extractive setup that F1-over-spans implies.
+* The Zenodo release does not include train-dev-test splits, and its answers
+  are not spans of their contexts.
 
 **Resolved.** A SQuAD-format conversion of TIGQA (`TIGQA_squad_format.json`,
 version TIGQA-1.0) supplies 2,108 QA pairs over 433 contexts with
@@ -315,16 +294,16 @@ official splits, used as released -- no partition is derived. Counts:
 1,750 / 250 / 500 sentences (25,819 / 3,749 / 7,449 tokens), tag set
 PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
 
-## 7. Single seed
+## 7. Random seeds
 
-The release sets `seed=42` in one place with no CLI override, so
-mean +/- standard deviation over multiple runs cannot be produced.
+The release sets `seed=42` without a CLI override.
 
-**Implemented here:** seed is a config field and CLI argument, and
-`configs/base.yaml` sets the paper's five runs as seeds 42-46. The paper
-states the experiments were "repeated five times with different random
-seeds" but does not say which, so these are ours and are recorded in every
-run record.
+**Implemented here:** `seed` is a configuration field and CLI argument.
+`configs/base.yaml` specifies seeds 42–46, and the selected seed is recorded
+in each run record. The published specification states that the experiments
+were repeated five times with different random seeds; the specific seed
+values are not specified. Seeds 42–46 are the values used by this
+implementation.
 
 ## 8. Table 1 hyperparameters
 

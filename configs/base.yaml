@@ -6,17 +6,17 @@
 #   paper           stated in the paper text (arXiv:2603.22629)
 #   implementation  not stated in the paper; chosen here and recorded as
 #                   this repository's choice
-#   unavailable     not stated in the paper and with no defensible default.
-#                   These are MANDATORY: runs fail rather than guess.
+#   unavailable     not stated in the paper. These are mandatory and must
+#                   be set explicitly; runs raise if they are absent.
 #
 # Table 1 ("Hyperparameter settings used for further pretraining with
-# morpheme-aware tokenization and fine-tuning") is recovered from the paper
-# and applied below. The paper gives one shared table for both LAPT and
-# fine-tuning and states hyperparameters are "consistent" across Amharic and
-# Tigrinya, so the same values populate both sections.
+# morpheme-aware tokenization and fine-tuning") is applied below. The paper
+# gives one shared table for both LAPT and fine-tuning and states
+# hyperparameters are "consistent" across Amharic and Tigrinya, so the same
+# values populate both sections.
 #
 # One value remains `unavailable`: the regularization strength lambda, which
-# the paper introduces in Sec 4.2 but never assigns. See IMPLEMENTATION_NOTES.md #8.
+# the paper defines in Sec 4.2 without a value. See IMPLEMENTATION_NOTES.md #8.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
@@ -24,27 +24,22 @@ model:
 lgse:
   # W is a square learned linear map (d x d), paper Sec 4.1. FastText must
   # therefore be trained at the model's embedding width, not 300-dim --
-  # build_projection refuses a rectangular map. See IMPLEMENTATION_NOTES.md section 1.
+  # build_projection raises on a rectangular map. See IMPLEMENTATION_NOTES.md section 1.
   ngram_min: 3                      # source: implementation (not in the paper)
   ngram_max: 5                      # source: implementation (not in the paper)
   # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
-  # source: unavailable -- the paper introduces lambda but never assigns it,
-  # and Table 1 does not list it. There is no published value to default to,
-  # so this must be set explicitly and is recorded with every result. The
-  # value below is this repository's choice, NOT the paper's.
-  # Removing this key makes runs fail rather than fall back to a default.
+  # source: unavailable -- Sec 4.2 defines lambda; no numerical value or
+  # selection procedure is given, and Table 1 does not list it. The value
+  # below is this implementation's choice and is recorded with every result.
+  # Removing this key raises rather than applying a default.
   reg_lambda: 1.0
 
   # MANDATORY for FastText-using systems. Alignment matrix W (Sec 4.1):
   # path to a .pt/.npy file holding a d x d matrix.
   #
-  # source: author-required -- the paper introduces W but never states how
-  # it is obtained. There is no default, not even the identity: the identity
-  # would assert the two embedding spaces are already aligned, which is the
-  # claim W exists to avoid making. Leaving this empty makes LGSE runs FAIL.
-  #
-  # Any result produced without an author-provided W is NOT faithful to the
-  # published method. See IMPLEMENTATION_NOTES.md 1a.
+  # Sec 4.1 defines W; its construction is not specified there, so W is
+  # supplied per run. There is no default, including the identity: leaving
+  # this empty raises for LGSE runs. See IMPLEMENTATION_NOTES.md 1a.
   alignment_matrix_path: ""
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
@@ -82,11 +77,11 @@ finetune:                           # downstream task fine-tuning
                                     #   no warmup stated)
 
 evaluation:
-  seeds: [42, 43, 44, 45, 46]       # source: paper -- "repeated five times
-                                    #   with different random seeds"; the paper
-                                    #   does not state which seeds, so these are
-                                    #   ours and are recorded per run
-  metric: f1                        # source: paper -- F1 for NER, QA, classification
+  seeds: [42, 43, 44, 45, 46]       # the published specification states five
+                                    #   runs with different random seeds; the
+                                    #   values are not specified. 42-46 are the
+                                    #   values used here, recorded per run
+  metric: f1                        # F1 for the NER and QA tasks implemented here
   model_selection: dev              # source: paper -- selection on dev, report test
 
 data:
@@ -96,7 +91,7 @@ data:
   #
   #   fasttext skipgram -input <corpus> -output <model> -dim 768
   #
-  # The code refuses mismatched vectors rather than reshaping them; see
+  # Mismatched vectors raise; they are not reshaped. See
   # IMPLEMENTATION_NOTES.md section 1.
   fasttext:
     amharic:

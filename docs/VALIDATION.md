@@ -1,16 +1,12 @@
 # Pipeline validation
 
-Evidence that the complete LGSE path runs end to end, recorded so that
-integration failures do not reach it unnoticed.
+A record of the complete LGSE path running end to end: tokenizer expansion,
+initialization, regularization, backbone freezing, checkpointing, and
+downstream fine-tuning. Its scores are not results (see *Scores* below).
 
-> **This record is an implementation validation, not a reproduction.** It
-> confirms that the stages below execute and connect: tokenizer expansion,
-> initialization, regularization, backbone freezing, checkpointing, and
-> downstream fine-tuning. Its scores are not results (see *Scores* below).
->
-> The run recorded here did not use a supplied W. W has no default in this
-> implementation, so running the command below requires
-> `lgse.alignment_matrix_path` to be set.
+The run recorded here did not use a supplied W. W has no default in this
+implementation, so the command below requires `lgse.alignment_matrix_path`
+to be set.
 
 ## Run
 
@@ -56,12 +52,10 @@ section 8).
 
 ## Integration properties this validation covers
 
-Each of these is invisible to unit tests, which exercise these components
-separately:
+These properties involve more than one component:
 
-1. **W is not in the optimizer.** No objective stated in the paper trains W.
-   W is an externally supplied, frozen alignment matrix — see
-   `IMPLEMENTATION_NOTES.md` §1a.
+1. **W is not in the optimizer.** W is an externally supplied, frozen
+   alignment matrix — see `IMPLEMENTATION_NOTES.md` §1a.
 
 2. **The projection runs on real vectors.** `word_from_morphemes` averages in
    the tensor's own framework rather than with `np.mean`, which cannot consume
@@ -73,20 +67,16 @@ separately:
    graph; the regularizer anchors to a constant μ. No LAPT loss term is a
    function of W, so it receives `grad = None` every step and never moves.
 
-   This follows from the paper's equations, which call W "learned" while
-   specifying no objective that depends on it. The implementation reports W's
-   gradient status each epoch. See `IMPLEMENTATION_NOTES.md` §1a.
+   The implementation reports W's gradient status each epoch. See
+   `IMPLEMENTATION_NOTES.md` §1a.
 
 4. **W is preserved at checkpoint time.** `save()` serializes `projection.pt`
    alongside the model and tokenizer (`LGSELAPTrainer.save` /
    `load_projection`), so a resumed run does not restart from a fresh
-   initialization. This matters for any run that does train W, and costs
-   nothing for runs that do not.
+   initialization.
 
 `tests/test_learned_projection_pipeline.py` covers all four; 28 tests pass.
-`test_paper_objectives_give_w_no_gradient` asserts the documented gradient
-status and fails if a change adds a loss term outside the published
-specification.
+`test_paper_objectives_give_w_no_gradient` asserts W's gradient status.
 
 ## Provenance recorded per run
 
@@ -102,9 +92,8 @@ Every `experiment.json` carries what is needed to re-run it:
 | `python`, `packages` | torch / transformers / fasttext / numpy versions |
 | `unavailable_hyperparameters` | count still marked `source: unavailable` |
 
-`dirty` is recorded rather than assumed false: a run made with uncommitted
-changes cannot be recovered from its commit hash alone, and a table built
-from such runs says so.
+`dirty` records whether the working tree had uncommitted changes; the
+generated table reports it.
 
 `scripts/aggregate_results.py` surfaces the commit and config hash behind any
 table it generates, and warns when runs span more than one commit or when any
@@ -116,9 +105,9 @@ A missing dataset manifest is never silent. Three cases, all verified:
 
 | Case | Behaviour |
 |---|---|
-| `--require-manifest` and no manifest | the run refuses to start, naming the directory and the script that writes one |
+| `--require-manifest` and no manifest | the run raises, naming the directory and the script that writes one |
 | no manifest, flag not passed | the run proceeds; the table renders **manifest unavailable -- splits not traceable** and a warning naming the affected language/task |
 | some runs documented, others not | the table shows the source and split seed, followed by **N of M runs had no manifest** |
 
-Use `--require-manifest` for official experiment runs so no reported figure
-can rest on splits that cannot be traced to a source, checksum and seed.
+`--require-manifest` requires every run to carry a manifest recording its
+source, checksum and split seed.
