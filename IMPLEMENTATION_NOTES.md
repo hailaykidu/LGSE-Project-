@@ -341,23 +341,20 @@ how the table is applied:
 
 The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
 
-**Still `source: unavailable`:** the regularization strength λ in
-`L_reg = λ‖e_new − μ‖²`. The paper introduces λ but does not give its value,
-and Table 1 does not list it. This is the only optimisation-relevant value
-not from the paper.
+The regularization strength λ in `L_reg = λ‖e_new − μ‖²` is marked
+`source: unavailable` in the configuration. This implementation uses
+λ = 1.0.
 
 ### 8a. λ is a mandatory parameter
 
-The published specification defines the regularization coefficient λ but does
-not provide a numerical value or selection procedure, so **`reg_lambda` has
-no default**. `LGSEConfig` raises `MissingRequiredParameter` when it is not
+Sec 4.2 defines the regularization coefficient λ. **`reg_lambda` has no
+default**: `LGSEConfig` raises `MissingRequiredParameter` when it is not
 supplied, and `run_experiment.py` stops if `lgse.reg_lambda` is absent from
 the run config.
 
 λ is stated per run and recorded in the run record alongside
 `reg_lambda_source: "unavailable -- not stated in the paper"`.
 
-`configs/base.yaml` ships `reg_lambda: 1.0`, marked `source: unavailable`.
-This implementation uses λ = 1.0. λ sets the balance between preserving the
-lexically grounded initialization and adapting to the target language, which
-makes it a candidate for sensitivity analysis.
+`configs/base.yaml` ships `reg_lambda: 1.0`. This implementation uses
+λ = 1.0. λ balances preserving the lexically grounded initialization against
+adapting to the target language.

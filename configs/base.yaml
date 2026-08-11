@@ -15,8 +15,8 @@
 # hyperparameters are "consistent" across Amharic and Tigrinya, so the same
 # values populate both sections.
 #
-# One value remains `unavailable`: the regularization strength lambda, which
-# the paper defines in Sec 4.2 without a value. See IMPLEMENTATION_NOTES.md #8.
+# One value is marked `unavailable`: the regularization strength lambda
+# (Sec 4.2). See IMPLEMENTATION_NOTES.md #8.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
@@ -28,10 +28,8 @@ lgse:
   ngram_min: 3                      # source: implementation (not in the paper)
   ngram_max: 5                      # source: implementation (not in the paper)
   # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
-  # source: unavailable -- Sec 4.2 defines lambda; no numerical value or
-  # selection procedure is given, and Table 1 does not list it. The value
-  # below is this implementation's choice and is recorded with every result.
-  # Removing this key raises rather than applying a default.
+  # source: unavailable -- this implementation uses 1.0, recorded with every
+  # result. Removing this key raises rather than applying a default.
   reg_lambda: 1.0
 
   # MANDATORY for FastText-using systems. Alignment matrix W (Sec 4.1):
