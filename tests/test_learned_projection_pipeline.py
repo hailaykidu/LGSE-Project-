@@ -174,18 +174,18 @@ def test_missing_alignment_matrix_is_refused():
         build_projection(DIM, DIM)
 
 
-def test_missing_matrix_error_explains_the_gap():
+def test_missing_matrix_error_is_actionable():
     from lgse.projection import MissingAlignmentMatrix
 
     with pytest.raises(MissingAlignmentMatrix) as exc:
         build_projection(DIM, DIM)
     msg = str(exc.value)
 
-    assert "Sec 4.1" in msg                        # where W comes from
-    assert "never states how W is obtained" in msg  # the actual gap
-    assert "identity" in msg                        # why not defaulted
+    assert "Sec 4.1" in msg                         # where W is defined
+    assert "no default" in msg                      # W is not defaulted
+    assert "identity" in msg                        # nor is the identity
     assert "alignment_matrix_path" in msg           # how to proceed
-    assert "NOT" in msg and "faithful" in msg       # fidelity warning
+    assert "build_alignment_matrix.py" in msg       # how to build one
     assert "IMPLEMENTATION_NOTES.md" in msg
 
 

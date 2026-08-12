@@ -9,14 +9,12 @@ class LGSEInitializer:
     """
     Computes and writes initialization vectors for newly added tokens.
 
-    Deliberately does NOT resize the embedding matrix itself -- that is the
-    caller's responsibility via the tokenizer's own `add_tokens()` and the
-    model's own `resize_token_embeddings()`. An earlier version of this
-    class reconstructed the weight matrix by hand and replaced
-    `embedding_layer.weight` with a new Parameter, which silently breaks
-    weight tying between the input embeddings and a tied MLM output head
-    (common for XLM-R-style models): the tied head would keep pointing at
-    the old, smaller Parameter object instead of following the resize.
+    Does not resize the embedding matrix itself -- that is the caller's
+    responsibility via the tokenizer's own `add_tokens()` and the model's
+    own `resize_token_embeddings()`. Replacing `embedding_layer.weight`
+    with a new Parameter would break weight tying between the input
+    embeddings and a tied MLM output head (common for XLM-R-style models),
+    since the tied head would keep pointing at the old Parameter object.
     Using the model's own resize API first keeps both sides of the tie
     consistent; this class only fills in the *values* for the new rows.
     """

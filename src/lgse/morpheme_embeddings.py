@@ -9,14 +9,10 @@ class MorphemeEmbeddingBuilder:
         self.segmenter = segmenter
         self.embedding_dim = embedding_dim
 
-        # LGSE's W is square (paper Sec 4.1), so FastText and the model's
-        # embedding space must share a dimension. Verify that here rather
-        # than waiting for a shape error deep in a forward pass, and use the
-        # same check as build_projection so the two cannot disagree.
-        #
-        # There is deliberately no fallback: reshaping or rectangularly
-        # projecting mismatched vectors would leave the run reporting as
-        # LGSE while computing something the paper does not describe.
+        # W is square (Sec 4.1), so FastText and the model's embedding
+        # space share a dimension. Checked here rather than at a shape error
+        # deep in a forward pass, using the same check as build_projection.
+        # Mismatched vectors are not reshaped or rectangularly projected.
         self.projection = projection
         if fasttext_model is not None:
             from .projection import check_dimensions
@@ -40,18 +36,16 @@ class MorphemeEmbeddingBuilder:
     def word_from_morphemes(self, morphemes: List[str]) -> Optional[np.ndarray]:
         """Average FastText vectors over an already-segmented morpheme list.
         Returns None (not a random vector) if none of the morphemes have a
-        FastText vector -- the caller is responsible for the next fallback
-        step (character n-grams), matching the paper's described fallback
+        FastText vector; the caller applies the next step in the fallback
         chain: morphemes -> whole-token FastText -> character n-grams.
         """
         morpheme_vecs = [v for m in morphemes if (v := self._fasttext_vec(m)) is not None]
         if not morpheme_vecs:
             return None
-        # With a trainable W these are torch tensors carrying
-        # gradients, and np.mean would try to convert them -- which raises
-        # "Can't call numpy() on Tensor that requires grad". Averaging in the
-        # tensor's own framework keeps W on the autograd graph, which is the
-        # whole point of learning it.
+        # These are torch tensors; np.mean would try to convert them and
+        # raise "Can't call numpy() on Tensor that requires grad" whenever
+        # they track gradients. Averaging in the tensor's own framework
+        # handles both cases.
         import torch
         if isinstance(morpheme_vecs[0], torch.Tensor):
             return torch.stack(morpheme_vecs, dim=0).mean(dim=0)

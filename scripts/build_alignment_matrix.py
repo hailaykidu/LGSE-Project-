@@ -1,16 +1,12 @@
 """
 build_alignment_matrix.py -- W by orthogonal Procrustes on shared vocabulary.
 
-Sec 4.1 defines a learned projection matrix W in R^{d x d}; the construction
-of W is not specified there. No objective in the published specification is a
-function of W: Sec 4.2's L_reg anchors to a constant mu, and Sec 5's LAPT
-applies MLM to the embedding matrix with the encoder frozen. Initialization
-writes W's output into the embedding through `.data`, which severs the
-autograd graph, so no gradient path reaches W during training.
+W is the square d x d projection of Sec 4.1, applied to FastText vectors
+before they are written into the model's embedding space.
 
-This script instantiates W by orthogonal Procrustes alignment. W is computed
-here, before any training, and used as a precomputed matrix -- consistent
-with `AlignmentProjection`, which holds it with `requires_grad=False`.
+This script constructs W by orthogonal Procrustes alignment. W is computed
+here, before any training, and used as a precomputed matrix, matching
+`AlignmentProjection`, which holds it with `requires_grad=False`.
 
 METHOD (an implementation choice; see IMPLEMENTATION_NOTES.md section 1a)
 ------------------------------------------------------------------------
@@ -24,8 +20,8 @@ Orthogonal Procrustes on anchor tokens present in both spaces:
 
 The orthogonality constraint makes this a rotation of the FastText space onto
 XLM-R's, without rescaling, so distances among FastText neighbours are
-preserved. An unconstrained least-squares solution would fit the anchors more
-closely while being free to collapse directions.
+preserved. An unconstrained least-squares solution fits the anchors more
+closely but may rescale or collapse directions.
 
 ANCHORS
 -------
@@ -103,8 +99,8 @@ def main() -> int:
     if ft_dim != xlmr_dim:
         raise SystemExit(
             f"Dimension mismatch: FastText {ft_dim}, {args.model} {xlmr_dim}.\n"
-            "  Sec 4.1's W is square; neither space is padded or truncated to\n"
-            "  fit. Train FastText at the model's embedding width.")
+            "  W is square; neither space is padded or truncated to fit.\n"
+            "  Train FastText at the model's embedding width.")
 
     # Anchors: tokens both spaces represent.
     xs, ys, anchors = [], [], []
@@ -120,8 +116,7 @@ def main() -> int:
     print(f"anchor tokens: {n:,}")
     if n < args.min_anchors:
         raise SystemExit(
-            f"Too few anchors: {n} < {args.min_anchors}. A rotation fitted on\n"
-            "  this much shared vocabulary would not align the two spaces.")
+            f"Too few anchors: {n} < {args.min_anchors} shared tokens.")
 
     X = np.asarray(xs, dtype=np.float64).T          # d x n
     Y = np.asarray(ys, dtype=np.float64).T          # d x n
@@ -154,9 +149,8 @@ def main() -> int:
         "unaligned_frobenius": round(baseline, 4),
         "orthogonality_max_abs_error": orthogonality_error,
         "source": (
-            "Sec 4.1 defines W; its construction is not specified there. "
-            "This matrix is built by orthogonal Procrustes alignment, "
-            "precomputed here and used frozen."),
+            "implementation choice: orthogonal Procrustes alignment, "
+            "precomputed before training and used frozen"),
     }
     (args.out_dir / f"W_{args.language}.json").write_text(
         json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

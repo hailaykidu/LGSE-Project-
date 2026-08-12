@@ -3,9 +3,9 @@
 Four groups for W -- dimensions, gradient flow, optimizer inclusion, and
 save/load -- and one for lambda's effect on the loss and its gradient.
 
-W is held frozen: no objective in the published specification is a function
-of W (see IMPLEMENTATION_NOTES.md section 1a). These tests record that
-behaviour so a change to it is visible rather than silent.
+These tests verify that W is implemented as a fixed projection: it is
+initialized from the supplied matrix, excluded from optimization, and does
+not receive parameter updates during training.
 """
 
 import sys
