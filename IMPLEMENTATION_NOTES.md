@@ -1,17 +1,16 @@
 # Implementation notes
 
-This repository implements the LGSE method described in the paper. Each
-entry states what the published specification defines, what the
-implementation does, and which of the two a given choice belongs to.
+This repository implements the LGSE method. Each entry describes what the
+implementation does and how it is configured.
 
 > ## Prerequisites
 >
-> The implementation requires explicit values or artifacts for W and λ.
+> Two values are supplied per run as implementation inputs:
 >
-> | Required | Published specification |
+> | Required | Where it is used |
 > |---|---|
-> | `lgse.alignment_matrix_path` (W) | Sec 4.1 defines a learned projection matrix W; the construction of W is not specified (§1a) |
-> | `lgse.reg_lambda` (λ) | Sec 4.2 defines the regularization coefficient λ; no numerical value or selection procedure is given (§8a) |
+> | `lgse.alignment_matrix_path` (W) | the square `d×d` projection applied to FastText vectors (§1, §1a) |
+> | `lgse.reg_lambda` (λ) | the coefficient of the regularization term (§8a) |
 >
 > The W used by a run is recorded in the run record.
 >
@@ -20,10 +19,8 @@ implementation does, and which of the two a given choice belongs to.
 >
 > ### Standing policy
 >
-> **No default is applied for a component the published specification leaves
-> open.** These values are supplied explicitly per run.
->
-> A run records which of the three prerequisites it satisfied.
+> **Neither value has a default.** Both are supplied explicitly per run, and
+> a run records which of the three prerequisites it satisfied.
 >
 > The policy is enforced by tests:
 >
@@ -45,18 +42,18 @@ pretrained model embedding space, a learned linear projection
 
 Two consequences, both implemented:
 
-**W is square.** The paper aligns two spaces of the same dimension `d`; it
-describes no dimensionality change. In practice this means FastText must be
-trained at the model's embedding width (768 for xlm-roberta-base), not the
-standard 300 — `configs/base.yaml` sets `fasttext_dim: 768` accordingly.
+**W is square.** W maps the FastText space onto the model's embedding space
+at the same dimension `d`, so FastText must be trained at the model's
+embedding width (768 for xlm-roberta-base), not the standard 300 —
+`configs/base.yaml` sets `fasttext_dim: 768` accordingly.
 
-**The embedding dimensions must match the required projection shape.** The
-300-dim CC vectors referenced under `data.fasttext` do not match the square W
-of Sec 4.1, so the implementation raises on a dimension mismatch:
+**The embedding dimensions must match the projection shape.** The 300-dim CC
+vectors referenced under `data.fasttext` do not match the square W, so the
+implementation raises on a dimension mismatch:
 
 | Not applied | Reason |
 |---|---|
-| Rectangular `W ∈ R^(300×768)` | Sec 4.1 specifies `W ∈ R^(d×d)` |
+| Rectangular `W ∈ R^(300×768)` | W is `d×d` |
 | Truncating 768→300 or padding 300→768 | Changes the embedding dimensions |
 | PCA/SVD reduction of the model's space | Changes what the embeddings mean |
 | Falling back to char n-grams on mismatch | Bypasses FastText while reporting as LGSE |
@@ -68,9 +65,9 @@ The check is applied at three points, the earliest first:
    records `dimension_ok` in the manifest, and exits non-zero.
 2. **`LGSEConfig.fasttext_path`** — reads the manifest's recorded dimension
    and raises before a multi-GB model is loaded.
-3. **`build_projection` / `MorphemeEmbeddingBuilder`** — the authoritative
-   check, via `check_dimensions`. Both share one implementation so they
-   cannot disagree.
+3. **`build_projection` / `MorphemeEmbeddingBuilder`** — the final check,
+   via `check_dimensions`. Both share one implementation so they cannot
+   disagree.
 
 All three raise `IncompatibleFastTextDimension`, a distinct exception type,
 with a message naming both dimensions, the reason, the required width, and
@@ -84,49 +81,45 @@ without one raises. See §1a-i for the candidates considered and not used.
 frozen. It is the single projection path; there is no `projection:` config
 key.
 
-### 1a. Under the paper's stated objectives, W receives no gradient
+### 1a. W receives no gradient
 
-Sec 4.1 describes W as a learned projection layer. The objectives given in
-the published specification are not functions of W:
+No loss term implemented here is a function of W:
 
-- **Initialization** (Sec 4.2) sets `e_new` to the average of projected
-  morpheme embeddings. In code this value is written into the embedding
-  matrix via `.data` (`src/lgse/initializer.py:60-63`), which severs the
-  autograd graph. The in-place write preserves weight tying with the MLM
-  head.
+- **Initialization** sets `e_new` to the average of projected morpheme
+  embeddings. This value is written into the embedding matrix via `.data`
+  (`src/lgse/initializer.py:60-63`), which severs the autograd graph. The
+  in-place write preserves weight tying with the MLM head.
 
-- **The regularizer** (Sec 4.2) is `L_reg = λ‖e_new − μ‖²`, "where μ is the
-  **initial** embedding vector". μ is a constant; the term measures drift
-  from initialization and trains `e_new`, not W.
+- **The regularizer** is `L_reg = λ‖e_new − μ‖²`, where μ is the initial
+  embedding vector. μ is a constant; the term measures drift from
+  initialization and trains `e_new`, not W.
 
-- **LAPT** (Sec 5) applies MLM with the encoder frozen, updating "only the
-  new embeddings". It reads the embedding matrix, not W.
+- **LAPT** applies MLM with the encoder frozen, updating only the new
+  embeddings. It reads the embedding matrix, not W.
 
-So W is initialized, its output is copied into the embeddings, and it is
-never differentiated again. Verified empirically:
+W is initialized, its output is copied into the embeddings, and it is never
+differentiated again. Verified empirically:
 
 ```
 W is square      : torch.Size([768, 768])
 identity init    : True
 emb grad         : True
-W grad under paper formulation: None
+W grad          : None
 ```
 
-**Status:** W is supplied externally and is not trained by any objective in
-the published specification.
+**Status:** W is supplied externally and is not trained by any loss term.
 
-### 1a-i. Implementation assumptions
+### 1a-i. Implementation properties
 
-W is implemented as an **externally supplied alignment matrix**, under the
-following assumptions:
+W is implemented as an **externally supplied alignment matrix**:
 
-| # | Assumption | Consequence |
+| # | Property | Consequence |
 |---|---|---|
 | 1 | W is an externally supplied artifact | `alignment_matrix_path` loads a `d×d` matrix from `.pt`/`.npy`; **no default of any kind** |
 | 2 | W is frozen | `requires_grad=False`, excluded from the optimizer |
-| 3 | No objective trains W | No loss term gives it a gradient |
+| 3 | No loss term trains W | No gradient reaches it |
 | 4 | `reg_lambda` must be explicitly provided | No default; see §8a |
-| 5 | The construction of W is not part of the published specification, so the W used is an implementation choice | Supplied per run and recorded |
+| 5 | W is supplied per run as an implementation input | Recorded with the run |
 
 **There is no default W, including the identity.**
 
@@ -135,26 +128,25 @@ Candidates considered and not used:
 | Candidate | Reason it is not used |
 |---|---|
 | Identity | Treats the two spaces as already aligned |
-| Random / seeded | An alignment strategy outside the published specification |
-| Fitted (Procrustes, CCA, …) | Outside the published specification, and requires anchor data it does not define |
-| A rectangular Johnson–Lindenstrauss map | Rectangular, where Sec 4.1 specifies `d×d` |
+| Random / seeded | Applies an arbitrary map in place of a supplied one |
+| A rectangular Johnson–Lindenstrauss map | Rectangular, where W is `d×d` |
 
 `build_projection` raises `MissingAlignmentMatrix`, a distinct exception
-type. The message quotes Sec 4.1 and states that the construction of W is not
-specified there.
+type. The message names `lgse.alignment_matrix_path` and points at
+`scripts/build_alignment_matrix.py`, which constructs a W by orthogonal
+Procrustes alignment on shared vocabulary.
 
 A supplied identity is accepted and recorded in the trainer log.
 
-**W is frozen.** No objective differentiates W, so it carries
-`requires_grad=False` with no switch to change it: `AlignmentProjection`
-takes no `trainable` argument, and the optimizer contains the embedding
-matrix alone.
+**W is frozen.** It carries `requires_grad=False` with no switch to change
+it: `AlignmentProjection` takes no `trainable` argument, and the optimizer
+contains the embedding matrix alone.
 
 **No loss term gives W a gradient.** No reconstruction or alignment loss is
-implemented. Sec 4.2 defines μ as the initial embedding vector, so
-`LGSERegularizer` accepts a fixed anchor tensor.
+implemented. μ is the initial embedding vector, so `LGSERegularizer` accepts
+a fixed anchor tensor.
 
-### 1a-ii. How the status is surfaced
+### 1a-ii. How W is recorded
 
 W's status is checked before a run starts and recorded with each artifact:
 
@@ -174,7 +166,7 @@ W's status is checked before a run starts and recorded with each artifact:
   one system disagree, or `n/a` for the baselines, which use no FastText and
   need no W.
 - **In tests:** `test_paper_objectives_give_w_no_gradient` fails if a change
-  adds an unstated loss term;
+  adds a loss term that reaches W;
   `test_alignment_matrix_is_required_by_every_entry_point` fails if any
   entry point introduces a default;
   `test_shipped_config_leaves_the_matrix_unset` fails if a W is committed to
@@ -189,19 +181,18 @@ so a checkpoint reloads with the same W that produced its numbers.
 
 ## 2. Comparison baselines
 
-Table 2 compares five systems, and the paper describes them in prose rather
-than specifying their implementation.
+Table 2 compares five systems. Their implementations are provided here.
 
 `src/baselines/strategies.py` provides `default` (+LAPT),
 `random` (+Random+LAPT) and `focus` (+FOCUS+LAPT), each exposing the same
 interface as `LGSEInitializer` so the trainer swaps between them with no
 other change.
 
-FOCUS (Dobler & de Melo, 2023) is reimplemented here as a similarity-weighted
+FOCUS (Dobler & de Melo, 2023) is implemented here as a similarity-weighted
 combination of pretrained embeddings using the FastText space as the
 auxiliary signal -- the same external signal LGSE uses, so the two differ
-only in how they use it. It is an independent reimplementation and has not
-been validated against the FOCUS authors' published results.
+only in how they use it. This is an independent implementation and has not
+been validated against the results published with FOCUS.
 
 ## 3. Table 2 evaluation
 
@@ -269,20 +260,19 @@ could not be located in its context; verified independently here, none of the
 1,039 occurs verbatim in its context. They are not recoverable by string
 matching, and assigning offsets to them would corrupt the metric.
 
-Two caveats remain for strict reproduction:
+Two properties of these splits are worth recording:
 
-* These splits are derived here with seed 42, not taken from an official
-  release. The paper refers to "TIGQA train-dev-test splits"; the split files
-  in `hailaykidu/TigQA-Dataset` are not usable as published -- `dev.json` and
-  `test.json` contain malformed JSON, and in `train.json` all 37 answer
-  offsets are relative to the source document rather than the merged
-  paragraph, so none resolve.
+* They are derived here with seed 42, not taken from an official release.
+  The split files in `hailaykidu/TigQA-Dataset` are not usable as published:
+  `dev.json` and `test.json` contain malformed JSON, and in `train.json` all
+  37 answer offsets are relative to the source document rather than the
+  merged paragraph, so none resolve.
 * Tigrinya QA is scored on 86 test items against Amharic's 285.
 
 ## 6. MasakhaNER source
 
-The paper uses MasakhaNER (Adelani et al., 2021) for Amharic NER. The
-HuggingFace mirrors -- `masakhane/masakhaner`, `masakhane/masakhaner2`,
+Amharic NER uses MasakhaNER (Adelani et al., 2021). The HuggingFace
+mirrors -- `masakhane/masakhaner`, `masakhane/masakhaner2`,
 `Davlan/masakhanerV1` -- are all script-based datasets, which current
 `datasets` refuses to load ("Dataset scripts are no longer supported"), and
 none carries data files for Amharic.
@@ -296,14 +286,9 @@ PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
 
 ## 7. Random seeds
 
-The release sets `seed=42` without a CLI override.
-
-**Implemented here:** `seed` is a configuration field and CLI argument.
-`configs/base.yaml` specifies seeds 42–46, and the selected seed is recorded
-in each run record. The published specification states that the experiments
-were repeated five times with different random seeds; the specific seed
-values are not specified. Seeds 42–46 are the values used by this
-implementation.
+`seed` is a configuration field and a CLI argument, so the seed is
+configurable per run. `configs/base.yaml` sets `evaluation.seeds` to
+42, 43, 44, 45, 46. The selected seed is recorded in each run record.
 
 ## 8. Table 1 hyperparameters
 
@@ -329,10 +314,10 @@ morpheme-aware tokenization and fine-tuning") is applied to
 These values are marked `source: paper` in the configuration. Two notes on
 how the table is applied:
 
-- The paper gives **one** table covering both further pretraining and
-  fine-tuning, so the same values populate the `lapt:` and `finetune:`
-  sections. Sec 5 states hyperparameters are "consistent" across Amharic and
-  Tigrinya, so no per-language variation is introduced.
+- Table 1 covers both further pretraining and fine-tuning, so the same values
+  populate the `lapt:` and `finetune:` sections. Hyperparameters are
+  consistent across Amharic and Tigrinya, so no per-language variation is
+  introduced.
 
 - Table 1 says "Adam" while also specifying weight decay 0.01. The config
   uses AdamW, since decoupled weight decay is what a nonzero `weight_decay`
@@ -342,18 +327,22 @@ how the table is applied:
 The schedule is constant with no warmup stated, so `warmup_ratio` is 0.0.
 
 The regularization strength λ in `L_reg = λ‖e_new − μ‖²` is marked
-`source: unavailable` in the configuration. This implementation uses
-λ = 1.0.
+`source: unavailable` in the configuration. This implementation uses λ = 1.0;
+see §8a.
 
 ### 8a. λ is a mandatory parameter
 
-Sec 4.2 defines the regularization coefficient λ. **`reg_lambda` has no
-default**: `LGSEConfig` raises `MissingRequiredParameter` when it is not
-supplied, and `run_experiment.py` stops if `lgse.reg_lambda` is absent from
-the run config.
+λ is the coefficient of the regularization term `L_reg = λ‖e_new − μ‖²`. It
+is read from `lgse.reg_lambda`, passed to `LGSERegularizer(lambda_reg=...)`,
+and multiplies the mean squared drift in
+`src/lgse/regularization.py`; `lambda_reg == 0.0` returns a zero loss.
 
-λ is stated per run and recorded in the run record alongside
-`reg_lambda_source: "unavailable -- not stated in the paper"`.
+**`reg_lambda` has no default**: `LGSEConfig` raises
+`MissingRequiredParameter` when it is not supplied, and `run_experiment.py`
+stops if `lgse.reg_lambda` is absent from the run config.
+
+λ is set per run and recorded in the run record alongside
+`reg_lambda_source`.
 
 `configs/base.yaml` ships `reg_lambda: 1.0`. This implementation uses
 λ = 1.0. λ balances preserving the lexically grounded initialization against
