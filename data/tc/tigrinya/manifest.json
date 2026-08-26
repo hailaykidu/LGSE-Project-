@@ -1,0 +1,51 @@
+{
+  "source": "data-is-better-together/fineweb-c (config tir_Ethi)",
+  "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
+  "documents": 745,
+  "labelled": 745,
+  "label_scale": "paper Sec 7, 1-6",
+  "label_map": {
+    "None": "1",
+    "Minimal": "2",
+    "Basic": "3",
+    "Good": "4",
+    "Excellent": "5",
+    "❗ Problematic Content ❗": "6"
+  },
+  "annotator_resolution": "majority",
+  "tie_break": "lower rating",
+  "problematic_flag_folded_into_rating": false,
+  "split": "stratified 80/10/10, duplicate texts grouped",
+  "seed": 42,
+  "split_sizes": {
+    "train": 597,
+    "dev": 74,
+    "test": 74
+  },
+  "label_distribution": {
+    "train": {
+      "1": 163,
+      "2": 189,
+      "3": 183,
+      "4": 44,
+      "5": 9,
+      "6": 9
+    },
+    "dev": {
+      "1": 20,
+      "2": 24,
+      "3": 23,
+      "4": 5,
+      "5": 1,
+      "6": 1
+    },
+    "test": {
+      "1": 20,
+      "2": 24,
+      "3": 23,
+      "4": 5,
+      "5": 1,
+      "6": 1
+    }
+  }
+}
