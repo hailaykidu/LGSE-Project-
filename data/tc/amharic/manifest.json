@@ -1,15 +1,11 @@
 {
-  "source": "data-is-better-together/fineweb-c (config amh_Ethi)",
-  "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
-  "original_size": 2500,
-  "processed_size": 745,
-  "processing_steps": [
-    "Duplicate removal: deleting identical or highly redundant rows",
-    "Missing value filtering",
-    "Outlier filtering"
-  ],
-  "documents": 745,
-  "labelled": 745,
+  "source": "Self-annotated Amharic Educational Quality dataset, created and annotated independently of FineWeb-C",
+  "source_url": null,
+  "raw_file": "data/tc/amharic/Educational classifier.csv",
+  "documents": 236,
+  "labelled": 236,
+  "unique_texts": 227,
+  "duplicate_rows": 9,
   "label_scale": "paper Sec 7, 1-6",
   "label_map": {
     "None": "1",
@@ -18,5 +14,14 @@
     "Good": "4",
     "Excellent": "5",
     "❗ Problematic Content ❗": "6"
-  }
+  },
+  "label_distribution": {
+    "1": 38,
+    "2": 98,
+    "3": 64,
+    "4": 33,
+    "5": 1,
+    "6": 2
+  },
+  "note": "Counted directly from the raw CSV (238 total rows: 1 guidelines row + 1 header row + 236 data rows). No original-pool size, cleaning-pipeline record, or train/dev/test split is recorded in this repository for this file; do not assume the Tigrinya manifest's 2,500->745 figures apply here without separate confirmation."
 }
