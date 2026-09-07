@@ -55,5 +55,6 @@
       "5": 1,
       "6": 1
     }
-  }
+  },
+  "note": "processed_size (745) is independently confirmed: it matches both the committed train/dev/test.csv row counts in this directory (597+74+74) and the tir_Ethi config's row count reported by the data-is-better-together/fineweb-c dataset itself. original_size (2,500) is not independently verifiable from anything committed in this repository -- it is recorded as stated by the Tigrinya annotation lead. This dataset is unrelated to data/tc/amharic/, which has its own separate source and figures."
 }
