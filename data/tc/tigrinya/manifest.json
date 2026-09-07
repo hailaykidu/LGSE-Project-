@@ -2,6 +2,13 @@
   "source": "data-is-better-together/fineweb-c (config tir_Ethi)",
   "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
   "annotation_lead": "Hailay Kidu Teklehaymanot led the Tigrinya annotation effort for FineWeb-C, organizing the Tigrinya community and annotating the Tigrinya (tir_Ethi) data, as acknowledged at https://huggingface.co/spaces/data-is-better-together/FineWeb-C-Contributors",
+  "original_size": 2500,
+  "processed_size": 745,
+  "processing_steps": [
+    "Duplicate removal: deleting identical or highly redundant rows",
+    "Missing value filtering",
+    "Outlier filtering"
+  ],
   "documents": 745,
   "labelled": 745,
   "label_scale": "paper Sec 7, 1-6",

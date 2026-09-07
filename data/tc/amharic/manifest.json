@@ -1,0 +1,22 @@
+{
+  "source": "data-is-better-together/fineweb-c (config amh_Ethi)",
+  "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
+  "original_size": 2500,
+  "processed_size": 745,
+  "processing_steps": [
+    "Duplicate removal: deleting identical or highly redundant rows",
+    "Missing value filtering",
+    "Outlier filtering"
+  ],
+  "documents": 745,
+  "labelled": 745,
+  "label_scale": "paper Sec 7, 1-6",
+  "label_map": {
+    "None": "1",
+    "Minimal": "2",
+    "Basic": "3",
+    "Good": "4",
+    "Excellent": "5",
+    "❗ Problematic Content ❗": "6"
+  }
+}
