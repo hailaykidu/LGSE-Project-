@@ -1,5 +1,13 @@
 # Table 2 -- rankings and the LGSE-FOCUS comparison
 
+## Note on interpretation
+
+**The authoritative Table 2 results are those reported in the published LGSE paper.** The results below are reproduced using the repository's implementation and documented choices. They should be read as supporting reproduction evidence, not as replacement or reinterpretation of the published values.
+
+For complete context on the relationship between published results and repository artifacts, see `IMPLEMENTATION_NOTES.md` Section 3: "Table 2 reproducibility."
+
+## Results from this implementation
+
 Mean +/- sample sd over seeds 42-46. Metric: accuracy for TC (Table 2 'AC'), F1 for NER and QA.
 
 The paper specifies a learned projection matrix W but does not specify how W is obtained (Sec. 4.1). To implement the pipeline, this repository uses orthogonal Procrustes alignment to instantiate W (see `data/alignment/W_*.json`). The paper defines the regularization coefficient lambda but does not provide a numerical value or selection procedure; to implement the pipeline, this repository uses lambda = 1.0. These are results from this implementation, obtained using those implementation choices.

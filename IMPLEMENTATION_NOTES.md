@@ -272,13 +272,39 @@ seeds).
 
 **Status:** The full Table 2 sweep has now been completed.
 
+**Relationship to the published paper:**
+
+The numerical values reported in **Table 2 of the published LGSE paper are
+the authoritative published results.** They remain the reference for the
+scientific claims made by the paper and are not replaced, amended, or
+reinterpreted by the results generated in this repository.
+
+This repository serves a complementary purpose: it preserves and documents
+the experimental components available for the Table 2 evaluation and provides
+an executable implementation that connects those components into a traceable
+evaluation pipeline.
+
+**Historical evidence available:**
+
+There is no single surviving end-to-end execution record that links every
+published Table 2 number to a complete configuration, run, and output.
+Instead, individual components of the experiment survive in this repository,
+including data, implementation code, configurations, and result artifacts.
+This repository brings these components together and makes the currently
+executable implementation explicit.
+
 **Underspecified components and their resolution:**
 
 The paper specifies a learned projection matrix W (Sec. 4.1) but does not
 explicitly describe the procedure used to instantiate it, and it defines the
 regularization coefficient λ (Sec. 4.2) without giving a numerical value.
-In the released reproduction repository, these underspecified implementation
-details are now explicitly fixed as follows:
+Where the paper does not specify sufficient implementation detail to
+reconstruct an implementation exactly, this repository documents the choices
+used by its executable implementation. These are **repository implementation
+choices**, not newly recovered historical values unless supported by
+surviving primary evidence.
+
+In particular:
 
 | Component | Paper specifies | This repository implements |
 |---|---|---|
@@ -287,6 +313,19 @@ details are now explicitly fixed as follows:
 
 These choices are documented in IMPLEMENTATION_NOTES.md (this file) and
 implemented in the corresponding evaluation pipeline in `src/evaluation/`.
+
+**Interpretation of repository results:**
+
+The repository's reproduced results should be read as **reproduction/evaluation
+evidence**, not as replacement values for the published Table 2. When a
+repository result differs from a published Table 2 value, the published value
+remains the authoritative reported result. The difference is documented in
+terms of the available experimental provenance and the explicit implementation
+choices used by the repository.
+
+The repository does not invent missing historical configuration or claim exact
+historical reconstruction where the surviving record does not permit a published
+number to be traced through one complete historical execution.
 
 **Reproducibility claim:** The resulting Table 2 values constitute the
 reproducible output of the released implementation under the explicitly
