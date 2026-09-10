@@ -1,51 +1,27 @@
 """
 projection.py -- the alignment matrix W of the LGSE method.
 
-Paper Sec 4.1:
+W is a square d x d linear map applied to FastText vectors before they are
+written into the model's embedding space: e_aligned_t = W e_t (Sec 4.1).
 
-    "To align the FastText embedding space with the pretrained model
-     embedding space, a learned linear projection W in R^{d x d} is
-     applied, i.e. e_aligned_t = W e_t."
+Two properties follow, and both are enforced here:
 
-Two things follow directly, and both are load-bearing:
+  * **W is square.** It maps the FastText space onto the model's embedding
+    space at the same dimension d, so FastText vectors must be trained at the
+    model's embedding width (768 for xlm-roberta-base). `check_dimensions`
+    verifies this and raises on a mismatch.
 
-  * **W is square** (d x d). The paper aligns two spaces of the same
-    dimension d; it does not describe a rectangular map that changes
-    dimensionality. Running with 300-dim FastText against 768-dim XLM-R
-    therefore requires FastText vectors trained at d=768. `check_dimensions`
-    enforces this and reports the mismatch rather than reshaping the method.
+  * **W is fixed during training.** It is supplied per run, held with
+    `requires_grad=False`, and excluded from the optimizer. Initialization
+    writes W's output into the embedding through `.data`, so no gradient
+    path reaches W. `scripts/build_alignment_matrix.py` constructs W before
+    training; see IMPLEMENTATION_NOTES.md section 1a.
 
-  * **W is described as "learned", but the paper specifies no objective
-    that trains it.** Sec 4.2's L_reg anchors to a constant mu; Sec 5's
-    LAPT applies MLM to the embedding matrix with the encoder frozen.
-    Neither is a function of W. Initialization writes W's output into the
-    embedding through `.data`, which severs the autograd graph, and nothing
-    downstream depends on W again.
-
-STATUS: author-required / unspecified in paper
-------------------------------------------------------------------
-W is therefore treated here as an **externally supplied alignment matrix**:
-a given of the run, loaded from disk, with **no default of any kind**. A run
-without an author-provided W fails rather than starting.
-
-That includes the identity. The identity is not a neutral fallback -- it
-asserts that the FastText and model embedding spaces are already aligned,
-which is precisely the claim Sec 4.1 introduces W to avoid making. Choosing
-it silently would substitute an implementation decision for a specification
-the paper does not give, and would materially affect results while looking
-like a faithful run.
-
-W is frozen -- excluded from the optimizer and carrying
-`requires_grad=False`.
-
-No gradient path is manufactured for W. Constructing one would require
-inventing a loss term the paper does not state, which would be implementing
-a different method while reporting it as LGSE.
-
-Resolving this requires the authors to state which objective trains W.
-See IMPLEMENTATION_NOTES.md section 1a.
+W has no default: `build_projection` requires an explicit matrix and raises
+`MissingAlignmentMatrix` without one. The identity is not applied as a
+fallback, since it would treat the FastText and model embedding spaces as
+already aligned.
 """
-
 from typing import Optional
 
 import numpy as np
@@ -54,28 +30,20 @@ import torch.nn as nn
 
 
 class MissingAlignmentMatrix(ValueError):
-    """Raised when no author-supplied W is available.
+    """Raised when no alignment matrix W was supplied.
 
-    A distinct type because this is not a misconfiguration to patch with a
-    default -- it marks a genuinely unspecified part of the method.
+    A distinct type so callers can catch a missing W specifically.
     """
 
 
 class AlignmentProjection(nn.Module):
-    """Square alignment matrix W (d x d), externally supplied.
+    """Square alignment matrix W (d x d), supplied per run.
 
-    W is a *given* of the run, never something this pipeline fits or
-    invents. `weight` is required: there is no default, not even the
-    identity. The identity would be an implementation choice the paper does
-    not describe, and one that materially affects results -- it asserts that
-    the FastText and model embedding spaces are already aligned, which is
-    exactly the claim Sec 4.1 introduces W to avoid having to make.
+    `weight` is required: there is no default, and the identity is not
+    applied as a fallback.
 
-    W is **frozen**: `requires_grad=False`, excluded from the optimizer.
-    This is not an oversight but the documented consequence of the paper
-    specifying no objective that trains it (see IMPLEMENTATION_NOTES.md
-    section 1a). Marking it trainable while nothing differentiates it would
-    report a capability the run does not have.
+    W is fixed: `requires_grad=False`, excluded from the optimizer. See
+    IMPLEMENTATION_NOTES.md section 1a.
     """
 
     def __init__(self, dim: int, weight: torch.Tensor,
@@ -124,11 +92,10 @@ class AlignmentProjection(nn.Module):
 
 
 def load_alignment_matrix(path, dim: int) -> torch.Tensor:
-    """Read an author-supplied W from a .pt or .npy file.
+    """Read W from a .pt or .npy file.
 
-    The file must contain exactly a d x d matrix. Nothing is reshaped,
-    transposed or padded to make a mismatched file fit -- see the note on
-    dimensions in check_dimensions.
+    The file must contain exactly a d x d matrix; a mismatched file is not
+    reshaped, transposed or padded to fit.
     """
     from pathlib import Path
 
@@ -171,11 +138,9 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
                      source: str = "") -> None:
     """Verify FastText matches the model's embedding width, or raise.
 
-    LGSE's W is square (paper Sec 4.1), so these two must be equal. When
-    they are not, the only correct fix is different FastText vectors --
-    reshaping, truncating, padding or rectangular-projecting the ones in
-    hand would change the method into one the paper does not describe, and
-    would do so invisibly in the reported numbers.
+    W is square, so the two dimensions must be equal. A mismatch is resolved
+    by supplying FastText vectors at the model's width; the vectors in hand
+    are not reshaped, truncated or padded.
     """
     if fasttext_dim == embedding_dim:
         return
@@ -187,38 +152,34 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
         f"  FastText:   {fasttext_dim}-dim{where}\n"
         f"  Model:      {embedding_dim}-dim embedding space\n"
         f"\n"
-        f"LGSE's projection W is square (W in R^(d x d), paper Sec 4.1): it "
-        f"aligns the FastText space with the model's embedding space, both "
-        f"of dimension d. It does not change dimensionality.\n"
+        f"W is square (W in R^(d x d), Sec 4.1): it aligns the FastText "
+        f"space with the model's embedding space, both of dimension d, and "
+        f"does not change dimensionality.\n"
         f"\n"
         f"Required: FastText vectors trained at dimension {embedding_dim}.\n"
         f"\n"
-        f"This is a data prerequisite, not a configuration problem. The "
-        f"standard 300-dim FastText CC vectors (Grave et al., 2018) cannot "
-        f"be used with a {embedding_dim}-dim model under the published "
-        f"method. Options:\n"
+        f"This is a data prerequisite. The standard 300-dim FastText CC "
+        f"vectors (Grave et al., 2018) do not match a {embedding_dim}-dim "
+        f"model. Options:\n"
         f"  - train FastText at dimension {embedding_dim} on the target "
         f"language corpus (`fasttext ... -dim {embedding_dim}`);\n"
         f"  - use a model whose embedding width is {fasttext_dim}.\n"
         f"\n"
-        f"Reshaping, truncating, zero-padding or rectangularly projecting "
-        f"the {fasttext_dim}-dim vectors would silently change the method "
-        f"and is deliberately not implemented. See IMPLEMENTATION_NOTES.md section 1.")
+        f"The {fasttext_dim}-dim vectors are not reshaped, truncated, "
+        f"zero-padded or rectangularly projected to fit. See "
+        f"IMPLEMENTATION_NOTES.md section 1.")
 
 
 def build_projection(source_dim: int, target_dim: int,
                      alignment_matrix_path=None) -> nn.Module:
-    """Return the square alignment matrix W (paper Sec 4.1).
+    """Return the square alignment matrix W.
 
-    `alignment_matrix_path` supplies the author-provided W and is required:
-    without it this raises `MissingAlignmentMatrix`. The returned W is
-    frozen -- see this module's docstring for why.
+    `alignment_matrix_path` is required: without it this raises
+    `MissingAlignmentMatrix`. The returned W is fixed.
 
-    Raises `IncompatibleFastTextDimension` on a dimension mismatch: W is
-    square, so unequal dimensions mean the FastText model does not match the
-    target embedding width. That is a data problem to fix by training
-    FastText at dimension d, not something to paper over with a rectangular
-    map.
+    Raises `IncompatibleFastTextDimension` when the FastText width does not
+    match the target embedding width; the fix is FastText vectors trained at
+    dimension d.
     """
     check_dimensions(source_dim, target_dim)
 
@@ -226,31 +187,19 @@ def build_projection(source_dim: int, target_dim: int,
         raise MissingAlignmentMatrix(
             f"No alignment matrix W was supplied.\n"
             f"\n"
-            f"Paper Sec 4.1 introduces W:\n"
-            f"    \"a learned linear projection W in R^(d x d) is applied,\n"
-            f"     i.e. e_aligned_t = W e_t\"\n"
-            f"but never states how W is obtained -- no initialization, no\n"
-            f"fitting procedure, and no training objective anywhere in the\n"
-            f"paper is a function of W.\n"
+            f"W is the square projection applied to FastText vectors before\n"
+            f"they are written into the embedding space (Sec 4.1):\n"
+            f"    e_aligned_t = W e_t\n"
             f"\n"
-            f"W is therefore an author-supplied artifact. It cannot be\n"
-            f"derived from the paper, and this implementation will not\n"
-            f"choose one on the authors' behalf:\n"
-            f"\n"
-            f"  - The identity would assert that the FastText and model\n"
-            f"    embedding spaces are already aligned -- exactly the claim\n"
-            f"    W exists to avoid making.\n"
-            f"  - A random or fitted W would be an alignment strategy the\n"
-            f"    paper does not describe.\n"
-            f"\n"
-            f"Either would materially affect results while looking like a\n"
-            f"faithful run.\n"
+            f"W is supplied per run. There is no default, and the identity\n"
+            f"is not applied as a fallback.\n"
             f"\n"
             f"To proceed, set `lgse.alignment_matrix_path` to a .pt/.npy\n"
-            f"file holding a {source_dim}x{source_dim} matrix.\n"
+            f"file holding a {source_dim}x{source_dim} matrix. Build one\n"
+            f"with:\n"
+            f"    python scripts/build_alignment_matrix.py --language <am|ti>\n"
             f"\n"
-            f"Any result produced without an author-provided W is NOT\n"
-            f"faithful to the published method. See IMPLEMENTATION_NOTES.md 1a.")
+            f"See IMPLEMENTATION_NOTES.md section 1a.")
 
     weight = load_alignment_matrix(alignment_matrix_path, source_dim)
     return AlignmentProjection(source_dim, weight=weight,

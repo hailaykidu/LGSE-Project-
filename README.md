@@ -4,7 +4,8 @@
 
 This is the official repository for **LGSE: Lexically Grounded Subword
 Embedding Initialization for Low-Resource Language Adaptation**
-(Teklehaymanot, Fazlija & Nejdl, LREC 2026; arXiv:2603.22629).
+(Teklehaymanot, Fazlija & Nejdl, LREC 2026).
+Paper: https://aclanthology.org/2026.lrec-1.812/
 
 It implements the method described in the paper for **Amharic** and
 **Tigrinya**, two morphologically rich Ethio-Semitic languages.
@@ -68,19 +69,16 @@ Core dependencies: `torch`, `transformers`, `fasttext`, `numpy`,
 
 ### Requirements
 
-Three artifacts are supplied by the experimenter. The paper does not specify
-values for them, so the implementation requires them explicitly rather than
-choosing on the authors' behalf:
+Three artifacts are supplied per run:
 
-| Requirement | Where | Why it is not defaulted |
+| Requirement | Where | Published specification |
 |---|---|---|
-| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 introduces W but does not state how it is obtained |
-| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 introduces λ but does not give its value |
+| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 defines W; its construction is not specified |
+| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 defines λ; no value is given |
 | FastText at the model's width | `data/fasttext_manifest.json` | W is square (`d×d`), so FastText must match the model's embedding width |
 
-A run missing any of these stops with an explanatory error rather than
-substituting a value. See [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md)
-§1, §1a and §8a for the reasoning.
+A run missing any of these stops with an explanatory error. See
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) §1, §1a and §8a.
 
 ### FastText models
 
@@ -101,8 +99,8 @@ use:
 fasttext skipgram -input <corpus> -output <model> -dim 768
 ```
 
-Mismatched vectors are never truncated, padded, or rectangularly projected
-to fit; the dimension is checked at download, at config resolution, and at
+Mismatched vectors are not truncated, padded, or rectangularly projected to
+fit; the dimension is checked at download, at config resolution, and at
 construction.
 
 ### Language-adaptive pretraining
@@ -157,16 +155,15 @@ LGSE-Project/
 Results are produced by running the pipeline; none are committed to this
 repository. `scripts/aggregate_results.py` builds a table from your own runs
 in `results/`, recording for each figure the commit, configuration hash,
-dataset manifest, seeds and environment that produced it, and labelling
-whether the run used an author-supplied alignment matrix.
+dataset manifest, seeds and environment that produced it, and which alignment
+matrix the run used.
 
-The paper's reported numbers are not copied into this repository, since they
-were produced under the authors' full experimental conditions and are not
-outputs of a run performed here.
+The paper's reported numbers are not copied into this repository; the tables
+here are built from runs performed in this repository.
 
-[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records every point
-where the paper underdetermines the implementation, and
-[`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records each point where
+an implementation choice is supplied alongside the published specification,
+and [`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
 validation.
 
 ---
