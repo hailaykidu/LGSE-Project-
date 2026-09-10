@@ -140,17 +140,57 @@ class LGSELAPTrainer:
                 device=str(self.device),
             )
         else:
-            from baselines import build_initializer
+            from baselines import (assert_focus_init_is_distinct,
+                                   assert_focus_is_wired,
+                                   build_focus_aux_table, build_initializer,
+                                   make_focus_aux_lookup)
             kwargs = {"embedding_layer": embedding_layer,
                       "device": str(self.device)}
             if self.initializer_kind == "random":
                 kwargs.update(seed=config.seed, old_vocab_size=old_vocab_size)
             elif self.initializer_kind == "focus":
-                kwargs.update(aux_vectors=None, aux_index=None,
+                # FOCUS (Dobler & de Melo, 2023) needs an auxiliary space in
+                # which old and new tokens are both representable, so a new
+                # token can be written as a similarity-weighted combination
+                # of the pretrained rows. That space is the FastText model
+                # already loaded above -- the same external signal LGSE sees,
+                # which is what keeps the two methods comparable.
+                #
+                # Previously aux_vectors/aux_index were passed as None and
+                # set_aux_lookup was never called, so FocusInit's guard
+                # returned the mean pretrained embedding for every new token
+                # and the arm silently reduced to +LAPT. See
+                # report/LGSE_FORENSIC_IMPLEMENTATION_AUDIT.md.
+                aux_vectors, aux_index = build_focus_aux_table(
+                    tokenizer=self.tokenizer,
+                    fasttext_model=ft_model,
+                    old_vocab_size=old_vocab_size,
+                    device=embedding_layer.weight.device,
+                )
+                kwargs.update(aux_vectors=aux_vectors, aux_index=aux_index,
                               old_vocab_size=old_vocab_size)
             initializer = build_initializer(self.initializer_kind, **kwargs)
 
+        if self.initializer_kind == "focus":
+            # The auxiliary lookup maps a *new* token to its FastText vector,
+            # in the same (unprojected) space as aux_vectors above. No W is
+            # applied on either side: FOCUS compares FastText to FastText and
+            # only uses the similarities to weight pretrained rows.
+            initializer.set_aux_lookup(
+                make_focus_aux_lookup(
+                    ft_model, device=embedding_layer.weight.device))
+            assert_focus_is_wired(initializer, ft_model)
+
         init_matrix = initializer.write_embeddings_for_new_tokens(token_to_id)
+
+        if self.initializer_kind == "focus":
+            # Outcome check, not plumbing: catches any future regression that
+            # reaches the mean-vector fallback despite the wiring assertions.
+            self.focus_init_stats = assert_focus_init_is_distinct(init_matrix)
+            print(f"[LGSELAPTrainer] FOCUS init: "
+                  f"{int(self.focus_init_stats['unique_rows'])}/"
+                  f"{int(self.focus_init_stats['n_rows'])} unique rows, "
+                  f"per-dim std {self.focus_init_stats['per_dim_std']:.5f}")
 
         # 6) regularizer anchored to the initial embedding vectors.
         #

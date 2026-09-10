@@ -1,0 +1,35 @@
+{
+  "source": "https://github.com/semantic-systems/amharic-qa",
+  "license": "MIT",
+  "citation": "AmQA, semantic-systems/amharic-qa",
+  "split": "official train/dev/test, used as released",
+  "format": "SQuAD v2.0",
+  "files": {
+    "train": {
+      "raw_file": "train_data.json",
+      "raw_sha256": "80e216fe3594e02eb82de0a66a501332cddb4fb2734823db6a41d1edf2ad516a",
+      "qas_in_release": 1723,
+      "qas_written": 1723
+    },
+    "dev": {
+      "raw_file": "dev_data.json",
+      "raw_sha256": "889f4aeb478005a544a159a552ee7af0974dc78d41618299d8f4290e833d03e2",
+      "qas_in_release": 600,
+      "qas_written": 600
+    },
+    "test": {
+      "raw_file": "test_data.json",
+      "raw_sha256": "4bff7f83d9d7209108c9133f19de6037e8b979932b761050c67f9b5d2f50f292",
+      "qas_in_release": 299,
+      "qas_written": 299
+    }
+  },
+  "repairs": {
+    "dict_wrapped_paragraphs": "one dev article stores paragraphs as a dict; wrapped in a list, content unchanged",
+    "offset_corrected": 20,
+    "dropped_empty_text": 0,
+    "dropped_text_not_in_context": 0,
+    "dropped_ambiguous": 0,
+    "dropped_questions": 0
+  }
+}

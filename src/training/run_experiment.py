@@ -15,6 +15,7 @@ any difference in the reported F1 is attributable to initialization.
 """
 
 import argparse
+import gc
 import hashlib
 import json
 import platform
@@ -110,6 +111,28 @@ def provenance(config_path: Path, data_dir: Path, corpus: Path) -> dict:
         "python": platform.python_version(),
         "packages": versions,
     }
+
+
+def completed(out_dir: Path):
+    """The finished record for this cell, or None if it must still run.
+
+    `experiment.json` is written last, after the downstream stage returns,
+    so its presence means the whole cell succeeded. A cell that died partway
+    leaves a `lapt/` checkpoint and no record, and must be rerun -- the
+    checkpoint alone carries no dev/test scores. The file is parsed rather
+    than stat-ed: a run killed mid-write leaves truncated JSON, and treating
+    that as complete would silently drop a cell from the matrix.
+    """
+    record = out_dir / "experiment.json"
+    if not record.exists():
+        return None
+    try:
+        data = json.load(open(record, encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    if "dev" not in data or "test" not in data:
+        return None
+    return data
 
 
 def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
@@ -209,6 +232,22 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
               encoding="utf-8") as f:
         _json.dump(trainer.projection_status(), f, indent=2)
 
+    # Release the adapted model before returning. The downstream stage runs
+    # as a subprocess that loads its own copy onto the same GPU, so holding
+    # this one alive costs the card twice over: on a 40GB A100 the LAPT model
+    # and its optimizer state leave too little for the evaluation to place
+    # its weights, and the subprocess dies at .to(device) before training a
+    # step. The checkpoint is already on disk above, so nothing here is lost.
+    del trainer, dataset, tokenizer
+    gc.collect()
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+    except Exception:
+        pass
+
     return str(out_dir / "lapt")
 
 
@@ -216,7 +255,7 @@ def run_downstream(task: str, model_path: str, data_dir: Path, seed: int,
                    cfg, out_dir: Path):
     """Stage 2+3, delegated to the task runner so both share one code path."""
     script = ROOT / "src" / "evaluation" / (
-        "run_ner.py" if task == "ner" else "run_qa.py")
+        {"ner": "run_ner.py", "qa": "run_qa.py", "tc": "run_tc.py"}[task])
     ft = cfg["finetune"]
     cmd = [sys.executable, str(script),
            "--model", model_path,
@@ -234,7 +273,7 @@ def run_downstream(task: str, model_path: str, data_dir: Path, seed: int,
 def main():
     p = argparse.ArgumentParser(description="Run one Table 2 cell")
     p.add_argument("--system", required=True)
-    p.add_argument("--task", required=True, choices=("ner", "qa"))
+    p.add_argument("--task", required=True, choices=("ner", "qa", "tc"))
     p.add_argument("--language", required=True, choices=("amharic", "tigrinya"))
     p.add_argument("--seed", type=int, required=True)
     p.add_argument("--data-dir", type=Path, required=True)
@@ -304,7 +343,11 @@ def main():
     }
     with open(out_dir / "experiment.json", "w", encoding="utf-8") as f:
         json.dump(record, f, indent=2, ensure_ascii=False)
-    print(f"{name}: test F1 {result['test']['f1']:.2f}")
+    # TC reports accuracy (Table 2's "AC" column) and writes no "f1" key,
+    # while NER and QA report F1. Naming the metric keeps one from being
+    # printed under the other's label.
+    metric = "accuracy" if args.task == "tc" else "f1"
+    print(f"{name}: test {metric} {result['test'][metric]:.2f}")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,8 @@ case "$LANGUAGE-$TASK" in
   tigrinya-ner)  DATA=data/ner/tigrinya ;;
   amharic-qa)    DATA=data/qa/amqa ;;
   tigrinya-qa)   DATA=data/qa/tigqa_squad ;;
+  amharic-tc)    DATA=data/tc/amharic ;;
+  tigrinya-tc)   DATA=data/tc/tigrinya ;;
   *) echo "no data dir for $LANGUAGE-$TASK" >&2; exit 1 ;;
 esac
 

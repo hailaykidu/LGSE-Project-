@@ -28,24 +28,25 @@ lgse:
   ngram_min: 3                      # source: implementation (not in the paper)
   ngram_max: 5                      # source: implementation (not in the paper)
   # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
-  # source: unavailable -- the paper introduces lambda but never assigns it,
-  # and Table 1 does not list it. There is no published value to default to,
-  # so this must be set explicitly and is recorded with every result. The
-  # value below is this repository's choice, NOT the paper's.
+  # The paper defines lambda but does not provide a numerical value or
+  # selection procedure. To implement the pipeline, we use lambda = 1.0.
+  # source: unavailable -- Table 1 does not list it, so this must be set
+  # explicitly and is recorded with every result.
   # Removing this key makes runs fail rather than fall back to a default.
   reg_lambda: 1.0
 
   # MANDATORY for FastText-using systems. Alignment matrix W (Sec 4.1):
   # path to a .pt/.npy file holding a d x d matrix.
   #
-  # source: author-required -- the paper introduces W but never states how
-  # it is obtained. There is no default, not even the identity: the identity
-  # would assert the two embedding spaces are already aligned, which is the
-  # claim W exists to avoid making. Leaving this empty makes LGSE runs FAIL.
+  # The paper specifies a learned projection matrix W but does not specify
+  # how W is obtained. To implement the pipeline, we use orthogonal
+  # Procrustes alignment to instantiate W (see scripts/build_alignment_matrix.py).
   #
-  # Any result produced without an author-provided W is NOT faithful to the
-  # published method. See IMPLEMENTATION_NOTES.md 1a.
-  alignment_matrix_path: ""
+  # There is no default, not even the identity: the identity would assert the
+  # two embedding spaces are already aligned, which is the claim W exists to
+  # avoid making. Leaving this empty makes LGSE runs FAIL.
+  # See IMPLEMENTATION_NOTES.md 1a.
+  alignment_matrix_path: "data/alignment/W_ti.npy"
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
 

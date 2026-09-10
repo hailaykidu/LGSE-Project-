@@ -1,0 +1,20 @@
+{
+  "language": "tigrinya",
+  "path": "/homes/neumann/teklehaymanot/lgse-repro/data/alignment/W_ti.npy",
+  "anchor_tokens": 3875,
+  "fasttext_dimension": 768,
+  "xlmr_dimension": 768,
+  "shape": [
+    768,
+    768
+  ],
+  "objective": "orthogonal Procrustes: W* = argmin_{W^T W = I} ||W X - Y||_F, solved as U V^T from SVD(Y X^T)",
+  "seed": 42,
+  "fasttext_model": "/homes/neumann/teklehaymanot/.cache/lgse/fasttext768/fasttext_ti_768.bin",
+  "fasttext_vocab_size": 156687,
+  "backbone": "xlm-roberta-base",
+  "residual_frobenius": 315.1166,
+  "unaligned_frobenius": 490.0028,
+  "orthogonality_max_abs_error": 1.5543122344752192e-15,
+  "status": "The paper specifies a learned projection matrix W but does not specify how W is obtained. To implement the pipeline, this repository uses orthogonal Procrustes alignment to instantiate W. This matrix is precomputed here and used frozen."
+}

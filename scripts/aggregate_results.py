@@ -111,7 +111,9 @@ def main():
             key = (language, task, system)
             if key not in runs:
                 continue
-            stats = aggregate([r["test"] for r in runs[key]])["f1"]
+            # Table 2 labels the TC column "AC"; NER and QA are F1.
+            metric = "accuracy" if task == "tc" else "f1"
+            stats = aggregate([r["test"] for r in runs[key]])[metric]
             seeds = sorted(r["seed"] for r in runs[key])
             lines.append(f"| {LABELS[system]} | {stats['mean']:.2f} "
                          f"± {stats['std']:.2f} | {len(seeds)} | "

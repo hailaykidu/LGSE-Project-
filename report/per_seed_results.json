@@ -1,0 +1,1202 @@
+[
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 66.2057044079516
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 72.05882352941177
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 70.32418952618454
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 65.29884032114184
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 68.27586206896552
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 69.41066417212348
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 66.49916247906197
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 69.21119592875317
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 69.85726280436609
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 68.24978012313105
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 69.05187835420394
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 70.4830053667263
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 67.6246830092984
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 64.44629475437137
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 67.04918032786885
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 67.42957746478874
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 65.06224066390041
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 69.1399662731872
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 67.51054852320677
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 67.01119724375538
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 42,
+    "score": 68.86383347788377
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 43,
+    "score": 71.32987910189983
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 44,
+    "score": 66.60839160839161
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 45,
+    "score": 70.43478260869564
+  },
+  {
+    "language": "amharic",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 46,
+    "score": 67.62956669498725
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 58.26342957761413
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 59.327509837139225
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 56.45458701226156
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 60.650160329975414
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 61.469326751077304
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 59.04384681600723
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 55.30499341844178
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 58.42245793241871
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 62.709099942569694
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 60.58453903713551
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 58.41784011122986
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 58.0605349329321
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 57.86433154659131
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 59.321718499265984
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 59.67009235683456
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 59.8168822444676
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 58.406854054627345
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 54.61542800008933
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 59.03328360203313
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 61.23280035255579
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 42,
+    "score": 59.844621219176915
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 43,
+    "score": 61.352543929580925
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 44,
+    "score": 59.94078015006913
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 45,
+    "score": 57.297379947182726
+  },
+  {
+    "language": "amharic",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 46,
+    "score": 59.08326507700584
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 50.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 47.82608695652174
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 72.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 72.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 50.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 56.52173913043478
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 68.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 72.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 54.166666666666664
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 52.17391304347826
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 60.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 72.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 54.166666666666664
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 52.17391304347826
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 72.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 68.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 54.166666666666664
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 65.21739130434783
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 64.0
+  },
+  {
+    "language": "amharic",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 64.0
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 74.73065621939276
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 74.42557442557442
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 73.0844793713163
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 73.05888483585201
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 72.9528535980149
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 69.17440156326332
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 75.01251877816726
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 73.62025316455694
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 73.73588610702015
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 72.67326732673266
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 74.03369672943508
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 71.8302910705476
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 73.90648567119156
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 72.97438578149504
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 73.54260089686098
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 74.03422982885087
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 74.53726863431717
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 71.65991902834008
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 73.98496240601504
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 73.24496809032892
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 42,
+    "score": 73.0844793713163
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 43,
+    "score": 74.28856714927609
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 44,
+    "score": 74.30555555555556
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 45,
+    "score": 73.98416886543535
+  },
+  {
+    "language": "tigrinya",
+    "task": "ner",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 46,
+    "score": 74.12172191984166
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 49.407433311962066
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 54.22863957747677
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 48.75699653743429
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 20.820874861572545
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "focus_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 49.91247124968054
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 49.668696936138794
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 48.67138447507804
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 45.020859393564415
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 49.26087682207633
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 46.237470539796114
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 49.16112956810632
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 51.239174262430076
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 51.65894387130618
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 41.87246216315984
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "lgse_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 42.94580742255162
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 42,
+    "score": 49.29934406678592
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 43,
+    "score": 50.179086519355806
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 44,
+    "score": 50.49518514940791
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 45,
+    "score": 44.65762273901808
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "random_lapt",
+    "metric": "f1",
+    "seed": 46,
+    "score": 47.39756367663343
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 42,
+    "score": 51.27630121816167
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 43,
+    "score": 50.34078310746663
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 44,
+    "score": 50.1060567339637
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 45,
+    "score": 49.489855070170435
+  },
+  {
+    "language": "tigrinya",
+    "task": "qa",
+    "system": "xlmr",
+    "metric": "f1",
+    "seed": 46,
+    "score": 44.80258113979044
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 36.486486486486484
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 37.83783783783784
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 32.432432432432435
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 29.72972972972973
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "focus_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 35.13513513513514
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 41.891891891891895
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 28.37837837837838
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 37.83783783783784
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 32.432432432432435
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 29.72972972972973
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 45.94594594594595
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 35.13513513513514
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 39.189189189189186
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 33.78378378378378
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "lgse_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 31.08108108108108
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 32.432432432432435
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 33.78378378378378
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 32.432432432432435
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 32.432432432432435
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "random_lapt",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 55.4054054054054
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 42,
+    "score": 43.24324324324324
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 43,
+    "score": 31.08108108108108
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 44,
+    "score": 37.83783783783784
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 45,
+    "score": 41.891891891891895
+  },
+  {
+    "language": "tigrinya",
+    "task": "tc",
+    "system": "xlmr",
+    "metric": "accuracy",
+    "seed": 46,
+    "score": 31.08108108108108
+  }
+]
