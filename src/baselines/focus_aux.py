@@ -10,8 +10,10 @@ This module builds the auxiliary table over the pretrained vocabulary and
 the per-token lookup for new vocabulary, and asserts loudly that both are
 present. The arm previously ran with `aux_vectors=None` and no lookup, in
 which case `FocusInit` falls back to the mean pretrained embedding for every
-new token -- indistinguishable from `+LAPT`. See
-`report/LGSE_FORENSIC_IMPLEMENTATION_AUDIT.md`.
+new token -- indistinguishable from `+LAPT`. `assert_focus_is_wired` and
+`assert_focus_init_is_distinct` below guard against a regression back to
+that state; the committed Table 2 run's logs ("FOCUS init: N/N unique rows,
+per-dim std ...") confirm the fixed path was active.
 """
 
 from typing import Callable, Dict, List, Optional, Tuple

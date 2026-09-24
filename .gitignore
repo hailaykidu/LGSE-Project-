@@ -12,6 +12,7 @@ __pycache__/
 # results file would also make the tree look like it carries results that
 # no longer correspond to the current code.
 results/
+results_b/
 checkpoints/
 outputs/
 logs/
@@ -28,3 +29,5 @@ wandb/
 *.ckpt
 *.safetensors
 *.h5
+results_hornmorpho/
+results_gen2_snapshot_20260924/

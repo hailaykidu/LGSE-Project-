@@ -28,6 +28,15 @@ class LGSEConfig:
     morph_lexicon_path: str = "data/morph_lexicon.txt"
     new_tokens_file: str = "data/new_tokens.txt"
 
+    # Consult HornMorpho (via amseg) when the static lexicon has no entry
+    # for a token. Amharic only -- amseg's analyzer is Amharic-specific.
+    # Default False so runs reproduce the lexicon-only behaviour the
+    # completed Table 2 results were produced under; set True to test LGSE
+    # with the morphological analysis its morpheme path presumes.
+    # Measured on the 198 Amharic LAPT tokens: lexicon alone segments 45
+    # (22.7%), lexicon + HornMorpho segments 120 (60.6%).
+    use_hornmorpho: bool = False
+
     # FastText models are ~3 GB and are not committed. They are fetched by
     # data/scripts/download_fasttext.py, which records the resolved path,
     # dimension, vocab size and sha256 in data/fasttext_manifest.json.

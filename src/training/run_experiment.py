@@ -197,16 +197,31 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
             f"Any result produced without one is NOT faithful to the "
             f"published method. See IMPLEMENTATION_NOTES.md section 1a.")
 
+    # data/new_tokens.txt is Tigrinya vocabulary (see IMPLEMENTATION_NOTES.md
+    # section 5c): words like ትግራዋይ and the ኣ-prefixed negation pattern are
+    # not Amharic. It was the sole default for both languages until this
+    # per-language file existed. data/new_tokens_amharic.txt is a
+    # corpus-derived Amharic OOV list (data/tc/amharic + data/ner/amharic
+    # word frequency, ranked by XLM-R subword fragmentation -- the same
+    # fragmentation criterion the Tigrinya list appears to follow), built
+    # and documented 2026-09-18. Tigrinya keeps the original file unchanged.
+    new_tokens_file = ("data/new_tokens_amharic.txt" if language == "amharic"
+                        else "data/new_tokens.txt")
+
     lgse_cfg = LGSEConfig(
         model_name=base_model,
         language="am" if language == "amharic" else "ti",
         system=system_cfg.get("name", "lgse_lapt"),
         expand_vocab=system_cfg["expand_vocab"],
         initializer=system_cfg["initializer"] or "default",
+        new_tokens_file=new_tokens_file,
         ngram_min=cfg["lgse"]["ngram_min"],
         ngram_max=cfg["lgse"]["ngram_max"],
         reg_lambda=cfg["lgse"]["reg_lambda"],
         alignment_matrix_path=cfg["lgse"].get("alignment_matrix_path", ""),
+        # Off unless a run config turns it on, so the default reproduces the
+        # lexicon-only runs in report/TABLE2_REPORT.md.
+        use_hornmorpho=cfg["lgse"].get("use_hornmorpho", False),
         seed=seed,
         learning_rate=cfg["lapt"]["learning_rate"],
         batch_size=cfg["lapt"]["batch_size"],

@@ -1,0 +1,24 @@
+{
+  "_comment": "Provenance for the LAPT (language-adaptive pretraining) corpora consumed by scripts/run_table2.sh. These files are large plain-text corpora derived from external sources; they are not committed, so this manifest is the record of what a given run was trained on. Verify with: sha256sum data/lapt/<lang>.txt",
+  "amharic": {
+    "language": "amharic",
+    "path": "data/lapt/amharic.txt",
+    "lines": 204137,
+    "size_bytes": 24309552,
+    "sha256": "16a5041118febcade4a13efff9e91becf75de5433b0d262a894777ac923e0c64",
+    "provenance": "Base corpus (200,000 lines) restored from VEXMLM_Official/datasets/raw/amharic/amharic.txt, sha256-verified byte-identical to the file recorded in this project's historical experiment.json artifacts (b5d5b1da90d3fff680d083dcab7ad8416037665e7762c99a2826b53ef8a849e1). Supplemented 2026-09-18 with 4,137 deduplicated lines: 2,029 unique Amharic values from HornMT (~/LLAMA3_M/HornMT.json, data.amh field) and 2,108 unique lines from FLORES-200 Amharic (amseg/data/evaluation/flores200/amharic_flores_{dev,devtest}.am and amseg/data/evaluation/amharic/test.am).",
+    "verification": "hash-verified against a historical record for the 200,000-line base; the 4,137-line supplement is newly added and has no prior record.",
+    "supplement_rationale": "Raised gradient coverage of the 198 new Amharic tokens from 101/198 (51.0%) to 110/198 (55.6%). See IMPLEMENTATION_NOTES.md sections 5b-ii and 5b-iii.",
+    "notes": "FLORES-200 is a public Meta AI benchmark release. Ge'ez text from amseg (geez_corpus.txt, mt_combined.txt) was deliberately excluded: it is classical/liturgical Ge'ez, a different language from Amharic despite the shared script."
+  },
+  "tigrinya": {
+    "language": "tigrinya",
+    "path": "data/lapt/tigrinya.txt",
+    "lines": 200000,
+    "size_bytes": 18026579,
+    "sha256": "e006c5ff19e3ec63f29b862871607d2be1cb94d3fe5db8447cd0f17898e0f6ec",
+    "provenance": "Copied from VEXMLM_Official/datasets/raw/tigrinya/tigrinya.txt, selected on directory-convention match with the Amharic corpus and a matching filesystem timestamp (Aug 5 14:00).",
+    "verification": "NOT hash-verified. Unlike Amharic, no historical experiment.json record of a Tigrinya LAPT corpus hash exists in this repository, so there is nothing to verify this file against. It is the most plausible candidate, not a confirmed match. Any Tigrinya result produced from it should carry this caveat.",
+    "notes": "See IMPLEMENTATION_NOTES.md section 5d. Restored 2026-09-18 after the file was found missing despite being referenced by logs/t2_tigrinya_{tc,ner,qa}.sbatch."
+  }
+}

@@ -78,6 +78,10 @@ class LGSELAPTrainer:
         needs_fasttext = self.initializer_kind in ("lgse", "focus")
         segmenter = MorphologicalSegmenter.from_file(config.morph_lexicon_path)
         print(f"Loaded morphological lexicon: {len(segmenter.lexicon)} words")
+        if config.use_hornmorpho and config.language == "am":
+            segmenter = segmenter.with_hornmorpho()
+            print(f"[LGSELAPTrainer] HornMorpho fallback: "
+                  f"{'active' if segmenter.analyzer else 'unavailable'}")
         ft_model = fasttext.load_model(config.fasttext_path) \
             if needs_fasttext else None
 
@@ -159,8 +163,12 @@ class LGSELAPTrainer:
                 # Previously aux_vectors/aux_index were passed as None and
                 # set_aux_lookup was never called, so FocusInit's guard
                 # returned the mean pretrained embedding for every new token
-                # and the arm silently reduced to +LAPT. See
-                # report/LGSE_FORENSIC_IMPLEMENTATION_AUDIT.md.
+                # and the arm silently reduced to +LAPT. Fixed by wiring
+                # build_focus_aux_table/set_aux_lookup below, guarded by
+                # assert_focus_is_wired and assert_focus_init_is_distinct
+                # (src/baselines/focus_aux.py); confirmed fixed in the
+                # committed Table 2 run via the "FOCUS init: N/N unique
+                # rows" log lines.
                 aux_vectors, aux_index = build_focus_aux_table(
                     tokenizer=self.tokenizer,
                     fasttext_model=ft_model,

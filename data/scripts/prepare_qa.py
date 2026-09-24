@@ -118,7 +118,8 @@ def split_80_10_10(items, seed: int):
 
 def main():
     p = argparse.ArgumentParser(description="Prepare QA splits")
-    p.add_argument("--dataset", choices=("amqa", "tigqa", "tigqa_squad"),
+    p.add_argument("--dataset",
+                   choices=("amqa", "tigqa", "tigqa_squad", "tigqa_extractive"),
                    required=True)
     p.add_argument("--raw", type=Path, required=True)
     p.add_argument("--out-dir", type=Path, default=Path("data/qa"))
@@ -128,7 +129,54 @@ def main():
     manifest = {"raw_sha256": sha256(args.raw), "seed": args.seed,
                 "split": "random 80/10/10 with the seed recorded here"}
 
-    if args.dataset == "tigqa_squad":
+    if args.dataset == "tigqa_extractive":
+        # A separate, later TIGQA-to-SQuAD conversion (version
+        # TIGQA-extractive-1.0) that per-answer-records how each answer_start
+        # was obtained via `match_status`: "exact" (verbatim substring),
+        # "fuzzy" (nearest-substring alignment -- may be a truncated or
+        # shifted fragment of the real annotated answer, not necessarily
+        # correct), "unmatched"/"no_answer_chunk" (no usable span, kept as
+        # is_impossible with the original text in `raw_answer`).
+        #
+        # Only "exact" is kept here: every "fuzzy" span was spot-checked and
+        # does resolve at its offset, but several are verifiably wrong
+        # (nearest-substring, not correct-substring) -- e.g. one answer_start
+        # resolves to "ን ዳይ ኦክሳይድ" where the annotated answer was
+        # "ካርዶንዳይኦክሳይድ". Using them would put verifiably incorrect spans
+        # into extractive ground truth.
+        raw = json.load(open(args.raw, encoding="utf-8"))
+        items, exact, fuzzy, unmatched = [], 0, 0, 0
+        for article in raw["data"]:
+            for para in article["paragraphs"]:
+                ctx = para["context"]
+                keep = []
+                for qa in para["qas"]:
+                    status = qa.get("match_status")
+                    if status == "exact":
+                        exact += 1
+                        keep.append({k: v for k, v in qa.items()
+                                     if k not in ("match_status", "match_ratio",
+                                                  "raw_answer")})
+                    elif status == "fuzzy":
+                        fuzzy += 1
+                    else:
+                        unmatched += 1
+                if keep:
+                    items.append({"title": article.get("title", "TIGQA"),
+                                  "context": ctx, "qas": keep})
+        manifest.update({
+            "source": str(args.raw),
+            "citation": "Teklehaymanot et al. (2024), TIGQA",
+            "version": raw.get("version"),
+            "extractive_qa_pairs": exact,
+            "fuzzy_dropped": fuzzy,
+            "unmatched_or_unanswerable_dropped": unmatched,
+            "note": ("only match_status == 'exact' is kept; 'fuzzy' spans "
+                     "resolve at their offset but are nearest-substring "
+                     "alignments that can be verifiably wrong, so they are "
+                     "excluded rather than trusted as ground truth"),
+        })
+    elif args.dataset == "tigqa_squad":
         # TIGQA already converted to SQuAD form, with answer_start offsets.
         # Answers the conversion could not locate in their context carry
         # answer_start == -1; those are abstractive rewrites and are kept

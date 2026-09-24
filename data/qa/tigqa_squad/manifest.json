@@ -1,17 +1,17 @@
 {
-  "raw_sha256": "4d089b392276062390c201a966ebd56c17a3c4c4bad032d3e10db0bc8706912a",
+  "raw_sha256": "5e496b54842e288089c8ac50e99e91c7ecbb9778100d0cffa46d95ef5749f57c",
   "seed": 42,
   "split": "random 80/10/10 with the seed recorded here",
-  "source": "../MPETokenization/Paralleldata/data/TIGQA_squad_format.json",
+  "source": "data/qa/tigqa_squad/tigqa_extractive_squad.json",
   "citation": "Teklehaymanot et al. (2024), TIGQA",
-  "version": "TIGQA-1.0",
-  "extractive_qa_pairs": 797,
-  "abstractive_dropped": 1039,
-  "unanswerable_dropped": 272,
-  "note": "answer_start == -1 marks answers not present verbatim in the context; those are abstractive and cannot be scored by span-extraction F1",
+  "version": "TIGQA-extractive-1.0",
+  "extractive_qa_pairs": 1517,
+  "fuzzy_dropped": 148,
+  "unmatched_or_unanswerable_dropped": 514,
+  "note": "only match_status == 'exact' is kept; 'fuzzy' spans resolve at their offset but are nearest-substring alignments that can be verifiably wrong, so they are excluded rather than trusted as ground truth",
   "counts": {
-    "train": 292,
-    "dev": 36,
-    "test": 37
+    "train": 85,
+    "dev": 10,
+    "test": 12
   }
 }

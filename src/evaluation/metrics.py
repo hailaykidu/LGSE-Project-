@@ -103,6 +103,11 @@ def aggregate(runs: List[Dict[str, float]]) -> Dict[str, Dict[str, float]]:
     out = {}
     for k in keys:
         values = [r[k] for r in runs]
+        # TC records a nested "per_class" breakdown alongside its scalar
+        # metrics; averaging across seeds is only meaningful for the
+        # scalars, and summing dicts raised TypeError here.
+        if not all(isinstance(v, (int, float)) for v in values):
+            continue
         out[k] = {
             "mean": sum(values) / len(values),
             "std": statistics.pstdev(values) if len(values) > 1 else 0.0,

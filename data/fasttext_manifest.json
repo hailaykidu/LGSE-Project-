@@ -1,7 +1,7 @@
 {
   "tigrinya": {
     "language": "tigrinya",
-    "path": "/homes/neumann/teklehaymanot/.cache/lgse/fasttext768/fasttext_ti_768.bin",
+    "path": "data/models/fasttext768/fasttext_ti_768.bin",
     "dimension": 768,
     "vocab_size": 156687,
     "sha256": "7849aea1c4a07f5f835ef586a4cedd263fb1988cf3860e782d05d4d840241e59",
@@ -9,11 +9,12 @@
     "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
     "corpus": "/homes/neumann/teklehaymanot/amseg/mt_finetune/data/all.ti",
     "corpus_sha256": "0e179edecadd24d60043d6cafefbdcc0f2735a653ce9ee1409f1ce64adb1ccd9",
-    "replaces": "300-dim vectors in data/fasttext_manifest.json"
+    "replaces": "300-dim vectors in data/fasttext_manifest.json",
+    "note": "Path is relative to the repository root; run_table2.sh cd's there. ~12 GB, excluded by .gitignore -- regenerate with data/scripts/train_fasttext_768.py and verify against sha256 below."
   },
   "amharic": {
     "language": "amharic",
-    "path": "/homes/neumann/teklehaymanot/.cache/lgse/fasttext768/fasttext_am_768.bin",
+    "path": "data/models/fasttext768/fasttext_am_768.bin",
     "dimension": 768,
     "vocab_size": 165471,
     "sha256": "13b7342b62cb265d58ad594a4702ef6bc5482db566e559878216668d229d4cb7",
@@ -21,6 +22,7 @@
     "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
     "corpus": "/homes/neumann/teklehaymanot/amseg/mt_finetune/data_am/all.am",
     "corpus_sha256": "b54b421d0ec6a93819bd034b2e0c80b5f9c19069644c400071a8156505a636e7",
-    "replaces": "300-dim vectors in data/fasttext_manifest.json"
+    "replaces": "300-dim vectors in data/fasttext_manifest.json",
+    "note": "Path is relative to the repository root; run_table2.sh cd's there. ~12 GB, excluded by .gitignore -- regenerate with data/scripts/train_fasttext_768.py and verify against sha256 below."
   }
 }

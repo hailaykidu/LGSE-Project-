@@ -161,6 +161,16 @@ matrix the run used.
 The paper's reported numbers are not copied into this repository; the tables
 here are built from runs performed in this repository.
 
+**Table 2 has been run end-to-end** (five systems, three tasks, two
+languages, five seeds; W via orthogonal Procrustes, λ=1.0 -- see
+[`report/TABLE2_REPORT.md`](report/TABLE2_REPORT.md)). The published Table 2
+has no surviving execution record to reproduce against, so this run is the
+only measured result that exists for the method. It does not reproduce the
+published ranking, margins, or winner: LGSE beats FOCUS on 2 of 6
+task/language cells, the paper's full ordering holds on 0 of 6, no comparison
+separates at one standard deviation, and unmodified XLM-R is the best system
+in 5 of 6 cells.
+
 [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records each point where
 an implementation choice is supplied alongside the published specification,
 and [`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
@@ -173,6 +183,22 @@ validation.
 Amharic and Tigrinya, with the method designed to extend to other
 Ge'ez-script and Semitic languages where morphological segmentation
 resources exist.
+
+---
+
+## Data annotation
+
+The Amharic Educational Quality text-classification dataset
+(`data/tc/amharic/`) was human-annotated for this work, with
+**Hailay Kidu Teklehaymanot** as annotation lead. It is monolingual
+Amharic and independent of FineWeb-C; per-file provenance, cleaning
+counts and split sizes are in `data/tc/amharic/manifest.json`.
+
+The Tigrinya QA data derives from **TIGQA** (Teklehaymanot et al.,
+LREC-COLING 2024), an expert-annotated Tigrinya reading-comprehension
+dataset. The Tigrinya text-classification data comes from FineWeb-C
+(`tir_Ethi`). Both carry their own manifests recording source, licence
+and how the splits used here were constructed.
 
 ---
 

@@ -69,8 +69,11 @@ def test_segment_returns_empty_list_for_unknown_word():
 
 def test_from_file_against_real_lexicon():
     seg = MorphologicalSegmenter.from_file(REAL_LEXICON_PATH)
-    # 226 non-comment/header/blank/marker lines in the real file, 210 of
-    # them parse into a non-empty (word, morphemes) pair (verified by
-    # direct inspection during the fix -- not an arbitrary number).
-    assert len(seg.lexicon) == 210
+    # The file originally held 226 lines, 210 of which parsed. It was later
+    # expanded with 10,218 amseg/HornMorpho-derived Amharic entries
+    # (IMPLEMENTATION_NOTES.md 5c), so this asserts a lower bound on what
+    # parses rather than an exact count that has to be edited on every
+    # lexicon change. The Tigrinya entry below is one of the originals and
+    # must survive the merge.
+    assert len(seg.lexicon) >= 210
     assert seg.segment("ሰላማዊ") == ["ሰላም", "ኣዊ"]

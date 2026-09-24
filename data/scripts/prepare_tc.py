@@ -185,8 +185,20 @@ def main() -> int:
         "source_url": f"https://huggingface.co/datasets/{DATASET}",
         "documents": len(raw),
         "labelled": len(rows),
-        "label_scale": "paper Sec 7, 1-6",
-        "label_map": LABEL_MAP,
+        "label_scale": "paper Sec 7, ordinal 1-5 plus a non-ordinal flag value 6",
+        "ordinal_scale": {k: v for k, v in LABEL_MAP.items() if v != "6"},
+        "non_ordinal_flag": {
+            "❗ Problematic Content ❗": "6",
+            "note": (
+                "Not a 6th point above 'Excellent' on the educational-quality "
+                "scale -- a separate flag for unreadable/garbled/off-topic/"
+                "inappropriate content, stored as label value 6 for "
+                "classification purposes only. Scoring in "
+                "src/evaluation/run_tc.py treats all six values as unordered "
+                "classes (exact-match accuracy, per-class F1), so this does "
+                "not affect metrics; it is a documentation distinction only."
+            ),
+        },
         "annotator_resolution": args.strategy,
         "tie_break": "lower rating",
         "problematic_flag_folded_into_rating": False,
