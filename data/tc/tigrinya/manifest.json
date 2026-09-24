@@ -3,14 +3,17 @@
   "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
   "documents": 745,
   "labelled": 745,
-  "label_scale": "paper Sec 7, 1-6",
-  "label_map": {
+  "label_scale": "paper Sec 7, ordinal 1-5 plus a non-ordinal flag value 6",
+  "ordinal_scale": {
     "None": "1",
     "Minimal": "2",
     "Basic": "3",
     "Good": "4",
-    "Excellent": "5",
-    "❗ Problematic Content ❗": "6"
+    "Excellent": "5"
+  },
+  "non_ordinal_flag": {
+    "❗ Problematic Content ❗": "6",
+    "note": "Not a 6th point above 'Excellent' on the educational-quality scale -- a separate flag for unreadable/garbled/off-topic/inappropriate content, stored as label value 6 for classification purposes only. Scoring in src/evaluation/run_tc.py treats all six values as unordered classes (exact-match accuracy, per-class F1), so this does not affect metrics; it is a documentation distinction only."
   },
   "annotator_resolution": "majority",
   "tie_break": "lower rating",
