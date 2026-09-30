@@ -22,15 +22,6 @@ model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
 
 lgse:
-  # HornMorpho (via amseg) is consulted when data/morph_lexicon.txt has no
-  # entry for a token. Amharic only. Measured on the 198 Amharic LAPT
-  # tokens: the static lexicon segments 45 (22.7%); lexicon + HornMorpho
-  # segments 114 (57.6%), a 2.5x increase in how often LGSE's morpheme
-  # path is exercised rather than falling through to whole-token FastText.
-  # configs/base.yaml leaves this off, so the runs in
-  # report/TABLE2_REPORT.md are unaffected.
-  # source: implementation (not in the paper)
-  use_hornmorpho: true
   # W is a square learned linear map (d x d), paper Sec 4.1. FastText must
   # therefore be trained at the model's embedding width, not 300-dim --
   # build_projection refuses a rectangular map. See IMPLEMENTATION_NOTES.md section 1.
@@ -55,12 +46,10 @@ lgse:
   # two embedding spaces are already aligned, which is the claim W exists to
   # avoid making. Leaving this empty makes LGSE runs FAIL.
   # See IMPLEMENTATION_NOTES.md 1a.
-  #
-  # HornMorpho is Amharic-only, so this must be W_am.npy. Inherited W_ti.npy
-  # from base.yaml; see the note there. Runs in results_hornmorpho/ produced
-  # before this fix used the Tigrinya matrix on Amharic data and are invalid
-  # for focus_lapt and lgse_lapt (the two systems that consume FastText).
-  alignment_matrix_path: "data/alignment/W_am.npy"
+  # Tigrinya alignment matrix. This file exists so a Tigrinya run never
+  # rewrites configs/base.yaml, which concurrent runs of the other
+  # language read.
+  alignment_matrix_path: "data/alignment/W_ti.npy"
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
 

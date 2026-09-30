@@ -46,7 +46,14 @@ lgse:
   # two embedding spaces are already aligned, which is the claim W exists to
   # avoid making. Leaving this empty makes LGSE runs FAIL.
   # See IMPLEMENTATION_NOTES.md 1a.
-  alignment_matrix_path: "data/alignment/W_ti.npy"
+  #
+  # base.yaml is the Amharic config, so this must be W_am.npy. It briefly
+  # held W_ti.npy (introduced in 7f4e3ca, reverted here): Tigrinya runs used
+  # to edit this file in place before configs/tigrinya.yaml existed, and the
+  # Tigrinya value was left behind. Every Amharic run that consumes FastText
+  # -- focus_lapt and lgse_lapt -- was silently aligned with the Tigrinya
+  # matrix. Keep the per-language configs separate; never point this at W_ti.
+  alignment_matrix_path: "data/alignment/W_am.npy"
   fasttext_dim: 768                 # source: paper (Sec 4.1) -- W is d x d,
                                     #   so FastText dim must equal the model's
 

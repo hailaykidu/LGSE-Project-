@@ -31,3 +31,7 @@ wandb/
 *.h5
 results_hornmorpho/
 results_gen2_snapshot_20260924/
+results_tigrinya_gen2/
+results_hornmorpho_wam/
+data/_incoming/
+.claude/

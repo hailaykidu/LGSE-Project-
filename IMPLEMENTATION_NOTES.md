@@ -443,6 +443,50 @@ Two caveats remain for strict reproduction:
 * Tigrinya QA is now scored on 151 test items (was 86) against Amharic's 299
   (AmQA's official test split, `data/qa/amqa/manifest.json`).
 
+### 4b-i. What the TIGQA artifacts contain (verified 2026-09-24)
+
+Section 4b records that the paper reports F1 on "TIGQA train-dev-test splits"
+and that those splits are not in the Zenodo release. Both artifacts have now
+been checked at source.
+
+**The extractive dataset used here is `Hailay/tigqa-extractive-qa`**, and it is
+the correct format for this work: SQuAD-style rows with the answer resolved to
+a character span (`answer_start` plus span text) inside its context, which is
+what span-extraction training and F1 scoring require. The data in
+`data/qa/tigqa_squad/` is byte-identical to its exact-matched subset -- all
+1,517 (question, answer) pairs and all 1,517 contexts match -- so no
+re-preparation is needed.
+
+The Zenodo record (DOI 10.5281/zenodo.11423987, sha256
+`32d9fda5f8f74b474adc312fdc144ff3248471520ef5554b406481443dfc65ad`) is the raw
+annotation table the HF dataset was parsed from: a single `.docx` holding one
+108-row, six-column table (`R/no | Grade level | Topic | Context | Question |
+Answer`) with questions and answers as free text, several per cell. It is not
+directly usable for extractive QA -- it carries no character offsets -- which
+is precisely the gap the HF release fills.
+
+Neither artifact carries two things the published Tigrinya QA figure appears
+to rely on, and both are properties of the released data rather than of this
+implementation:
+
+* **Multiple reference answers.** The paper states dev/test questions carry 3+
+  references. SQuAD F1 takes the maximum over references, so scoring against
+  one is strictly lower-bounded. Every row of the HF dataset carries exactly
+  one reference, and the `.docx` has a single `Answer` column with no
+  structure separating alternatives.
+* **Official splits.** The HF dataset ships a single `train` split and its card
+  states it "does not reproduce the official TIGQA-E/TIGQA-H or
+  train/dev/test splits"; the `.docx` has no split column. The 1,189/177/151
+  split used here is seed 42, derived in this repository; the paper's
+  1,215/200/200 cannot be reconstructed from either.
+
+A third difference is not a data issue: the 84.34 test F1 quoted on the
+dataset card as TIGQA's best benchmarked result is **XLM-R Large**; every run
+in this repository uses `xlm-roberta-base`.
+
+Tigrinya QA numbers here are therefore not directly comparable to the
+published figure. The dataset is correct; the comparison is not like-for-like.
+
 ## 5a. Text classification: the paper's 2,500-sample figure does not match either language's data as held here
 
 The paper states (Sec 7): *"we introduce a new benchmark dataset comprising
@@ -488,6 +532,31 @@ Two properties of the expanded set affect how its accuracy should be read:
   (a class with fewer than one example remaining after dev/test allocation is
   not split). Dev and test therefore contain no label-5 examples, and the
   top of the ordinal scale is untested.
+
+### 5a-i. The two languages' TC columns are not directly comparable
+
+After the Amharic rebuild the two TC test sets differ in both size and class
+balance, and the second difference matters more than the first:
+
+| | Amharic | Tigrinya |
+|---|---|---|
+| test items | 235 | 74 |
+| one document is worth | 0.43 accuracy points | 1.35 accuracy points |
+| majority label | 2 | 2 |
+| majority-class baseline | **66.4%** | **32.4%** |
+
+A classifier that always predicts label 2 scores 66.4% on Amharic and 32.4%
+on Tigrinya. TC accuracy therefore does not measure the same thing in the two
+columns, and the raw difference between them is mostly class prior rather
+than model quality. Against the frozen second-generation numbers, `+LGSE`
+scores 75.77 on Amharic (+9.4 over its baseline) and 37.03 on Tigrinya (+4.6
+over its): a gap of about 9 points once the priors are accounted for, not the
+~39 the raw figures suggest.
+
+Two consequences for reporting: the Amharic and Tigrinya TC cells should not
+be averaged into a single figure, and a TC accuracy should be read against
+its own language's majority-class baseline rather than against the other
+language's score.
 
 The previous 558/71/71 split and every Table 2 TC number measured on it are
 preserved in `results_gen2_snapshot_20260924/`. The new split has a test set
@@ -932,6 +1001,77 @@ they were part of it. They were all overwritten by the completing jobs
 before any table was produced, and every value in the second-generation
 Amharic table was confirmed to come from a record dated 2026-09-18 or later
 before being reported.
+
+### 5d-v. The Tigrinya alignment matrix was used on Amharic runs (2026-09-29)
+
+`configs/base.yaml` set `lgse.alignment_matrix_path` to
+`data/alignment/W_ti.npy` -- the *Tigrinya* matrix -- and
+`configs/hornmorpho.yaml` inherited that value. Every Amharic run in
+`results_hornmorpho/` that consumes FastText was therefore aligned with the
+wrong language's W.
+
+The value entered in commit `7f4e3ca`. Before `configs/tigrinya.yaml`
+existed, Tigrinya runs edited `base.yaml` in place to point at `W_ti.npy`;
+when the per-language config was split out, the Tigrinya value was left
+behind in `base.yaml` instead of being reverted to `W_am.npy`.
+
+The two matrices are genuinely different: mean absolute difference 0.041,
+maximum 0.249 over the 768x768 entries. `W_am.json` records 5,910 anchor
+tokens against the Amharic FastText model; `W_ti.json` records 3,875 against
+the Tigrinya one.
+
+**Scope.** W is loaded only on the FastText-consuming path
+(`src/lgse/lap_trainer.py`, `if ft_model is not None`), so only `focus_lapt`
+and `lgse_lapt` are affected. This is confirmed empirically rather than
+assumed: `lapt` and `random_lapt` reproduce the frozen Amharic NER numbers
+bit-exactly, delta 0.0000 on all five seeds, because they never touch W.
+`focus_lapt` moved -0.74 to -4.12 F1 per seed against frozen -- that shift is
+attributable to W, not to HornMorpho.
+
+Six cells are invalid: `focus_lapt` and `lgse_lapt` x {tc, ner, qa} in
+`results_hornmorpho/`. The frozen August snapshot is unaffected (every run
+there records `W_am.npy`), as are all Tigrinya results, where `W_ti.npy` is
+correct.
+
+**Consequence for the HornMorpho experiment.** The measured coverage gain
+from wiring HornMorpho into the segmenter fallback (Amharic morpheme
+coverage 22.7% -> 57.6%) had no valid LGSE numbers behind it until these
+cells were re-run, because the only two systems that exercise the segmenter
+are the two that were mis-aligned.
+
+Both configs were corrected to `W_am.npy` and carry comments recording this.
+The re-runs write to `results_hornmorpho_wam/` rather than overwriting
+`results_hornmorpho/`, so the mis-aligned runs remain on disk as evidence.
+Their sbatch scripts assert, before training starts, that the configured
+path ends in `W_am.npy` and that `W_am.json` declares `language: amharic`.
+
+### 5d-vi. Degenerate NER fine-tuning runs (~1% of all runs)
+
+Four of 387 runs recorded precision, recall and F1 of exactly 0.0 on both
+dev and test: `random_lapt__ner__amharic__seed46` (present in the frozen
+snapshot and in every directory derived from it) and
+`lgse_lapt__ner__tigrinya__seed45`.
+
+These are not crashes. The Tigrinya case ran the full 20,458 s -- slightly
+longer than the healthy seed 44 at 20,042 s -- and wrote a complete record.
+Its LAPT stage was healthy and near-identical to seed 44's (final average
+loss 3.81 vs 3.84); the failure is confined to the downstream NER
+fine-tuning, which is seeded separately. Training loss flatlined at ~0.78
+from epoch 1 and never descended: the model settled into the all-`O` local
+minimum, proposing no entity, so precision and recall are both genuinely
+zero. The LGSE embedding initialisation is not implicated.
+
+`FROZEN_RESULTS.json` averages the zero into its mean, publishing
+`random_lapt__ner__amharic` as 54.22 +/- 30.44 where the four converged
+seeds give 67.78 +/- 3.25 -- a 13.5-point understatement of that baseline.
+A single degenerate seed dominates a five-seed mean, and the resulting
+standard deviation (30.44) is a collapse indicator, not a measure of
+seed variance.
+
+No frozen number has been altered. Tables in `report/` mark such cells and
+report the converged-seed mean alongside the all-seed mean, with the
+collapse count disclosed, rather than silently dropping or silently
+averaging the zero.
 
 ## 6. MasakhaNER source
 
