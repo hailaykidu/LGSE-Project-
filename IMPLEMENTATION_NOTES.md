@@ -1073,6 +1073,10 @@ report the converged-seed mean alongside the all-seed mean, with the
 collapse count disclosed, rather than silently dropping or silently
 averaging the zero.
 
+Baseline re-evaluation on the rebuilt split (xlmr, lapt, random_lapt)
+deferred: estimated several days on the current cluster queue. † cells remain
+on the previous test set until rerun.
+
 ## 6. MasakhaNER source
 
 The paper uses MasakhaNER (Adelani et al., 2021) for Amharic NER. The
