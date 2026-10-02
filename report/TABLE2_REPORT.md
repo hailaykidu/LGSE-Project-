@@ -38,18 +38,27 @@ affect it.*
 
 | Rank | System | Mean | SD | n | Missing seeds | s42 | s43 | s44 | s45 | s46 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | XLM-R (default) | 68.97 | 1.94 | 5 | - | 68.86 | 71.33 | 66.61 | 70.43 | 67.63 |
-| 2 | +FOCUS+LAPT | 68.82 | 1.79 | 5 | - | 67.24 | 71.22 | 67.01 | 68.64 | 69.97 |
-| 3 | +LGSE+LAPT | 67.75 | 1.80 | 5 | - | 65.85 | 66.05 | 70.03 | 68.00 | 68.83 |
-| 4 | +LAPT | 66.25 | 1.95 | 5 | - | 63.99 | 69.20 | 65.83 | 65.32 | 66.90 |
-| 5 | +Random+LAPT | 54.22 | 30.44 | 5 | - | 65.11 | 72.29 | 67.99 | 65.73 | 0.00 |
+| - | +LGSE+LAPT (corrected alignment matrix) | 68.18* | 1.10 | 4 | - | 67.07 | 69.28 | 67.43 | 0.00 | 68.95 |
+| - | XLM-R (default) † | 68.97 | 1.94 | 5 | - | 68.86 | 71.33 | 66.61 | 70.43 | 67.63 |
+| - | +FOCUS+LAPT † | 68.82 | 1.79 | 5 | - | 67.24 | 71.22 | 67.01 | 68.64 | 69.97 |
+| - | +LAPT † | 66.25 | 1.95 | 5 | - | 63.99 | 69.20 | 65.83 | 65.32 | 66.90 |
+| - | +Random+LAPT † | 54.22 | 30.44 | 5 | - | 65.11 | 72.29 | 67.99 | 65.73 | 0.00 |
 
-**LGSE - FOCUS = -1.07** (67.75 +/- 1.80 vs 68.82 +/- 1.79)
+† Old test set; re-evaluation pending.
 
-- Primary (LGSE > FOCUS): **NOT MET**
-- Ranges at +/-1 sd: **overlapping** -- the difference is within seed-to-seed spread
-- Secondary (LGSE > FOCUS > Random > Default): **NOT MET**
-- Observed order: XLM-R (default) > +FOCUS+LAPT > +LGSE+LAPT > +LAPT > +Random+LAPT
+\* Mean over the four converged seeds; seed 45 scored exactly 0.00 (see the
+note on degenerate runs below and `IMPLEMENTATION_NOTES.md` 5d-vi).
+
+**LGSE - FOCUS: pending re-evaluation.** `+LGSE+LAPT` was evaluated with the
+corrected Amharic alignment matrix (`W_am.npy`); every baseline above still
+carries results from the superseded split. Ranks are withheld and no delta is
+computed, because a difference taken across two different evaluations
+measures the change of evaluation as much as the change of system.
+
+- Primary (LGSE > FOCUS): **pending re-evaluation**
+- Ranges at +/-1 sd: **pending re-evaluation**
+- Secondary (LGSE > FOCUS > Random > Default): **pending re-evaluation**
+- Observed order: **pending re-evaluation**
 
 **`+Random+LAPT` seed 46 scored exactly 0.00** (dev F1 0.00 as well): the
 fine-tuned tagger predicted no correct entity at all. LAPT loss decreased
@@ -66,23 +75,24 @@ unchanged.*
 
 | Rank | System | Mean | SD | n | Missing seeds | s42 | s43 | s44 | s45 | s46 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | +FOCUS+LAPT | 60.83 | 1.56 | 5 | - | 61.73 | 61.47 | 61.86 | 58.10 | 60.97 |
-| 2 | XLM-R (default) | 59.58 | 2.15 | 5 | - | 58.90 | 62.44 | 58.73 | 56.87 | 60.95 |
-| 3 | +Random+LAPT | 59.03 | 1.33 | 5 | - | 59.40 | 59.89 | 57.35 | 60.54 | 57.96 |
-| 4 | +LGSE+LAPT | 57.74 | 2.02 | 5 | - | 57.48 | 56.76 | 60.35 | 55.11 | 58.97 |
-| 5 | +LAPT | 57.08 | 1.97 | 5 | - | 56.58 | 60.38 | 55.28 | 56.00 | 57.17 |
+| - | +LGSE+LAPT (corrected alignment matrix) | 58.23 | 1.40 | 5 | - | 58.31 | 60.16 | 56.55 | 57.28 | 58.86 |
+| - | +FOCUS+LAPT † | 60.83 | 1.56 | 5 | - | 61.73 | 61.47 | 61.86 | 58.10 | 60.97 |
+| - | XLM-R (default) † | 59.58 | 2.15 | 5 | - | 58.90 | 62.44 | 58.73 | 56.87 | 60.95 |
+| - | +Random+LAPT † | 59.03 | 1.33 | 5 | - | 59.40 | 59.89 | 57.35 | 60.54 | 57.96 |
+| - | +LAPT † | 57.08 | 1.97 | 5 | - | 56.58 | 60.38 | 55.28 | 56.00 | 57.17 |
 
-**LGSE - FOCUS = -3.09** (57.74 +/- 2.02 vs 60.83 +/- 1.56)
+† Old test set; re-evaluation pending.
 
-- Primary (LGSE > FOCUS): **NOT MET**
-- Ranges at +/-1 sd: **separated** -- 57.74+2.02 = 59.76 is below 60.83-1.56 = 59.27 only marginally; the gap is the largest of the three Amharic tasks and the one least attributable to seed noise
-- Secondary (LGSE > FOCUS > Random > Default): **NOT MET**
-- Observed order: +FOCUS+LAPT > XLM-R (default) > +Random+LAPT > +LGSE+LAPT > +LAPT
+**LGSE - FOCUS: pending re-evaluation.** `+LGSE+LAPT` was evaluated with the
+corrected Amharic alignment matrix (`W_am.npy`); every baseline above still
+carries results from the superseded split. Ranks are withheld and no delta is
+computed, because a difference taken across two different evaluations
+measures the change of evaluation as much as the change of system.
 
-QA is the only Amharic task where FOCUS beats the unmodified XLM-R baseline,
-and it is also where LGSE trails FOCUS by the widest margin. LGSE places
-below `+Random+LAPT` here: random initialization of the new embedding rows
-outperformed LGSE's morpheme-derived initialization by 1.29 F1.
+- Primary (LGSE > FOCUS): **pending re-evaluation**
+- Ranges at +/-1 sd: **pending re-evaluation**
+- Secondary (LGSE > FOCUS > Random > Default): **pending re-evaluation**
+- Observed order: **pending re-evaluation**
 
 ## amharic / tc (accuracy)
 
@@ -95,29 +105,32 @@ in steps of one correctly or incorrectly classified example.
 
 | Rank | System | Mean | SD | n | Missing seeds | s42 | s43 | s44 | s45 | s46 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | +LGSE+LAPT (corrected test set) | 78.30 | 4.68 | 5 | - | 73.62 | 72.77 | 81.70 | 82.13 | 81.28 |
-| 2 | +LAPT † | 75.77 | 3.21 | 5 | - | 78.87 | 70.42 | 76.06 | 76.06 | 77.46 |
-| 2 | +LGSE+LAPT † | 75.77 | 4.03 | 5 | - | 81.69 | 76.06 | 76.06 | 70.42 | 74.65 |
-| 4 | XLM-R (default) † | 75.49 | 2.75 | 5 | - | 71.83 | 77.46 | 78.87 | 74.65 | 74.65 |
-| 5 | +FOCUS+LAPT † | 73.80 | 4.18 | 5 | - | 69.01 | 73.24 | 71.83 | 74.65 | 80.28 |
-| 6 | +Random+LAPT † | 73.24 | 3.45 | 5 | - | 77.46 | 74.65 | 74.65 | 70.42 | 69.01 |
+| - | +LGSE+LAPT (corrected alignment matrix) | 78.30 | 4.68 | 5 | - | 73.62 | 72.77 | 81.70 | 82.13 | 81.28 |
+| - | +LAPT † | 75.77 | 3.21 | 5 | - | 78.87 | 70.42 | 76.06 | 76.06 | 77.46 |
+| - | XLM-R (default) † | 75.49 | 2.75 | 5 | - | 71.83 | 77.46 | 78.87 | 74.65 | 74.65 |
+| - | +FOCUS+LAPT † | 73.80 | 4.18 | 5 | - | 69.01 | 73.24 | 71.83 | 74.65 | 80.28 |
+| - | +Random+LAPT † | 73.24 | 3.45 | 5 | - | 77.46 | 74.65 | 74.65 | 70.42 | 69.01 |
 
 † Old test set; re-evaluation pending.
 
-**LGSE - FOCUS = +1.97** (75.77 +/- 4.03 vs 73.80 +/- 4.18)
+The `+LGSE+LAPT` row is evaluated on the rebuilt 1872/233/235 split (235 test
+items, 0.43 accuracy points per item). Every daggered baseline is evaluated
+on the superseded 71-item split (1.41 points per item).
 
-- Primary (LGSE > FOCUS): **MET**
-- Ranges at +/-1 sd: **overlapping** -- the difference is within seed-to-seed spread
-- Secondary (LGSE > FOCUS > Random > Default): **NOT MET** (`+LAPT` ties LGSE for first)
-- Observed order: +LAPT = +LGSE+LAPT > XLM-R (default) > +FOCUS+LAPT > +Random+LAPT
+**LGSE - FOCUS: pending re-evaluation.** `+LGSE+LAPT` was evaluated with the
+corrected Amharic alignment matrix (`W_am.npy`) on the rebuilt split; every
+baseline above still carries results from the superseded split. Ranks are
+withheld and no delta is computed, because a difference taken across two
+different evaluations measures the change of evaluation as much as the change
+of system.
 
-TC is the one Amharic cell where LGSE beats FOCUS. The margin is +1.97 with
-standard deviations of ~4 on both systems, so it does not separate. LGSE also
-ties `+LAPT` to four significant figures (75.7746 vs 75.7746 -- both average
-to the same total number of correctly classified items across seeds), meaning
-LGSE's morpheme-derived initialization performs identically to default
-initialization on this task. At 71 test items and a 4-point spread, TC is the
-noisiest of the three Amharic tasks.
+- Primary (LGSE > FOCUS): **pending re-evaluation**
+- Ranges at +/-1 sd: **pending re-evaluation**
+- Secondary (LGSE > FOCUS > Random > Default): **pending re-evaluation**
+- Observed order: **pending re-evaluation**
+
+TC remains the noisiest of the three Amharic tasks: the `+LGSE+LAPT` seeds
+span 72.77 to 82.13, a 9.4-point range with a standard deviation of 4.68.
 
 ## tigrinya / ner (f1)
 
@@ -181,41 +194,42 @@ incorrectly classified example.
 generation and have not been rerun under the corrected Amharic token list,
 which does not apply to them.*
 
-Primary criterion (LGSE > FOCUS) met on **3 of 6** tasks with both systems
-complete: amharic/tc, tigrinya/qa, tigrinya/tc
+Primary criterion (LGSE > FOCUS) met on **2 of 3** Tigrinya tasks:
+tigrinya/qa and tigrinya/tc. All three Amharic tasks are **pending
+re-evaluation** -- `+LGSE+LAPT` now carries corrected-alignment-matrix
+results while the Amharic baselines do not, so no Amharic LGSE-FOCUS
+comparison is available.
 
-Secondary criterion (LGSE > FOCUS > Random > Default) met on **0 of 6**.
+Secondary criterion (LGSE > FOCUS > Random > Default) met on **0 of 3**
+Tigrinya tasks; Amharic pending re-evaluation.
 
-Separated at +/-1 sd on 0 of 6: none
+Separated at +/-1 sd on 0 of 3 Tigrinya tasks: none.
 
-### The corrected Amharic rerun did not change the conclusion
+### The Amharic comparison is pending re-evaluation
 
-The rerun was motivated by two real defects (a Tigrinya-derived OOV list used
-for Amharic runs, and a morpheme lexicon with almost no Amharic coverage),
-both fixed before these numbers were produced. Fixing them moved individual
-cells but not the finding:
+Amharic `+LGSE+LAPT` was rerun after a third defect was found: `base.yaml`
+and `hornmorpho.yaml` pointed `lgse.alignment_matrix_path` at
+`data/alignment/W_ti.npy`, the Tigrinya matrix, so Amharic FastText vectors
+were projected through an alignment fitted on Tigrinya anchors
+(`IMPLEMENTATION_NOTES.md` 5d-v). The corrected runs use `W_am.npy`.
 
-| Amharic task | LGSE - FOCUS, 1st gen | LGSE - FOCUS, 2nd gen |
-|---|---|---|
-| ner | -0.70 | -1.07 |
-| qa | -0.57 | -3.09 |
-| tc | -0.70 | +1.97 |
-
-LGSE now wins TC and loses NER and QA by wider margins than before. On QA it
-places below random initialization. On TC it ties `+LAPT` exactly (269/355
-items for both). Off-the-shelf XLM-R remains at or near the top of every
-Amharic cell despite expanding no vocabulary and running no LAPT at all.
+Only `+LGSE+LAPT` and `+FOCUS+LAPT` load W at all -- it is read solely on the
+FastText-consuming path -- and of those only `+LGSE+LAPT` has been rerun.
+The remaining Amharic baselines still carry superseded results, so the
+earlier LGSE-FOCUS deltas for amharic/ner, amharic/qa and amharic/tc are
+withdrawn rather than restated: a delta taken across two different
+evaluations measures the change of evaluation as much as the change of
+system. They will be recomputed once the baselines are rerun.
 
 Off-the-shelf XLM-R (no LAPT, no FastText-based initialization of any kind)
-is the best-scoring system in 4 of the 6 cells: all three Tigrinya cells and
-amharic/ner. After the Amharic rerun it is narrowly displaced in amharic/tc
-(by `+LAPT` and `+LGSE+LAPT`, both 75.77 vs 75.49) and in amharic/qa (by
-`+FOCUS+LAPT`, 60.83 vs 59.58). Every LGSE-FOCUS difference in this report,
-in both directions, is smaller than at least one of the two systems'
-seed-to-seed standard deviation. This is a finding of no measured effect for
-LGSE over FOCUS or over the unmodified baseline, under the documented
-implementation choices (Procrustes W, lambda = 1.0) and the five seeds used
-here -- not a partial reproduction of the paper's claim.
+is the best-scoring system in all three Tigrinya cells, despite expanding no
+vocabulary and running no LAPT at all. Every LGSE-FOCUS difference measured
+on a common evaluation in this report, in both directions, is smaller than at
+least one of the two systems' seed-to-seed standard deviation. On Tigrinya
+this is a finding of no measured effect for LGSE over FOCUS or over the
+unmodified baseline, under the documented implementation choices (Procrustes
+W, lambda = 1.0) and the five seeds used here -- not a partial reproduction
+of the paper's claim. The Amharic finding is pending re-evaluation.
 
 ### Known limitations of this measurement
 

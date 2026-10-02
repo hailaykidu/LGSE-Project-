@@ -5,7 +5,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 66.2057044079516
+    "score": 67.23695466210437,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -13,7 +14,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 72.05882352941177
+    "score": 71.21866897147797,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -21,7 +23,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 70.32418952618454
+    "score": 67.01298701298703,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -29,7 +32,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 65.29884032114184
+    "score": 68.64406779661017,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -37,7 +41,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 68.27586206896552
+    "score": 69.9738903394256,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -45,7 +50,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 69.41066417212348
+    "score": 63.986313088109505,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -53,7 +59,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 66.49916247906197
+    "score": 69.19682259488084,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -61,7 +68,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 69.21119592875317
+    "score": 65.82914572864323,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -69,7 +77,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 69.85726280436609
+    "score": 65.32325776658271,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -77,7 +86,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 68.24978012313105
+    "score": 66.90265486725664,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -85,7 +95,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 69.05187835420394
+    "score": 67.06689536878216,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -93,7 +104,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 70.4830053667263
+    "score": 69.2844677137871,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -101,7 +113,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 67.6246830092984
+    "score": 67.43159752868492,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -109,7 +122,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 64.44629475437137
+    "score": 0.0,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -117,7 +131,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 67.04918032786885
+    "score": 68.94689468946893,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -125,7 +140,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 67.42957746478874
+    "score": 65.11226252158893,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -133,7 +149,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 65.06224066390041
+    "score": 72.29129662522203,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -141,7 +158,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 69.1399662731872
+    "score": 67.9891794409378,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -149,7 +167,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 67.51054852320677
+    "score": 65.72614107883817,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -157,7 +176,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 67.01119724375538
+    "score": 0.0,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -205,7 +225,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 58.26342957761413
+    "score": 61.73344065761517,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -213,7 +234,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 59.327509837139225
+    "score": 61.47216994968463,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -221,7 +243,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 56.45458701226156
+    "score": 61.8620453062606,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -229,7 +252,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 60.650160329975414
+    "score": 58.10439832734802,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -237,7 +261,8 @@
     "system": "focus_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 61.469326751077304
+    "score": 60.97094204882418,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -245,7 +270,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 59.04384681600723
+    "score": 56.583966439562616,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -253,7 +279,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 55.30499341844178
+    "score": 60.38135071278418,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -261,7 +288,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 58.42245793241871
+    "score": 55.28134572648403,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -269,7 +297,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 62.709099942569694
+    "score": 56.00386477288971,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -277,7 +306,8 @@
     "system": "lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 60.58453903713551
+    "score": 57.17175736673207,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -285,7 +315,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 58.41784011122986
+    "score": 58.311367086525586,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -293,7 +324,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 58.0605349329321
+    "score": 60.15700028452155,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -301,7 +333,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 57.86433154659131
+    "score": 56.54944811028684,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -309,7 +342,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 59.321718499265984
+    "score": 57.28447867769227,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -317,7 +351,8 @@
     "system": "lgse_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 59.67009235683456
+    "score": 58.861354624450414,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -325,7 +360,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 42,
-    "score": 59.8168822444676
+    "score": 59.39869822839052,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -333,7 +369,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 43,
-    "score": 58.406854054627345
+    "score": 59.887432455072805,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -341,7 +378,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 44,
-    "score": 54.61542800008933
+    "score": 57.34760169322749,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -349,7 +387,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 45,
-    "score": 59.03328360203313
+    "score": 60.54296698132704,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -357,7 +396,8 @@
     "system": "random_lapt",
     "metric": "f1",
     "seed": 46,
-    "score": 61.23280035255579
+    "score": 57.96424948373065,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -365,7 +405,8 @@
     "system": "xlmr",
     "metric": "f1",
     "seed": 42,
-    "score": 59.844621219176915
+    "score": 58.90008920024845,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -373,7 +414,8 @@
     "system": "xlmr",
     "metric": "f1",
     "seed": 43,
-    "score": 61.352543929580925
+    "score": 62.435129410340906,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -381,7 +423,8 @@
     "system": "xlmr",
     "metric": "f1",
     "seed": 44,
-    "score": 59.94078015006913
+    "score": 58.73314849909106,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -389,7 +432,8 @@
     "system": "xlmr",
     "metric": "f1",
     "seed": 45,
-    "score": 57.297379947182726
+    "score": 56.8657906420371,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -397,7 +441,8 @@
     "system": "xlmr",
     "metric": "f1",
     "seed": 46,
-    "score": 59.08326507700584
+    "score": 60.94674518859368,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -405,7 +450,8 @@
     "system": "focus_lapt",
     "metric": "accuracy",
     "seed": 42,
-    "score": 50.0
+    "score": 69.01408450704226,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -413,7 +459,8 @@
     "system": "focus_lapt",
     "metric": "accuracy",
     "seed": 43,
-    "score": 47.82608695652174
+    "score": 73.23943661971832,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -421,7 +468,8 @@
     "system": "focus_lapt",
     "metric": "accuracy",
     "seed": 44,
-    "score": 72.0
+    "score": 71.83098591549296,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -429,7 +477,8 @@
     "system": "focus_lapt",
     "metric": "accuracy",
     "seed": 45,
-    "score": 72.0
+    "score": 74.64788732394366,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -437,7 +486,8 @@
     "system": "focus_lapt",
     "metric": "accuracy",
     "seed": 46,
-    "score": 64.0
+    "score": 80.28169014084507,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -445,7 +495,8 @@
     "system": "lapt",
     "metric": "accuracy",
     "seed": 42,
-    "score": 50.0
+    "score": 78.87323943661971,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -453,7 +504,8 @@
     "system": "lapt",
     "metric": "accuracy",
     "seed": 43,
-    "score": 56.52173913043478
+    "score": 70.4225352112676,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -461,7 +513,8 @@
     "system": "lapt",
     "metric": "accuracy",
     "seed": 44,
-    "score": 68.0
+    "score": 76.05633802816901,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -469,7 +522,8 @@
     "system": "lapt",
     "metric": "accuracy",
     "seed": 45,
-    "score": 72.0
+    "score": 76.05633802816901,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -477,7 +531,8 @@
     "system": "lapt",
     "metric": "accuracy",
     "seed": 46,
-    "score": 64.0
+    "score": 77.46478873239437,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -485,7 +540,8 @@
     "system": "lgse_lapt",
     "metric": "accuracy",
     "seed": 42,
-    "score": 54.166666666666664
+    "score": 73.61702127659574,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -493,7 +549,8 @@
     "system": "lgse_lapt",
     "metric": "accuracy",
     "seed": 43,
-    "score": 52.17391304347826
+    "score": 72.76595744680851,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -501,7 +558,8 @@
     "system": "lgse_lapt",
     "metric": "accuracy",
     "seed": 44,
-    "score": 60.0
+    "score": 81.70212765957446,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -509,7 +567,8 @@
     "system": "lgse_lapt",
     "metric": "accuracy",
     "seed": 45,
-    "score": 72.0
+    "score": 82.12765957446808,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -517,7 +576,8 @@
     "system": "lgse_lapt",
     "metric": "accuracy",
     "seed": 46,
-    "score": 64.0
+    "score": 81.27659574468085,
+    "source": "corrected alignment matrix (W_am.npy), rebuilt split"
   },
   {
     "language": "amharic",
@@ -525,7 +585,8 @@
     "system": "random_lapt",
     "metric": "accuracy",
     "seed": 42,
-    "score": 54.166666666666664
+    "score": 77.46478873239437,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -533,7 +594,8 @@
     "system": "random_lapt",
     "metric": "accuracy",
     "seed": 43,
-    "score": 52.17391304347826
+    "score": 74.64788732394366,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -541,7 +603,8 @@
     "system": "random_lapt",
     "metric": "accuracy",
     "seed": 44,
-    "score": 72.0
+    "score": 74.64788732394366,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -549,7 +612,8 @@
     "system": "random_lapt",
     "metric": "accuracy",
     "seed": 45,
-    "score": 68.0
+    "score": 70.4225352112676,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -557,7 +621,8 @@
     "system": "random_lapt",
     "metric": "accuracy",
     "seed": 46,
-    "score": 64.0
+    "score": 69.01408450704226,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -565,7 +630,8 @@
     "system": "xlmr",
     "metric": "accuracy",
     "seed": 42,
-    "score": 54.166666666666664
+    "score": 71.83098591549296,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -573,7 +639,8 @@
     "system": "xlmr",
     "metric": "accuracy",
     "seed": 43,
-    "score": 65.21739130434783
+    "score": 77.46478873239437,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -581,7 +648,8 @@
     "system": "xlmr",
     "metric": "accuracy",
     "seed": 44,
-    "score": 64.0
+    "score": 78.87323943661971,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -589,7 +657,8 @@
     "system": "xlmr",
     "metric": "accuracy",
     "seed": 45,
-    "score": 64.0
+    "score": 74.64788732394366,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "amharic",
@@ -597,7 +666,8 @@
     "system": "xlmr",
     "metric": "accuracy",
     "seed": 46,
-    "score": 64.0
+    "score": 74.64788732394366,
+    "source": "frozen snapshot 2026-09-24 (superseded split)"
   },
   {
     "language": "tigrinya",
