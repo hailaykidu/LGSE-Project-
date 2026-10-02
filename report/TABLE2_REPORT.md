@@ -99,9 +99,11 @@ measures the change of evaluation as much as the change of system.
 *Second-generation run; see the note under amharic / ner. XLM-R carries over
 unchanged.*
 
-Test set size: 71 items (rebuilt splits -- the first-generation table above
-used a 24-item test set). Each item is 1.41 accuracy points, so values move
-in steps of one correctly or incorrectly classified example.
+Test set size: the daggered baselines were evaluated on a 71-item test set
+(1.41 accuracy points per item); `+LGSE+LAPT` on the rebuilt 235-item split
+(0.43 points per item). The first-generation table above used a 24-item test
+set. Values still move in steps of one correctly or incorrectly classified
+example, but the step size differs by row.
 
 | Rank | System | Mean | SD | n | Missing seeds | s42 | s43 | s44 | s45 | s46 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -123,6 +125,30 @@ baseline above still carries results from the superseded split. Ranks are
 withheld and no delta is computed, because a difference taken across two
 different evaluations measures the change of evaluation as much as the change
 of system.
+
+**What 78.30 does and does not establish.** It is a measured result: five
+seeds, the Amharic alignment matrix, the rebuilt 235-item split, and the run
+records are tracked in `results_hornmorpho_wam/` so each seed can be checked
+against its own provenance. What it does not yet establish is attribution.
+Three measured facts keep the question open:
+
+1. Rebuilding the TC test set raised *every* system by +1.9 to +8.2 points.
+   The +2.5 here against the superseded `+LGSE+LAPT` figure sits inside that
+   range, so the split change alone could account for it.
+2. Correcting the alignment matrix moved amharic/ner by +2.20 but
+   amharic/tc by only +0.60 and amharic/qa by -0.76. If W were driving the
+   TC result, TC should have moved most; it moved least of the three in the
+   favourable direction.
+3. Only 33 of 198 Amharic tokens (16.7%) are genuinely decomposed into more
+   than one morpheme (5b-ii), so 83% of the new vocabulary receives an
+   embedding whole-token FastText would have produced regardless.
+
+`+FOCUS+LAPT` on the rebuilt split is the control that separates these: it
+consumes FastText and loads W, but uses no morpheme segmentation. If it lands
+near its superseded 73.80, the gain is attributable to LGSE; if it lands near
+78, the gain is the test set. Those five seeds are running
+(`logs/split/w_tc_focus_lapt_s4*`); this section will be updated with a
+stated verdict when they complete, in whichever direction they fall.
 
 - Primary (LGSE > FOCUS): **pending re-evaluation**
 - Ranges at +/-1 sd: **pending re-evaluation**
