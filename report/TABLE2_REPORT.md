@@ -107,7 +107,8 @@ example, but the step size differs by row.
 
 | Rank | System | Mean | SD | n | Missing seeds | s42 | s43 | s44 | s45 | s46 |
 |---|---|---|---|---|---|---|---|---|---|---|
-| - | +LGSE+LAPT (corrected alignment matrix) | 78.30 | 4.68 | 5 | - | 73.62 | 72.77 | 81.70 | 82.13 | 81.28 |
+| 1 | +FOCUS+LAPT (rebuilt split) | 81.62 | 1.26 | 5 | - | 80.00 | 81.28 | 82.13 | 83.40 | 81.28 |
+| 2 | +LGSE+LAPT (corrected alignment matrix) | 78.30 | 4.68 | 5 | - | 73.62 | 72.77 | 81.70 | 82.13 | 81.28 |
 | - | +LAPT † | 75.77 | 3.21 | 5 | - | 78.87 | 70.42 | 76.06 | 76.06 | 77.46 |
 | - | XLM-R (default) † | 75.49 | 2.75 | 5 | - | 71.83 | 77.46 | 78.87 | 74.65 | 74.65 |
 | - | +FOCUS+LAPT † | 73.80 | 4.18 | 5 | - | 69.01 | 73.24 | 71.83 | 74.65 | 80.28 |
@@ -126,11 +127,22 @@ withheld and no delta is computed, because a difference taken across two
 different evaluations measures the change of evaluation as much as the change
 of system.
 
-**What 78.30 does and does not establish.** It is a measured result: five
-seeds, the Amharic alignment matrix, the rebuilt 235-item split, and the run
-records are tracked in `results_hornmorpho_wam/` so each seed can be checked
-against its own provenance. What it does not yet establish is attribution.
-Three measured facts keep the question open:
+**Resolved 2026-10-02: 78.30 reflects the test set, not the method.**
+`+FOCUS+LAPT` on the rebuilt split completed at 5/5 and scores
+**81.62 +/- 1.26**, above `+LGSE+LAPT`'s 78.30 +/- 4.68. On the first
+like-for-like Amharic comparison in this work -- same 235-item split, same
+`W_am.npy`, same five seeds -- **LGSE trails FOCUS by 3.32 points and loses
+on four of five seeds** (s46 ties). FOCUS is also three times more stable
+(+/-1.26 against +/-4.68), though the two 1 sd ranges still overlap.
+
+The control was pre-registered in this file before it ran: near 73.80 would
+attribute the gain to LGSE, near 78 to the split. `+FOCUS+LAPT` moved
+73.80 -> 81.62, a shift of **+7.82** on a system that performs no morpheme
+segmentation whatsoever. The rebuilt test set, not the initializer, produced
+the apparent improvement, and FOCUS captured more of it than LGSE did.
+
+This is consistent with the three facts recorded below, which were written
+while the question was still open:
 
 1. Rebuilding the TC test set raised *every* system by +1.9 to +8.2 points.
    The +2.5 here against the superseded `+LGSE+LAPT` figure sits inside that
@@ -143,17 +155,19 @@ Three measured facts keep the question open:
    than one morpheme (5b-ii), so 83% of the new vocabulary receives an
    embedding whole-token FastText would have produced regardless.
 
-`+FOCUS+LAPT` on the rebuilt split is the control that separates these: it
-consumes FastText and loads W, but uses no morpheme segmentation. If it lands
-near its superseded 73.80, the gain is attributable to LGSE; if it lands near
-78, the gain is the test set. Those five seeds are running
-(`logs/split/w_tc_focus_lapt_s4*`); this section will be updated with a
-stated verdict when they complete, in whichever direction they fall.
+`+FOCUS+LAPT` was the control that separated these: it consumes FastText and
+loads W, but uses no morpheme segmentation, so it isolates the split change
+from the initializer. It landed at 81.62, well above 78.
 
-- Primary (LGSE > FOCUS): **pending re-evaluation**
-- Ranges at +/-1 sd: **pending re-evaluation**
-- Secondary (LGSE > FOCUS > Random > Default): **pending re-evaluation**
-- Observed order: **pending re-evaluation**
+- Primary (LGSE > FOCUS): **NOT MET** -- 78.30 vs 81.62, -3.32, LGSE behind
+  on four of five seeds
+- Ranges at +/-1 sd: **overlapping** -- LGSE [73.62, 82.98], FOCUS
+  [80.36, 82.87]; the difference is not separated at one standard deviation,
+  but it is consistent in sign across seeds
+- Secondary (LGSE > FOCUS > Random > Default): **NOT MET**
+- Observed order, rebuilt split only: +FOCUS+LAPT > +LGSE+LAPT. The three
+  daggered baselines have not been rerun, so the full column cannot yet be
+  ranked.
 
 TC remains the noisiest of the three Amharic tasks: the `+LGSE+LAPT` seeds
 span 72.77 to 82.13, a 9.4-point range with a standard deviation of 4.68.
