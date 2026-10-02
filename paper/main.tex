@@ -23,8 +23,16 @@
 A Reproduction of LGSE for Amharic and Tigrinya}
 
 \author{Hailay Kidu Teklehaymanot \\
-  Mekelle University \\
-  \texttt{hailay.kidu@mu.edu.et} \\}
+  Mekelle University, Ethiopia \\
+  \texttt{hailay.kidu@mu.edu.et} \\\And
+  Dren Fazlija \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{dren.fazlija@L3S.de} \\\And
+  Wolfgang Nejdl \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{nejdl@L3S.de} \\}
 
 \begin{document}
 \maketitle
@@ -77,9 +85,9 @@ all six task--language cells, by margins of 1.3 to 9.4 points, with standard
 deviations of 0.3 to 1.0 over five seeds.
 
 This paper reports what we found when we rebuilt that pipeline. We are not
-disinterested parties: the first author is also first author of the paper
-under examination, and this work began as an attempt to make its results
-reproducible rather than to refute them. We report the outcome as measured.
+disinterested parties: we are the authors of the paper under examination, and
+this work began as an attempt to make its results reproducible rather than to
+refute them. We report the outcome as measured.
 
 \paragraph{Contributions.}
 \begin{enumerate}
@@ -225,9 +233,9 @@ difference would, which motivates \S\ref{sec:why}.
 \subsection{The method is underspecified on its critical path}
 
 $W$ and $\lambda$ are both unspecified (\S2). We substituted Procrustes and
-$\lambda=1.0$ and documented both, but an independent reader cannot recover
-the authors' choices from the paper, and Equation~\ref{eq:lgse} cannot be
-evaluated without them. We note the practical cost concretely: during this
+$\lambda=1.0$ and documented both, but no reader---ourselves included, three
+months later---can recover the original choices from the paper, and
+Equation~\ref{eq:lgse} cannot be evaluated without them. We note the practical cost concretely: during this
 work a configuration error pointed Amharic runs at the \textit{Tigrinya}
 alignment matrix for several months. Because the paper specifies no $W$,
 nothing in the pipeline or its outputs flagged the substitution as wrong.
@@ -429,23 +437,32 @@ a definitive comparison would need more.
 
 \section*{Ethics Statement}
 
-This paper examines a published work on which the present author is also
-first author. We report the reproduction outcome as measured, including where
-it contradicts our own earlier claims, and we document errors introduced by
-us during this work alongside those found in the original: a configuration
-error that applied the Tigrinya alignment matrix to Amharic runs
-(\S\ref{sec:why}), and a coverage figure we initially over-reported as 22.7\%
-before re-measurement established 16.7\% (\S\ref{sec:coverage}). We found no
-evidence of fabrication in the original work; every discrepancy we traced is
-consistent with ordinary pipeline defects of the kind we also made ourselves.
+This paper examines a published work by the same authors. We report the
+reproduction outcome as measured, including where it contradicts our own
+earlier claims, and we document errors introduced during this reproduction
+alongside those found in the original: a configuration error that applied the
+Tigrinya alignment matrix to Amharic runs (\S\ref{sec:why}), and a coverage
+figure initially over-reported as 22.7\% before re-measurement established
+16.7\% (\S\ref{sec:coverage}). We found no evidence of fabrication in the
+original work; every discrepancy we traced is consistent with ordinary
+pipeline defects of the kind we also made ourselves here.
+
+Self-examination carries an obvious conflict of interest. We have tried to
+mitigate it by pre-registering the one controlled comparison before it ran
+(\S\ref{sec:controlled}), by releasing every per-seed record so that each
+number in this paper can be recomputed independently, and by reporting the
+outcome that is least favourable to our own prior claim. Readers should
+nonetheless weigh our conclusions accordingly.
+
 All datasets are publicly available or released by us, and the Amharic
 educational-quality annotation was led by the first author. No human subjects
 were involved.
 
 \section*{Acknowledgments}
 
-We thank the co-authors of the original LGSE paper for discussions during
-this reproduction.
+We thank the reviewers of the original LGSE submission, whose questions
+prompted the reproduction attempt reported here, and the L3S compute support
+team for the cluster time these runs required.
 
 \bibliography{custom}
 
