@@ -243,13 +243,17 @@ only partly exercised in these runs. Both are documented with measurements in
    initializer -- LGSE, FOCUS, Random, default -- is evaluated on its
    initialization alone. This affects all four systems equally.
 2. **Morpheme-path coverage.** Only 45 of 198 tokens (22.7%) have a
-   `data/morph_lexicon.txt` entry and therefore take LGSE's morpheme-average
-   path; the remaining 77.3% fall through to whole-token FastText, which is
-   close to what FOCUS does. Attaching HornMorpho (via `amseg`) as a
-   segmentation fallback raises this to 114/198 (57.6%) on the same token
-   list, a 2.5x increase. That integration exists in
-   `src/lgse/segmentation.py` behind `LGSEConfig.use_hornmorpho`, defaults to
-   off, and was **not** enabled for any run in this report.
+   `data/morph_lexicon.txt` entry, and just 33 (16.7%) are genuinely
+   decomposed: the other 12 entries map a loanword to itself as a single
+   morpheme (`ቴሌቪዥን`, `ፕሬዚደንት`, `ላቦራቶሪ`, ...), so averaging over that one
+   element reproduces exactly the whole-token FastText vector. 165 of 198
+   tokens (83.3%) therefore receive an embedding whole-token FastText alone
+   would have produced, which is close to what FOCUS does. Attaching
+   HornMorpho (via `amseg`) as a segmentation fallback raises genuine
+   decomposition to 99/198 (50.0%) on the same token list, a 3x increase.
+   That integration exists in `src/lgse/segmentation.py` behind
+   `LGSEConfig.use_hornmorpho`, defaults to off, and was **not** enabled for
+   any run in this report.
 
 Neither is a defence of the numbers above, which stand as measured. They
 identify what a stronger test of LGSE would require, and point 2 in

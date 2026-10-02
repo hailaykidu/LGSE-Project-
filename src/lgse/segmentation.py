@@ -92,12 +92,18 @@ class MorphologicalSegmenter:
 
         The static lexicon is a fixed word list, so it decomposes only the
         words someone happened to enter: measured against the 198 Amharic
-        tokens added by LAPT, it covers 45 (22.7%), leaving 77% of the new
-        vocabulary to fall through to whole-token FastText -- which is
-        approximately what the FOCUS baseline already does, so LGSE's
-        morpheme path was barely exercised. HornMorpho *analyzes* rather
-        than looks up, and covers 120/198 (60.6%) of the same list,
-        subsuming every word the lexicon covers.
+        tokens added by LAPT, it genuinely decomposes 33 (16.7%), leaving
+        83% of the new vocabulary to fall through to whole-token FastText --
+        which is approximately what the FOCUS baseline already does, so
+        LGSE's morpheme path was barely exercised. HornMorpho *analyzes*
+        rather than looks up, and decomposes 99/198 (50.0%) of the same
+        list, subsuming every word the lexicon covers.
+
+        Counts are of genuine decomposition into more than one morpheme
+        (re-measured 2026-10-02). The earlier figures -- 45/22.7% and
+        120/60.6% -- counted tokens with a lexicon entry, 12 of which map a
+        loanword to itself and so yield the whole-token FastText vector
+        anyway.
 
         Amharic only: amseg's analyzer is Amharic-specific. Tigrinya keeps
         the lexicon-only path, so its behavior is unchanged.

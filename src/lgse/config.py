@@ -33,8 +33,11 @@ class LGSEConfig:
     # Default False so runs reproduce the lexicon-only behaviour the
     # completed Table 2 results were produced under; set True to test LGSE
     # with the morphological analysis its morpheme path presumes.
-    # Measured on the 198 Amharic LAPT tokens: lexicon alone segments 45
-    # (22.7%), lexicon + HornMorpho segments 120 (60.6%).
+    # Measured on the 198 Amharic LAPT tokens (re-measured 2026-10-02,
+    # counting only genuine decomposition into >1 morpheme): lexicon alone
+    # 33 (16.7%), lexicon + HornMorpho 99 (50.0%). The earlier 45/22.7% and
+    # 120/60.6% counted lexicon entries rather than decompositions, and 12
+    # of those entries map a loanword to itself.
     use_hornmorpho: bool = False
 
     # FastText models are ~3 GB and are not committed. They are fetched by

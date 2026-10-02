@@ -651,9 +651,25 @@ vocabulary):
 
 | tier | count | % |
 |---|---|---|
-| morpheme-average | 45 | 22.7% |
+| morpheme-average (lexicon entry present) | 45 | 22.7% |
+| -- of which genuinely decomposed (>1 morpheme) | 33 | 16.7% |
+| -- of which map to themselves (1 morpheme) | 12 | 6.1% |
 | whole-token FastText | 153 | 77.3% |
 | character n-gram (random) fallback | 0 | 0.0% |
+
+**Re-measured 2026-10-02.** The 45 figure counts tokens that have a lexicon
+entry, not tokens that are actually decomposed. Twelve of those entries map a
+word to itself -- loanwords listed as their own single morpheme
+(`ቴሌቪዥን` television, `ፕሬዚደንት` president, `ኢንተርናሽናል` international,
+`ላቦራቶሪ` laboratory, and eight more). `MorphemeEmbeddingBuilder.embed_token`
+accepts any non-empty morpheme list, so these take the morpheme path and
+average over a single element, producing exactly the whole-token FastText
+vector they would have received from the next tier down.
+
+Genuine morphological decomposition therefore covers **33/198 (16.7%)**, not
+22.7%. The effective split between LGSE and FOCUS on Amharic is narrower than
+the original figure suggests: 165 of 198 tokens (83.3%) reach an embedding
+that whole-token FastText alone would have produced.
 
 Zero tokens hit the content-free random fallback -- FastText's own subword
 handling covers every token that has no lexicon entry, so the "weak
@@ -862,7 +878,9 @@ list** built earlier in this
 session (198 words drawn from `data/tc/amharic` + `data/ner/amharic`,
 ranked by XLM-R subword fragmentation, not yet wired into
 `data/new_tokens.txt`) went from 0/198 covered to **45/198 (22.7%) covered**
-by this merge alone — the first concrete coverage improvement against
+by this merge alone — of which 33 (16.7%) are genuinely decomposed into more
+than one morpheme; see the 2026-10-02 re-measurement in 5b-ii — the first
+concrete coverage improvement against
 genuinely Amharic-appropriate vocabulary. The remaining 153/198 uncovered
 OOV candidates are mostly proper nouns (place/person names such as
 `ላምፔዱዛ`, `ፓንክኸርስት`) and rare loanword spellings HornMorpho's lexicon does
@@ -1034,10 +1052,10 @@ there records `W_am.npy`), as are all Tigrinya results, where `W_ti.npy` is
 correct.
 
 **Consequence for the HornMorpho experiment.** The measured coverage gain
-from wiring HornMorpho into the segmenter fallback (Amharic morpheme
-coverage 22.7% -> 57.6%) had no valid LGSE numbers behind it until these
-cells were re-run, because the only two systems that exercise the segmenter
-are the two that were mis-aligned.
+from wiring HornMorpho into the segmenter fallback (Amharic genuine morpheme
+decomposition 16.7% -> 50.0%; see the re-measurement note in 5b-ii) had no
+valid LGSE numbers behind it until these cells were re-run, because the only
+two systems that exercise the segmenter are the two that were mis-aligned.
 
 Both configs were corrected to `W_am.npy` and carry comments recording this.
 The re-runs write to `results_hornmorpho_wam/` rather than overwriting
