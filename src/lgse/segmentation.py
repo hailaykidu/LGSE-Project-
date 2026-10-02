@@ -30,6 +30,9 @@ class MorphologicalSegmenter:
         # lexicon has no entry. See `with_hornmorpho`.
         self.analyzer = analyzer
         self._analyzer_cache: Dict[str, List[str]] = {}
+        # Words the source file gave more than one segmentation for; set by
+        # `from_file`. Empty for a segmenter built directly from a dict.
+        self.conflicts: Dict[str, List[List[str]]] = {}
 
     @staticmethod
     def _parse_line(line: str) -> Optional[tuple]:
@@ -47,6 +50,7 @@ class MorphologicalSegmenter:
     @classmethod
     def from_file(cls, path: str) -> "MorphologicalSegmenter":
         lexicon: Dict[str, List[str]] = {}
+        conflicts: Dict[str, List[List[str]]] = {}
 
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
@@ -61,10 +65,27 @@ class MorphologicalSegmenter:
                 if parsed is None:
                     continue
                 word, morphemes = parsed
-                if morphemes:
-                    lexicon[word] = morphemes
+                if not morphemes:
+                    continue
+                # Keep the first entry for a word, not the last. The file is
+                # a curated, numbered Tigrinya lexicon (the first ~204 lines)
+                # followed by a later unnumbered Amharic append, and nine
+                # words appear in both with different segmentations -- often
+                # differing only in which alef was typed (U+12A3 in the
+                # curated block vs U+12A0 in the append, e.g.
+                # ሰላማዊ -> ሰላም+ኣዊ vs ሰላም+አዊ). Last-wins silently let the
+                # append overwrite the curated analysis; conflicts are
+                # recorded on `conflicts` so they can be reported rather
+                # than resolved by file order.
+                if word in lexicon:
+                    if lexicon[word] != morphemes:
+                        conflicts.setdefault(word, []).append(morphemes)
+                    continue
+                lexicon[word] = morphemes
 
-        return cls(lexicon)
+        segmenter = cls(lexicon)
+        segmenter.conflicts = conflicts
+        return segmenter
 
     def with_hornmorpho(self) -> "MorphologicalSegmenter":
         """Attach HornMorpho (via amseg) as a fallback analyzer.

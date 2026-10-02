@@ -423,18 +423,43 @@ def test_manifest_accepts_the_required_dimension(tmp_path):
     assert config.fasttext_path == "/models/am.768.bin"
 
 
-def test_shipped_config_leaves_the_matrix_unset():
-    """configs/base.yaml must NOT ship a W.
+def test_shipped_config_matches_its_language():
+    """Each config must point at its own language's W, with provenance.
 
-    Shipping one would hand every user an alignment matrix this project
-    invented and the authors never specified -- the exact silent choice the
-    fail-fast behaviour exists to prevent.
+    This test previously asserted `alignment_matrix_path == ""`, on the
+    grounds that shipping a W would hand users an alignment matrix the
+    authors never specified. The configs now ship one, because the paper
+    gives no way to obtain W and a run has to have something: the
+    substitution (orthogonal Procrustes) is documented in
+    IMPLEMENTATION_NOTES.md 1a, and each matrix is accompanied by a
+    sidecar .json recording its language, anchor count, objective and
+    residual.
+
+    What still has to hold is that a config never points at another
+    language's matrix. It did once: base.yaml and hornmorpho.yaml carried
+    W_ti.npy while running Amharic, so Amharic FastText vectors were
+    projected through an alignment fitted on Tigrinya anchors
+    (IMPLEMENTATION_NOTES.md 5d-v). That is what this asserts now.
     """
+    import json
     import yaml
 
-    cfg = yaml.safe_load(
-        open(Path(__file__).resolve().parent.parent / "configs" / "base.yaml"))
-    assert cfg["lgse"]["alignment_matrix_path"] == ""
+    root = Path(__file__).resolve().parent.parent
+    expected = {"base.yaml": "amharic",
+                "hornmorpho.yaml": "amharic",
+                "tigrinya.yaml": "tigrinya"}
+    for name, language in expected.items():
+        cfg = yaml.safe_load(open(root / "configs" / name))
+        path = cfg["lgse"]["alignment_matrix_path"]
+        assert path, f"{name} ships no alignment matrix"
+
+        sidecar = (root / path).with_suffix(".json")
+        assert sidecar.exists(), f"{name}: {path} has no provenance sidecar"
+        meta = json.load(open(sidecar, encoding="utf-8"))
+        assert meta["language"] == language, (
+            f"{name} is the {language} config but points at "
+            f"{Path(path).name}, whose sidecar declares "
+            f"language={meta['language']!r}")
 
 
 def test_run_experiment_guards_fasttext_systems():
