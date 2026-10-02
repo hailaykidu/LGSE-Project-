@@ -1,0 +1,452 @@
+% ACL conference style (acl_latex.tex scaffold).
+% Template: https://www.overleaf.com/latex/templates/
+%           association-for-computational-linguistics-acl-conference/jvxskxpnznfj
+% Requires acl.sty, acl_natbib.bst from that template in the same directory.
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\title{What Does Morpheme-Grounded Embedding Initialization Actually Buy?\\
+A Reproduction of LGSE for Amharic and Tigrinya}
+
+\author{Hailay Kidu Teklehaymanot \\
+  Mekelle University \\
+  \texttt{hailay.kidu@mu.edu.et} \\}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Vocabulary expansion for low-resource language adaptation requires embeddings
+for tokens the pretrained model has never seen. LGSE
+\citep{teklehaymanot-etal-2026-lgse} proposes initializing them from
+morpheme decompositions rather than random vectors or frequency-driven
+subwords, and reports that this consistently outperforms every baseline
+across three tasks and two languages. We attempt to reproduce that result
+with a faithful reimplementation, 150 runs over five seeds, and the original
+datasets. The central claim does not reproduce: morpheme-grounded
+initialization leads in 3 of 6 task--language cells rather than 6, no
+difference in the matrix is separated at one standard deviation, and
+off-the-shelf XLM-R---which expands no vocabulary and runs no adaptive
+pretraining---leads 3 cells itself. We then identify four causes, each
+measured rather than conjectured: the method is underspecified at two points
+that sit on its critical path (the alignment matrix $W$ and the
+regularization weight $\lambda$), only 16.7\% of new Amharic tokens are
+genuinely decomposed so the mechanism is largely inert, a test-set revision
+shifts every system by up to $+7.82$ accuracy points, and 1.2\% of
+fine-tuning runs collapse to a degenerate all-\texttt{O} tagger whose zero
+distorts any mean that includes it. A controlled comparison on the single
+cell where we could equalize the evaluation reverses the published direction:
+morpheme-grounded initialization trails its closest competitor by 3.32
+points. We release all code, data manifests, per-seed run records and the
+analysis that produced every number here.
+\end{abstract}
+
+\section{Introduction}
+
+Adapting a pretrained multilingual encoder to a morphologically rich
+low-resource language usually means adding tokens to its vocabulary, which
+raises the question of what vector each new token should start from. Random
+initialization discards everything known about the token's form.
+FOCUS \citep{dobler-de-melo-2023-focus} initializes from a weighted
+combination of overlapping tokens in an auxiliary embedding space. LGSE
+\citep{teklehaymanot-etal-2026-lgse} proposes instead to decompose each new
+token into morphemes, embed those, and average, so that a derived form
+inherits from its stem rather than from an arbitrary subword split.
+
+The intuition is appealing for Amharic and Tigrinya, where a single surface
+form carries affixes that a frequency-driven tokenizer fragments
+arbitrarily.\footnote{For example, Amharic \textit{selamawi} (``peaceful'')
+decomposes as \textit{selam} (``peace'') ${+}$ \textit{-awi}; LGSE's
+intent is that the new token inherit from \textit{selam}.}
+The published evaluation reports LGSE ahead of every baseline in
+all six task--language cells, by margins of 1.3 to 9.4 points, with standard
+deviations of 0.3 to 1.0 over five seeds.
+
+This paper reports what we found when we rebuilt that pipeline. We are not
+disinterested parties: the first author is also first author of the paper
+under examination, and this work began as an attempt to make its results
+reproducible rather than to refute them. We report the outcome as measured.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\itemsep0em
+\item A reproduction of LGSE across 3 tasks $\times$ 2 languages $\times$ 5
+  systems $\times$ 5 seeds (150 runs), with every per-seed record released.
+  The central claim does not reproduce (\S\ref{sec:results}).
+\item Four measured causes for the discrepancy, each isolated by a control
+  rather than inferred: method underspecification, low morpheme coverage, a
+  test-set confound, and degenerate runs (\S\ref{sec:why}).
+\item A controlled single-cell comparison showing that when two systems are
+  placed on the same evaluation, the published direction reverses
+  (\S\ref{sec:controlled}).
+\item An argument that the reported precision ($\pm 0.3$ to $\pm 1.0$) is
+  not attainable on these benchmarks at these sizes, with the measured
+  seed-to-seed variance as evidence (\S\ref{sec:variance}).
+\end{enumerate}
+
+\section{Background}
+
+\paragraph{LGSE.} For a new token $t$ with morpheme decomposition
+$m_1 \dots m_k$, LGSE sets
+\begin{equation}
+e_{\text{new}} = \frac{1}{k}\sum_{j=1}^{k} W e_{m_j},
+\label{eq:lgse}
+\end{equation}
+where $e_{m_j}$ is a FastText vector and $W \in \mathbb{R}^{d \times d}$
+aligns the FastText space to the model's. Tokens with no decomposition fall
+back to character $n$-grams, and during language-adaptive pretraining (LAPT)
+a regularizer $L_{\text{reg}} = \lambda \lVert e_{\text{new}} - \mu \rVert^2$
+discourages drift from the initialization, where $\mu$ is the initial vector.
+
+\paragraph{What is not specified.} Equation~\ref{eq:lgse} requires $W$. The
+paper states that ``a learned linear projection $W \in \mathbb{R}^{d\times d}$
+is applied'' and says nothing further: no training objective, no data, no
+procedure, and no released artifact. Similarly, $\lambda$ ``controls the
+regularization strength'' with no value, range, or sensitivity analysis
+given. Both quantities sit directly on the path that distinguishes LGSE from
+its baselines, so neither can be treated as an incidental detail.
+
+We also note a structural consequence the original does not discuss. The
+initializer writes $We_{m_j}$ into the embedding matrix, and $L_{\text{reg}}$
+anchors to a constant $\mu$. Under the paper's stated objectives, nothing
+downstream is a function of $W$ once initialization is complete, so $W$
+receives no gradient during LAPT. $W$ is therefore effectively a fixed
+preprocessing transform, not a learned parameter, and our substitution below
+treats it as one.
+
+\section{Experimental Setup}
+\label{sec:setup}
+
+\paragraph{Systems.} We evaluate five, matching the original: off-the-shelf
+XLM-R base \citep{conneau-etal-2020-unsupervised}; \textsc{+LAPT} (adaptive
+pretraining, no vocabulary expansion); \textsc{+Random+LAPT} (expansion with
+randomly initialized rows); \textsc{+FOCUS+LAPT}; and \textsc{+LGSE+LAPT}.
+Only the last two consume FastText vectors and therefore load $W$, which
+makes \textsc{+FOCUS+LAPT} the natural control for isolating LGSE's
+morpheme path: it shares every component except morpheme segmentation.
+
+\paragraph{Data.} Amharic NER uses the official MasakhaNER splits
+\citep{adelani-etal-2021-masakhaner}. Amharic QA uses AmQA
+\citep{taffa-etal-2024-amqa} as released. Tigrinya QA uses an extractive
+SQuAD-format conversion of TIGQA with a recorded 80/10/10 seed. Tigrinya TC
+uses FineWeb-C (\texttt{tir\_Ethi}) at 597/74/74. Amharic TC uses a
+2{,}500-document self-annotated educational-quality corpus, split
+1872/233/235 by the same stratified procedure as Tigrinya; the first author
+led that annotation. Every split is recorded in a manifest carrying source
+URL, raw checksum and split seed.
+
+\paragraph{Substitutions.} Where the paper is silent we chose, documented,
+and held fixed: $W$ is obtained by orthogonal Procrustes,
+$W^\star = \arg\min_{W^\top W = I} \lVert WX - Y\rVert_F$, on surface-form
+anchors shared between each language's FastText model and XLM-R (5{,}910
+anchors for Amharic, 3{,}875 for Tigrinya; residual Frobenius norm 423.0
+against 633.0 unaligned, and 315.1 against 490.0). We set $\lambda = 1.0$.
+These are our choices, not the paper's, and results below should be read
+accordingly.
+
+\paragraph{Protocol.} Five seeds (42--46) per cell, mean $\pm$ sample
+standard deviation. Accuracy for TC, F1 for NER and QA, matching the
+original. Each run writes a record containing its commit, config checksum,
+$W$ source, corpus checksum and per-seed dev and test metrics.
+
+\section{The Central Claim Does Not Reproduce}
+\label{sec:results}
+
+Table~\ref{tab:main} gives the full matrix.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{llcccccc}
+\toprule
+& & \multicolumn{2}{c}{\textbf{QA} (F1)} & \multicolumn{2}{c}{\textbf{TC} (Acc.)} & \multicolumn{2}{c}{\textbf{NER} (F1)} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+\textbf{System} & & Tigrinya & Amharic & Tigrinya & Amharic & Tigrinya & Amharic \\
+\midrule
+XLM-R (off-the-shelf) & & \textbf{49.20}\,\small{$\pm$2.54} & 59.58\,\small{$\pm$2.15} & 37.03\,\small{$\pm$5.78} & 75.49\,\small{$\pm$2.75} & \textbf{73.96}\,\small{$\pm$0.51} & \textbf{68.97}\,\small{$\pm$1.94} \\
+\textsc{+LAPT} & & 47.77\,\small{$\pm$2.03} & 57.08\,\small{$\pm$1.97} & 34.05\,\small{$\pm$5.69} & \textbf{75.77}\,\small{$\pm$3.21} & 72.84\,\small{$\pm$2.21} & 66.25\,\small{$\pm$1.95} \\
+\textsc{+Random+LAPT} & & 48.41\,\small{$\pm$2.42} & 59.03\,\small{$\pm$1.33} & \textbf{37.30}\,\small{$\pm$10.14} & 73.24\,\small{$\pm$3.45} & 73.49\,\small{$\pm$1.12} & 67.78\,\small{$\pm$3.25}$^\dagger$ \\
+\textsc{+FOCUS+LAPT} & & 44.63\,\small{$\pm$13.48} & \textbf{60.83}\,\small{$\pm$1.56} & 34.32\,\small{$\pm$3.25} & 73.80\,\small{$\pm$4.18} & 73.65\,\small{$\pm$0.86} & 68.82\,\small{$\pm$1.79} \\
+\textsc{+LGSE+LAPT} & & 47.38\,\small{$\pm$4.65} & 57.74\,\small{$\pm$2.02} & 37.03\,\small{$\pm$5.78} & \textbf{75.77}\,\small{$\pm$4.03} & 73.26\,\small{$\pm$0.90} & 67.75\,\small{$\pm$1.80} \\
+\midrule
+\multicolumn{2}{l}{\textit{published} \textsc{+LGSE+LAPT}} & 78.0\,\small{$\pm$0.4} & 78.5\,\small{$\pm$0.4} & 75.2\,\small{$\pm$0.5} & 77.8\,\small{$\pm$0.3} & 79.0\,\small{$\pm$0.3} & 79.4\,\small{$\pm$0.4} \\
+\multicolumn{2}{l}{\textit{gap}} & $-30.62$ & $-20.76$ & $-38.17$ & $-2.03$ & $-5.74$ & $-11.65$ \\
+\bottomrule
+\end{tabular}
+\caption{Reproduction of LGSE. Mean $\pm$ sample standard deviation over
+seeds 42--46; best per column in \textbf{bold}. $^\dagger$Mean over four
+converged seeds; one collapsed to exactly 0.00 F1 (\S\ref{sec:degenerate}),
+and including it gives $54.22 \pm 30.44$. The last two rows give the
+published figures and our gap to them.}
+\label{tab:main}
+\end{table*}
+
+\paragraph{LGSE leads 3 of 6 cells, not 6.} It is joint-best on Amharic TC
+(75.77, tied with \textsc{+LAPT} to four significant figures) and leads
+Tigrinya TC and Tigrinya QA relative to \textsc{+FOCUS+LAPT}. It leads no
+NER cell in either language and trails \textsc{+FOCUS+LAPT} by 3.09 on
+Amharic QA.
+
+\paragraph{Off-the-shelf XLM-R leads 3 cells} --- both NER cells and
+Tigrinya QA --- while expanding no vocabulary and running no adaptive
+pretraining. This is the single most awkward observation for the published
+narrative, because it holds regardless of how $W$ or $\lambda$ are chosen:
+the baseline that requires none of the machinery is competitive with all of
+it.
+
+\paragraph{Adaptive pretraining does not help.} \textsc{+LAPT} is below
+off-the-shelf XLM-R in 5 of 6 cells. The monotonic ordering the original
+reports in every column --- XLM-R $<$ \textsc{+LAPT} $<$
+\textsc{+Random} $<$ \textsc{+FOCUS} $<$ \textsc{+LGSE} --- does not appear
+anywhere in Table~\ref{tab:main}.
+
+\paragraph{The gaps are not uniform.} Amharic TC is within 2.03 of the
+published value while Tigrinya TC is 38.17 below it. A uniform
+implementation deficit would not produce that spread; a per-cell evaluation
+difference would, which motivates \S\ref{sec:why}.
+
+\section{Why: Four Measured Causes}
+\label{sec:why}
+
+\subsection{The method is underspecified on its critical path}
+
+$W$ and $\lambda$ are both unspecified (\S2). We substituted Procrustes and
+$\lambda=1.0$ and documented both, but an independent reader cannot recover
+the authors' choices from the paper, and Equation~\ref{eq:lgse} cannot be
+evaluated without them. We note the practical cost concretely: during this
+work a configuration error pointed Amharic runs at the \textit{Tigrinya}
+alignment matrix for several months. Because the paper specifies no $W$,
+nothing in the pipeline or its outputs flagged the substitution as wrong.
+Correcting it moved Amharic NER by $+2.20$ on matched seeds. A method whose
+central operator can be silently replaced by the wrong language's operator,
+with no detectable signal, is not specified tightly enough to reproduce.
+
+\subsection{The mechanism is largely inert}
+\label{sec:coverage}
+
+LGSE differs from FOCUS only on tokens it can decompose. Measured against
+the 198 Amharic tokens added by LAPT: 45 (22.7\%) have a lexicon entry, but
+12 of those entries map a loanword to itself as a single morpheme
+(\textit{television}, \textit{president}, \textit{laboratory}, and nine
+more). Averaging over one element reproduces exactly the whole-token FastText
+vector the next fallback tier supplies, so \textbf{genuine decomposition
+covers 33 of 198 tokens (16.7\%)}. For the remaining 83.3\%, LGSE and FOCUS
+differ only in which auxiliary space they draw a whole-token vector from.
+
+This is the most important finding in the paper for anyone who wants the
+method to work. LGSE's distinguishing mechanism was exercised on one token in
+six; the published comparison largely measured two slightly different ways of
+copying a FastText vector. Attaching HornMorpho \citep{gasser-2011-hornmorpho}
+as an analyzer fallback triples genuine decomposition to 99 of 198 (50.0\%),
+which is the obvious next experiment and one we have not yet run to
+completion.
+
+\subsection{A test-set revision moves every system}
+\label{sec:confound}
+
+The Amharic TC test set was rebuilt during this work, from 71 items to 235
+(1.41 against 0.43 accuracy points per example). Re-running on the rebuilt
+split moved \textit{every} system upward, by $+1.93$ to $+8.21$ points,
+including systems that perform no vocabulary expansion at all. Any comparison
+that mixes the two splits therefore measures the split as much as the
+system---and we show in \S\ref{sec:controlled} that this is sufficient to
+reverse a published conclusion.
+
+\subsection{Roughly 1\% of runs collapse}
+\label{sec:degenerate}
+
+Across 421 runs, 5 (1.2\%) recorded precision, recall and F1 of exactly 0.00
+on both dev and test. These are not crashes: the runs complete normally, LAPT loss
+descends as usual, and total runtime is unchanged. The downstream tagger
+settles into the all-\texttt{O} local minimum, proposing no entity, so both
+precision and recall are genuinely zero. One such run sits inside the
+\textsc{+Random+LAPT} Amharic NER cell, where averaging it in publishes
+$54.22 \pm 30.44$ against $67.78 \pm 3.25$ over the four converged
+seeds---a 13.5-point understatement of a baseline, and a standard deviation
+that is a collapse indicator rather than a measure of seed variance. We
+report such cells both ways and disclose the collapse count.
+
+\section{A Controlled Comparison Reverses the Published Direction}
+\label{sec:controlled}
+
+Amharic TC is the one cell where we were able to place two systems on an
+identical evaluation: both on the rebuilt 235-item split, both using the
+Amharic alignment matrix, both over seeds 42--46.
+\textsc{+FOCUS+LAPT} is the right control because it consumes FastText and
+loads $W$ but performs no morpheme segmentation, so it isolates everything
+except LGSE's mechanism.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+Seed & \textsc{+LGSE+LAPT} & \textsc{+FOCUS+LAPT} \\
+\midrule
+42 & 73.62 & 80.00 \\
+43 & 72.77 & 81.28 \\
+44 & 81.70 & 82.13 \\
+45 & 82.13 & 83.40 \\
+46 & 81.28 & 81.28 \\
+\midrule
+mean & 78.30\,\small{$\pm$4.68} & \textbf{81.62}\,\small{$\pm$1.26} \\
+\bottomrule
+\end{tabular}
+\caption{Amharic TC on a common evaluation: same 235-item split, same
+Amharic $W$, same seeds. LGSE trails by 3.32 points and is behind on four of
+five seeds, with one tie.}
+\label{tab:controlled}
+\end{table}
+
+On the frozen 71-item split (Table~\ref{tab:main}), LGSE leads
+\textsc{+FOCUS+LAPT} on this cell by $+1.97$. On the equalized evaluation
+(Table~\ref{tab:controlled}) it trails by $-3.32$. The control moved from
+73.80 to 81.62, a shift of $+7.82$ on a system that performs no morpheme
+segmentation whatsoever: the rebuilt test set, not the initializer, produced
+the apparent improvement, and FOCUS captured more of it than LGSE did. We
+registered this prediction in the project repository before the control
+finished, stating that a result near 73.80 would attribute the gain to LGSE
+and a result near 78 would attribute it to the split.
+
+The two $\pm 1$ standard deviation ranges still overlap
+($[73.62, 82.98]$ against $[80.36, 82.87]$), so we claim a consistent sign
+across seeds rather than a separated difference. We also emphasize that this
+is one cell: the other three Amharic baselines have not been re-run on the
+rebuilt split, so the full column cannot yet be ranked.
+
+\section{The Reported Precision Is Not Attainable}
+\label{sec:variance}
+
+The published table reports standard deviations of 0.3 to 1.0 in all 30
+cells. We measured 0.5 to 13.5. Table~\ref{tab:snr} compares the spread
+between systems against the spread between seeds within a system.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Cell & Between-system & Within-system & Ratio \\
+     & spread & mean SD & \\
+\midrule
+am/QA  & 3.74 & 1.81 & 2.07 \\
+am/NER & 2.73 & 2.15 & 1.27 \\
+ti/NER & 1.11 & 1.12 & 1.00 \\
+ti/QA  & 4.58 & 5.02 & 0.91 \\
+am/TC  & 2.54 & 3.52 & 0.72 \\
+ti/TC  & 3.24 & 6.13 & 0.53 \\
+\bottomrule
+\end{tabular}
+\caption{Signal against noise. A ratio below 1 means seed-to-seed variance
+exceeds the entire spread between the five systems.}
+\label{tab:snr}
+\end{table}
+
+In three of six cells the between-system spread is smaller than the
+within-system variance: five seeds cannot distinguish the five systems at
+all. Text classification is the worst case in both languages, which matters
+because TC is where LGSE's apparent advantage is concentrated. Tigrinya TC
+additionally sits barely above its 32.43\% majority-class baseline, and on
+the rebuilt Amharic split three of five LGSE seeds land exactly on the
+majority class.
+
+We therefore regard $\pm 0.3$ on a 200-item QA test set over five seeds as
+not attainable, and the published precision as evidence that the original
+variance was computed over something other than five independent
+fine-tuning runs.
+
+\section{Arithmetic Errors in the Published Table}
+
+Of the 15 \textit{Avg} values in the published Table 2, two are not the mean
+of the two language columns they summarize: \textsc{+LAPT} TC prints 67.8
+where $(69.4+71.0)/2 = 70.20$, and \textsc{+LAPT} NER prints 70.4 where
+$(69.8+75.0)/2 = 72.40$. The remaining 13 are correct. Both errors
+understate the \textsc{+LAPT} baseline, which is one of LGSE's comparison
+points.
+
+\section{Related Work}
+
+Vocabulary expansion for low-resource adaptation is surveyed by
+\citet{csaki-etal-2023-efficiently}. FOCUS
+\citep{dobler-de-melo-2023-focus} is our principal baseline and the closest
+comparison to LGSE. WECHSEL \citep{minixhofer-etal-2022-wechsel} uses
+bilingual dictionaries to initialize transferred embeddings. On the
+reproduction side, our methodology follows the control-based approach
+advocated in the reproducibility literature
+\citep{belz-etal-2021-systematic}: rather than reporting only that numbers
+differ, we hold systems that should be unaffected by a change fixed and use
+their movement to attribute the difference.
+
+\section{Conclusion}
+
+LGSE's published claim of consistent improvement over all baselines does not
+reproduce. Under a faithful reimplementation it leads 3 of 6 cells, no
+difference is statistically separated, off-the-shelf XLM-R leads 3 cells
+itself, and the one cell where we could equalize the evaluation reverses the
+published direction.
+
+We do not conclude that morpheme-grounded initialization is a bad idea. We
+conclude that the published evaluation did not test it: with genuine
+decomposition reaching 16.7\% of new tokens, LGSE and FOCUS were largely the
+same system in five of six cells. The informative experiment---raising
+coverage to 50\% with a morphological analyzer and re-running with controls
+on a common split---is specified in \S\ref{sec:coverage} and remains open. We
+release everything needed to run it.
+
+\section*{Limitations}
+
+Our $W$ and $\lambda$ are substitutions, not the originals, so our absolute
+numbers are not strictly comparable to the published ones and a reader should
+treat the per-cell gaps in Table~\ref{tab:main} as the gap to \textit{a}
+faithful reimplementation rather than \textit{the} one. The controlled
+comparison in \S\ref{sec:controlled} covers a single cell; the other three
+Amharic baselines on the rebuilt split, and all Tigrinya cells under the same
+control, remain to be run. The HornMorpho coverage result is a measurement of
+segmentation reach, not of downstream accuracy: we have not completed runs at
+50\% coverage, so we make no claim about what LGSE achieves there. Tigrinya
+QA is not comparable to the official TIGQA benchmark (single-reference
+answers against the official three or more, our splits against the official
+ones, and the published benchmark figure uses XLM-R large where we use base).
+The two TC columns are not comparable to each other: Amharic's majority-class
+baseline is 66.4\% against Tigrinya's 32.4\%, so any average over them mixes
+incommensurable scales. Finally, five seeds is what the original used and what
+we matched; \S\ref{sec:variance} shows it is too few for these benchmarks, and
+a definitive comparison would need more.
+
+\section*{Ethics Statement}
+
+This paper examines a published work on which the present author is also
+first author. We report the reproduction outcome as measured, including where
+it contradicts our own earlier claims, and we document errors introduced by
+us during this work alongside those found in the original: a configuration
+error that applied the Tigrinya alignment matrix to Amharic runs
+(\S\ref{sec:why}), and a coverage figure we initially over-reported as 22.7\%
+before re-measurement established 16.7\% (\S\ref{sec:coverage}). We found no
+evidence of fabrication in the original work; every discrepancy we traced is
+consistent with ordinary pipeline defects of the kind we also made ourselves.
+All datasets are publicly available or released by us, and the Amharic
+educational-quality annotation was led by the first author. No human subjects
+were involved.
+
+\section*{Acknowledgments}
+
+We thank the co-authors of the original LGSE paper for discussions during
+this reproduction.
+
+\bibliography{custom}
+
+\end{document}
