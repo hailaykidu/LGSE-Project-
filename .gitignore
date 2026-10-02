@@ -32,6 +32,13 @@ wandb/
 results_hornmorpho/
 results_gen2_snapshot_20260924/
 results_tigrinya_gen2/
-results_hornmorpho_wam/
+# Corrected-alignment-matrix rerun. The run records are tracked so the
+# published numbers can be checked against their own provenance (commit,
+# config sha256, W_am.npy, corpus checksum, per-seed metrics); the model
+# checkpoints they sit beside are 27 GB and stay out.
+results_hornmorpho_wam/*
+!results_hornmorpho_wam/*/
+results_hornmorpho_wam/*/*
+!results_hornmorpho_wam/*/experiment.json
 data/_incoming/
 .claude/

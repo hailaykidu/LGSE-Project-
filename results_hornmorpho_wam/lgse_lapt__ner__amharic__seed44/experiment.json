@@ -1,0 +1,157 @@
+{
+  "experiment": "lgse_lapt__ner__amharic__seed44",
+  "system": "lgse_lapt",
+  "system_description": "+LGSE+LAPT: morpheme -> FastText -> char n-gram (this paper)",
+  "task": "ner",
+  "language": "amharic",
+  "seed": 44,
+  "projection": {
+    "kind": "externally supplied alignment matrix (paper Sec 4.1)",
+    "source": "data/alignment/W_am.npy",
+    "author_supplied": true,
+    "training_status": "author-required / unspecified in paper",
+    "trained_during_this_run": false
+  },
+  "reg_lambda": 1.0,
+  "reg_lambda_source": "unavailable -- not stated in the paper",
+  "model_path": "results_hornmorpho_wam/lgse_lapt__ner__amharic__seed44/lapt",
+  "dev": {
+    "precision": 71.6012084592145,
+    "recall": 72.2560975609756,
+    "f1": 71.92716236722306
+  },
+  "test": {
+    "precision": 66.43478260869566,
+    "recall": 68.45878136200717,
+    "f1": 67.43159752868492
+  },
+  "elapsed_seconds": 17818.6,
+  "config": {
+    "model": {
+      "name": "xlm-roberta-base"
+    },
+    "lgse": {
+      "use_hornmorpho": true,
+      "ngram_min": 3,
+      "ngram_max": 5,
+      "reg_lambda": 1.0,
+      "alignment_matrix_path": "data/alignment/W_am.npy",
+      "fasttext_dim": 768
+    },
+    "lapt": {
+      "freeze_backbone": true,
+      "max_length": 256,
+      "mlm_probability": 0.15,
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "weight_decay": 0.01,
+      "optimizer": "adamw",
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true
+    },
+    "finetune": {
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "max_length": 256,
+      "weight_decay": 0.01,
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true,
+      "warmup_ratio": 0.0
+    },
+    "evaluation": {
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "metric": "f1",
+      "model_selection": "dev"
+    },
+    "data": {
+      "fasttext": {
+        "amharic": {
+          "source": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz",
+          "citation": "Grave et al. (2018), FastText CC vectors",
+          "dimension": 300,
+          "usable_as_is": false
+        },
+        "tigrinya": {
+          "source": "https://huggingface.co/Hailay/fasttext-tigrinya",
+          "citation": "project-released Tigrinya FastText model",
+          "dimension": 300,
+          "usable_as_is": false
+        }
+      }
+    },
+    "output": {
+      "results_dir": "results",
+      "checkpoints_dir": "checkpoints",
+      "logs_dir": "logs"
+    }
+  },
+  "provenance": {
+    "commit": "6a8156b3ec854dfe3ebeb14068085de64a2dce03",
+    "branch": "main",
+    "dirty": false,
+    "config_file": "configs/hornmorpho.yaml",
+    "config_sha256": "3e51cdabc22d631712719878faaa45fed3fd80a1ce23bd4d4f9a43e5101cd423",
+    "data_dir": "data/ner/amharic",
+    "dataset_manifest": {
+      "source": "https://raw.githubusercontent.com/masakhane-io/masakhane-ner/main/data/amh",
+      "citation": "Adelani et al. (2021), MasakhaNER",
+      "split": "official MasakhaNER splits, used as released",
+      "files": {
+        "train": {
+          "sha256": "44d6e06d6bedd2b902578ae658fc3ad6548b8876166a821893d081393a92afe4",
+          "sentences": 1750,
+          "tokens": 25819
+        },
+        "dev": {
+          "sha256": "f7561345b55d41ccf472c1306e0a0a8f8bc3d46ac535f5dee3d1da3f1a0bb816",
+          "sentences": 250,
+          "tokens": 3749
+        },
+        "test": {
+          "sha256": "3968ef19c31c480859364f927ac6370ae5c33c9557437e87c0b6f7801df461b6",
+          "sentences": 500,
+          "tokens": 7449
+        }
+      }
+    },
+    "dataset_manifest_available": true,
+    "lapt_corpus": "data/lapt/amharic.txt",
+    "lapt_corpus_sha256": "16a5041118febcade4a13efff9e91becf75de5433b0d262a894777ac923e0c64",
+    "fasttext": {
+      "tigrinya": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 156687,
+        "sha256": "7849aea1c4a07f5f835ef586a4cedd263fb1988cf3860e782d05d4d840241e59"
+      },
+      "amharic": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 165471,
+        "sha256": "13b7342b62cb265d58ad594a4702ef6bc5482db566e559878216668d229d4cb7"
+      }
+    },
+    "python": "3.13.11",
+    "packages": {
+      "torch": "2.5.1+cu118",
+      "transformers": "4.51.3",
+      "fasttext": "unavailable",
+      "numpy": "2.4.6"
+    }
+  },
+  "unavailable_hyperparameters": 1
+}
