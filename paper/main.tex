@@ -152,7 +152,8 @@ morpheme path: it shares every component except morpheme segmentation.
 \citep{taffa-etal-2024-amqa} as released. Tigrinya QA uses an extractive
 SQuAD-format conversion of TIGQA with a recorded 80/10/10 seed. Tigrinya TC
 uses FineWeb-C (\texttt{tir\_Ethi}) at 597/74/74. Amharic TC uses a
-2{,}500-document self-annotated educational-quality corpus, split
+2{,}499-row self-annotated educational-quality corpus (2{,}340 after
+cleaning; see Appendix~\ref{app:repro}), split
 1872/233/235 by the same stratified procedure as Tigrinya; the first author
 led that annotation. Every split is recorded in a manifest carrying source
 URL, raw checksum and split seed.
@@ -386,18 +387,84 @@ $(69.8+75.0)/2 = 72.40$. The remaining 13 are correct. Both errors
 understate the \textsc{+LAPT} baseline, which is one of LGSE's comparison
 points.
 
+\section{What Would Make This Reproducible}
+\label{sec:recs}
+
+The causes in \S\ref{sec:why} generalize beyond this paper, and each has a
+cheap remedy that we would have benefited from.
+
+\paragraph{Release the operator, not just the equation.} $W$ is a $768
+\times 768$ matrix, 2.3\,MB. Releasing it, or the twenty lines that build it,
+would have removed the single largest obstacle to reproducing LGSE. Where a
+method introduces a learned or fitted transform, the artifact is part of the
+method. We release ours with a sidecar recording its language, anchor count,
+objective and residual Frobenius norm, so that a reader can tell at a glance
+whether they have the right matrix---which, as \S\ref{sec:why} describes, we
+once did not.
+
+\paragraph{Report the coverage of the mechanism.} LGSE differs from its
+baselines only on tokens it can decompose. One number---the fraction of new
+tokens that actually receive a multi-morpheme decomposition---would have
+revealed that the published comparison exercised the mechanism on 16.7\% of
+its vocabulary. We suggest that any paper proposing a conditional
+initialization strategy report the rate at which its condition fires. It is a
+single line and it bounds the effect size the method can possibly have.
+
+\paragraph{Run the system that shares everything but the contribution.}
+\textsc{+FOCUS+LAPT} and \textsc{+LGSE+LAPT} differ only in morpheme
+segmentation, so when the test set changed, their joint movement separated the
+evaluation change from the method
+(\S\ref{sec:controlled}). Reporting absolute numbers
+alone cannot do this. We found three confounds this way and would have found
+none without it.
+
+\paragraph{Disclose degenerate runs rather than averaging them.} A single
+all-\texttt{O} seed moved a baseline by 13.5 points and inflated its standard
+deviation to 30.44 (\S\ref{sec:degenerate}). Neither dropping such runs
+silently nor averaging them silently is adequate; we report both means and
+the collapse count, and let the reader decide.
+
+\paragraph{Check that the between-system spread exceeds the between-seed
+spread.} In three of six cells here it does not (\S\ref{sec:variance}), which
+means the experiment could not have supported a ranking no matter which system
+won. This is a precondition for a comparison, not a post-hoc caveat, and it is
+computable before any system is proposed.
+
 \section{Related Work}
 
-Vocabulary expansion for low-resource adaptation is surveyed by
-\citet{csaki-etal-2023-efficiently}. FOCUS
-\citep{dobler-de-melo-2023-focus} is our principal baseline and the closest
-comparison to LGSE. WECHSEL \citep{minixhofer-etal-2022-wechsel} uses
-bilingual dictionaries to initialize transferred embeddings. On the
-reproduction side, our methodology follows the control-based approach
-advocated in the reproducibility literature
+\paragraph{Embedding initialization for vocabulary expansion.} Adapting a
+multilingual encoder to a new language by extending its vocabulary requires a
+vector for every added token, and the choice of initializer is the subject of
+a small literature. WECHSEL \citep{minixhofer-etal-2022-wechsel} transfers
+embeddings through bilingual dictionaries and static word vectors. FOCUS
+\citep{dobler-de-melo-2023-focus}, our principal baseline, initializes each
+new token as a sparse weighted combination of the tokens it overlaps with in
+an auxiliary FastText space, and is the closest prior method to LGSE: both
+project from FastText into the model's space, and both reduce to a
+whole-token copy when their decomposition or overlap is unavailable. That
+shared fallback is precisely why the coverage measurement in
+\S\ref{sec:coverage} matters, and why we chose FOCUS as the control in
+\S\ref{sec:controlled}. \citet{csaki-etal-2023-efficiently} survey the
+broader adaptation pipeline. Our results do not speak against this line of
+work; they indicate that on these benchmarks, at these sizes, the choice among
+initializers is not resolvable with five seeds.
+
+\paragraph{Morphological segmentation for Ethio-Semitic languages.}
+Amharic and Tigrinya are templatic and heavily affixing, which motivates
+morpheme-aware vocabulary construction in the first place. HornMorpho
+\citep{gasser-2011-hornmorpho} provides finite-state analysis for both, and
+is what we attach in \S\ref{sec:coverage} to raise genuine decomposition from
+16.7\% to 50.0\%. The gap between a static lexicon and an analyzer is the
+practical difference between a mechanism that fires on one token in six and
+one that fires on one in two.
+
+\paragraph{Reproduction studies.} Our methodology follows the control-based
+approach advocated in the reproducibility literature
 \citep{belz-etal-2021-systematic}: rather than reporting only that numbers
 differ, we hold systems that should be unaffected by a change fixed and use
-their movement to attribute the difference.
+their movement to attribute the difference. Reproductions of this kind are
+usually conducted by third parties; this one is a self-examination, with the
+conflict of interest and its mitigations stated in the Ethics Statement.
 
 \section{Conclusion}
 
@@ -465,5 +532,56 @@ prompted the reproduction attempt reported here, and the L3S compute support
 team for the cluster time these runs required.
 
 \bibliography{custom}
+
+\appendix
+
+\section{Reproduction Details}
+\label{app:repro}
+
+\paragraph{Code and artifacts.} All code, data manifests, per-seed run
+records and the analysis scripts that produced every number in this paper are
+at \url{https://github.com/hailaykidu/LGSE-Project-}. Each run writes an
+\texttt{experiment.json} recording the commit, config SHA-256, alignment
+matrix path, LAPT corpus checksum, FastText manifest and per-seed dev and
+test metrics, so any figure in Tables~\ref{tab:main}--\ref{tab:snr} can be
+recomputed from the records rather than taken on trust.
+
+\paragraph{Hyperparameters.} LAPT: frozen backbone, maximum sequence length
+256, MLM probability 0.15, learning rate $5\times10^{-5}$ with a constant
+schedule, batch size 32, 10 epochs, weight decay 0.01, AdamW
+($\epsilon = 10^{-8}$, $\beta = (0.9, 0.999)$), fp16. LGSE: character
+$n$-gram range 3--5, $\lambda = 1.0$, FastText dimension 768. Downstream
+fine-tuning: learning rate $5\times10^{-5}$, batch size 32, 10 epochs. These
+follow the published Table 1 where it specifies a value and are recorded in
+\texttt{configs/} where it does not.
+
+\paragraph{Corpora and models.} LAPT corpora are 204{,}137 lines (1.98M
+words) for Amharic and 200{,}000 lines (1.53M words) for Tigrinya. FastText
+models are trained with skipgram, dimension 768, 5 epochs, minimum count 5,
+giving vocabularies of 165{,}471 (Amharic) and 156{,}687 (Tigrinya).
+Vocabulary expansion adds 198 Amharic and 200 Tigrinya tokens, selected by
+XLM-R subword fragmentation rate over the task corpora.
+
+\paragraph{Splits.} Amharic NER uses official MasakhaNER splits. Amharic QA
+uses AmQA as released. Tigrinya TC is FineWeb-C \texttt{tir\_Ethi} at
+597/74/74. Tigrinya QA is an extractive conversion of TIGQA with a recorded
+80/10/10 seed. Amharic TC is 1872/233/235 from a 2{,}499-row annotated corpus
+(2{,}340 after removing 2 spreadsheet-error rows and 157 exact duplicates),
+stratified with seed 42 and verified leakage-free.
+
+\paragraph{Compute.} Each (system, task, seed) unit takes approximately 5
+hours on one NVIDIA A100, dominated by the 10 LAPT epochs, which are repeated
+per seed because the seed determines the initialization under test. The 150
+runs in Table~\ref{tab:main} therefore represent roughly 750 GPU-hours.
+
+\section{Per-Seed Values}
+\label{app:seeds}
+
+Per-seed values for all 150 runs are released as
+\texttt{report/per\_seed\_results.json}, one record per
+(language, task, system, seed) with the score and the result directory it was
+read from. Table~\ref{tab:controlled} reproduces the five seeds of the
+controlled comparison inline, since that cell carries the paper's one
+directional conclusion.
 
 \end{document}
