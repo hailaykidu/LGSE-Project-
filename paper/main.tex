@@ -54,12 +54,13 @@ measured rather than conjectured: the method is underspecified at two points
 that sit on its critical path (the alignment matrix $W$ and the
 regularization weight $\lambda$), only 16.7\% of new Amharic tokens are
 genuinely decomposed so the mechanism is largely inert, a test-set revision
-shifts every system by up to $+7.82$ accuracy points, and 1.2\% of
+shifts every system by up to $+7.82$ accuracy points, and 1.4\% of
 fine-tuning runs collapse to a degenerate all-\texttt{O} tagger whose zero
-distorts any mean that includes it. A controlled comparison on the single
-cell where we could equalize the evaluation reverses the published direction:
-morpheme-grounded initialization trails its closest competitor by 3.32
-points. We release all code, data manifests, per-seed run records and the
+distorts any mean that includes it. Re-running both systems on all three
+Amharic tasks under an equalized evaluation leaves its closest competitor
+ahead on two of the three, and reverses the published direction on the task
+where LGSE had appeared strongest. We release all code, data manifests,
+per-seed run records and the
 analysis that produced every number here.
 \end{abstract}
 
@@ -98,9 +99,10 @@ refute them. We report the outcome as measured.
 \item Four measured causes for the discrepancy, each isolated by a control
   rather than inferred: method underspecification, low morpheme coverage, a
   test-set confound, and degenerate runs (\S\ref{sec:why}).
-\item A controlled single-cell comparison showing that when two systems are
-  placed on the same evaluation, the published direction reverses
-  (\S\ref{sec:controlled}).
+\item A controlled head-to-head on all three Amharic tasks showing that when
+  LGSE and its closest competitor are placed on the same evaluation, the
+  competitor leads two of three and the published direction reverses on the
+  third (\S\ref{sec:controlled}).
 \item An argument that the reported precision ($\pm 0.3$ to $\pm 1.0$) is
   not attainable on these benchmarks at these sizes, with the measured
   seed-to-seed variance as evidence (\S\ref{sec:variance}).
@@ -278,7 +280,7 @@ reverse a published conclusion.
 \subsection{Roughly 1\% of runs collapse}
 \label{sec:degenerate}
 
-Across 421 runs, 5 (1.2\%) recorded precision, recall and F1 of exactly 0.00
+Across 429 runs, 6 (1.4\%) recorded precision, recall and F1 of exactly 0.00
 on both dev and test. These are not crashes: the runs complete normally, LAPT loss
 descends as usual, and total runtime is unchanged. The downstream tagger
 settles into the all-\texttt{O} local minimum, proposing no entity, so both
@@ -292,9 +294,9 @@ report such cells both ways and disclose the collapse count.
 \section{A Controlled Comparison Reverses the Published Direction}
 \label{sec:controlled}
 
-Amharic TC is the one cell where we were able to place two systems on an
-identical evaluation: both on the rebuilt 235-item split, both using the
-Amharic alignment matrix, both over seeds 42--46.
+We re-ran \textsc{+LGSE+LAPT} and \textsc{+FOCUS+LAPT} on all three Amharic
+tasks under an identical evaluation: the rebuilt splits, the Amharic
+alignment matrix, and seeds 42--46 for both systems.
 \textsc{+FOCUS+LAPT} is the right control because it consumes FastText and
 loads $W$ but performs no morpheme segmentation, so it isolates everything
 except LGSE's mechanism.
@@ -302,40 +304,66 @@ except LGSE's mechanism.
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lcc}
+\begin{tabular}{lcccccc}
 \toprule
-Seed & \textsc{+LGSE+LAPT} & \textsc{+FOCUS+LAPT} \\
+& \multicolumn{2}{c}{TC (Acc.)} & \multicolumn{2}{c}{NER (F1)} & \multicolumn{2}{c}{QA (F1)} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Seed & LGSE & FOCUS & LGSE & FOCUS & LGSE & FOCUS \\
 \midrule
-42 & 73.62 & 80.00 \\
-43 & 72.77 & 81.28 \\
-44 & 81.70 & 82.13 \\
-45 & 82.13 & 83.40 \\
-46 & 81.28 & 81.28 \\
+42 & 73.62 & 80.00 & 67.07 & 61.08 & 58.31 & 60.34 \\
+43 & 72.77 & 81.28 & 69.28 & 70.40 & 60.16 & 61.39 \\
+44 & 81.70 & 82.13 & 67.43 & \textit{0.00} & 56.55 & 58.38 \\
+45 & 82.13 & 83.40 & \textit{0.00} & 68.24 & 57.28 & 59.32 \\
+46 & 81.28 & 81.28 & 68.95 & 68.15 & 58.86 & 57.61 \\
 \midrule
-mean & 78.30\,\small{$\pm$4.68} & \textbf{81.62}\,\small{$\pm$1.26} \\
+mean & 78.30 & \textbf{81.62} & \textbf{68.43} & 66.54 & 58.23 & \textbf{59.41} \\
+sd & 4.68 & 1.26 & 1.19 & 4.87 & 1.40 & 1.51 \\
+$n$ & 5 & 5 & 3 & 3 & 5 & 5 \\
 \bottomrule
 \end{tabular}
-\caption{Amharic TC on a common evaluation: same 235-item split, same
-Amharic $W$, same seeds. LGSE trails by 3.32 points and is behind on four of
-five seeds, with one tie.}
+\caption{Amharic on a common evaluation: same splits, same Amharic $W$, same
+seeds. FOCUS leads TC by 3.32 and QA by 1.17; LGSE leads NER by 1.89.
+Italicised zeros are degenerate all-\texttt{O} runs
+(\S\ref{sec:degenerate}); NER means are over the three seeds where both
+systems converged.}
 \label{tab:controlled}
 \end{table}
 
-On the frozen 71-item split (Table~\ref{tab:main}), LGSE leads
-\textsc{+FOCUS+LAPT} on this cell by $+1.97$. On the equalized evaluation
-(Table~\ref{tab:controlled}) it trails by $-3.32$. The control moved from
-73.80 to 81.62, a shift of $+7.82$ on a system that performs no morpheme
-segmentation whatsoever: the rebuilt test set, not the initializer, produced
-the apparent improvement, and FOCUS captured more of it than LGSE did. We
-registered this prediction in the project repository before the control
-finished, stating that a result near 73.80 would attribute the gain to LGSE
-and a result near 78 would attribute it to the split.
+\paragraph{TC: the published direction reverses.} On the frozen 71-item split
+(Table~\ref{tab:main}), LGSE leads \textsc{+FOCUS+LAPT} on this cell by
+$+1.97$. On the equalized evaluation it trails by $-3.32$, and it does not
+win a single seed. The control moved from 73.80 to 81.62, a shift of $+7.82$
+on a system that performs no morpheme segmentation whatsoever: the rebuilt
+test set, not the initializer, produced the apparent improvement, and FOCUS
+captured more of it than LGSE did. We registered this prediction in the
+project repository before the control finished, stating that a result near
+73.80 would attribute the gain to LGSE and a result near 78 would attribute
+it to the split.
 
-The two $\pm 1$ standard deviation ranges still overlap
-($[73.62, 82.98]$ against $[80.36, 82.87]$), so we claim a consistent sign
-across seeds rather than a separated difference. We also emphasize that this
-is one cell: the other three Amharic baselines have not been re-run on the
-rebuilt split, so the full column cannot yet be ranked.
+\paragraph{QA: FOCUS leads, consistently.} LGSE trails by $1.17$ and is
+behind on four of five seeds. The margin is small and the two standard
+deviations overlap, but the sign is stable.
+
+\paragraph{NER: LGSE leads, on three usable seeds.} This is the one task
+where LGSE comes out ahead, by $+1.89$. We report it with less confidence
+than the other two. Two of the ten runs in this cell collapsed to the
+degenerate all-\texttt{O} tagger---LGSE on seed 45, FOCUS on seed
+44---leaving three seeds on which both systems converged. A 20\% collapse
+rate in a single cell, against 1.4\% across the project
+(\S\ref{sec:degenerate}), means the Amharic NER fine-tune is unstable
+independently of which initializer it starts from, and three paired
+observations cannot separate a 1.89-point difference from that instability.
+
+\paragraph{Overall.} FOCUS leads two of the three Amharic tasks on matched
+data, LGSE leads the third, and no difference is separated at one standard
+deviation. Taken with Table~\ref{tab:main}, the picture is consistent:
+morpheme-grounded initialization is not distinguishable from
+frequency-driven initialization on these benchmarks, and where it appeared to
+be, the appearance came from an evaluation difference rather than from the
+method. The three remaining Amharic baselines (XLM-R, \textsc{+LAPT},
+\textsc{+Random+LAPT}) have not been re-run on the rebuilt splits, so the
+full column still cannot be ranked; what can be compared is the pair that the
+paper's claim rests on.
 
 \section{The Reported Precision Is Not Attainable}
 \label{sec:variance}
@@ -471,8 +499,8 @@ conflict of interest and its mitigations stated in the Ethics Statement.
 LGSE's published claim of consistent improvement over all baselines does not
 reproduce. Under a faithful reimplementation it leads 3 of 6 cells, no
 difference is statistically separated, off-the-shelf XLM-R leads 3 cells
-itself, and the one cell where we could equalize the evaluation reverses the
-published direction.
+itself, and when we equalize the evaluation across all three Amharic tasks
+its closest competitor leads two of them.
 
 We do not conclude that morpheme-grounded initialization is a bad idea. We
 conclude that the published evaluation did not test it: with genuine
@@ -488,9 +516,11 @@ Our $W$ and $\lambda$ are substitutions, not the originals, so our absolute
 numbers are not strictly comparable to the published ones and a reader should
 treat the per-cell gaps in Table~\ref{tab:main} as the gap to \textit{a}
 faithful reimplementation rather than \textit{the} one. The controlled
-comparison in \S\ref{sec:controlled} covers a single cell; the other three
-Amharic baselines on the rebuilt split, and all Tigrinya cells under the same
-control, remain to be run. The HornMorpho coverage result is a measurement of
+comparison in \S\ref{sec:controlled} covers two systems on three Amharic
+tasks; the other three Amharic baselines on the rebuilt splits, and all
+Tigrinya cells under the same control, remain to be run. Its NER cell rests
+on three paired seeds after two degenerate runs were excluded, which is too
+few to support a directional claim on that task. The HornMorpho coverage result is a measurement of
 segmentation reach, not of downstream accuracy: we have not completed runs at
 50\% coverage, so we make no claim about what LGSE achieves there. Tigrinya
 QA is not comparable to the official TIGQA benchmark (single-reference
