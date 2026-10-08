@@ -37,8 +37,9 @@ No figure in the paper is typed by hand. Each is computed from the per-seed
 |---|---|
 | Table 1 (main matrix) | `results_gen2_snapshot_20260924/` — 150 runs, the frozen snapshot |
 | Table 1, published rows | `report/TABLE2_REPORT.md`, transcribed from the LREC 2026 paper |
-| Table 2 (controlled am/TC) | `results_hornmorpho_wam/{lgse,focus}_lapt__tc__amharic__seed4*` |
-| Table 3 (signal/noise) | derived from the frozen snapshot |
+| Table 2 (controlled three-way, Amharic) | `results_hornmorpho_wam/{lgse_lapt,focus_lapt,xlmr}__{tc,ner,qa}__amharic__seed*` — NER uses seeds 42–51 for the two vocabulary-expanding systems |
+| Table 3 (paired tests) | derived from the same records; paired `scipy.stats.ttest_rel` and `wilcoxon` on matched seeds where both systems converged |
+| Table 4 (signal/noise) | derived from the frozen snapshot |
 | §5.2 coverage, 16.7% / 50.0% | `IMPLEMENTATION_NOTES.md` §5b-ii |
 | §5.3 split shift, +1.93..+8.21 | `IMPLEMENTATION_NOTES.md` §5a |
 | §5.4 degenerate runs, 5/421 | scan of all `results*/*/experiment.json` |

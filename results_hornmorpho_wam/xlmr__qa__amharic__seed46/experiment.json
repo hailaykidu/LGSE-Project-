@@ -1,0 +1,168 @@
+{
+  "experiment": "xlmr__qa__amharic__seed46",
+  "system": "xlmr",
+  "system_description": "XLM-R baseline, no vocabulary expansion, no LAPT",
+  "task": "qa",
+  "language": "amharic",
+  "seed": 46,
+  "projection": {
+    "kind": "externally supplied alignment matrix (paper Sec 4.1)",
+    "source": "data/alignment/W_am.npy",
+    "author_supplied": true,
+    "training_status": "author-required / unspecified in paper",
+    "trained_during_this_run": false
+  },
+  "reg_lambda": 1.0,
+  "reg_lambda_source": "unavailable -- not stated in the paper",
+  "model_path": "xlm-roberta-base",
+  "dev": {
+    "f1": 62.3277878067352,
+    "exact_match": 46.333333333333336
+  },
+  "test": {
+    "f1": 60.32629607088331,
+    "exact_match": 44.48160535117057
+  },
+  "elapsed_seconds": 571.6,
+  "config": {
+    "model": {
+      "name": "xlm-roberta-base"
+    },
+    "lgse": {
+      "use_hornmorpho": true,
+      "ngram_min": 3,
+      "ngram_max": 5,
+      "reg_lambda": 1.0,
+      "alignment_matrix_path": "data/alignment/W_am.npy",
+      "fasttext_dim": 768
+    },
+    "lapt": {
+      "freeze_backbone": true,
+      "max_length": 256,
+      "mlm_probability": 0.15,
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "weight_decay": 0.01,
+      "optimizer": "adamw",
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true
+    },
+    "finetune": {
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "max_length": 256,
+      "weight_decay": 0.01,
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true,
+      "warmup_ratio": 0.0
+    },
+    "evaluation": {
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "metric": "f1",
+      "model_selection": "dev"
+    },
+    "data": {
+      "fasttext": {
+        "amharic": {
+          "source": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz",
+          "citation": "Grave et al. (2018), FastText CC vectors",
+          "dimension": 300,
+          "usable_as_is": false
+        },
+        "tigrinya": {
+          "source": "https://huggingface.co/Hailay/fasttext-tigrinya",
+          "citation": "project-released Tigrinya FastText model",
+          "dimension": 300,
+          "usable_as_is": false
+        }
+      }
+    },
+    "output": {
+      "results_dir": "results",
+      "checkpoints_dir": "checkpoints",
+      "logs_dir": "logs"
+    }
+  },
+  "provenance": {
+    "commit": "f97d92f26c95163367a21de6482c5b9b2fa88c31",
+    "branch": "main",
+    "dirty": true,
+    "config_file": "configs/hornmorpho.yaml",
+    "config_sha256": "3e51cdabc22d631712719878faaa45fed3fd80a1ce23bd4d4f9a43e5101cd423",
+    "data_dir": "data/qa/amqa",
+    "dataset_manifest": {
+      "source": "https://github.com/semantic-systems/amharic-qa",
+      "license": "MIT",
+      "citation": "AmQA, semantic-systems/amharic-qa",
+      "split": "official train/dev/test, used as released",
+      "format": "SQuAD v2.0",
+      "files": {
+        "train": {
+          "raw_file": "train_data.json",
+          "raw_sha256": "80e216fe3594e02eb82de0a66a501332cddb4fb2734823db6a41d1edf2ad516a",
+          "qas_in_release": 1723,
+          "qas_written": 1723
+        },
+        "dev": {
+          "raw_file": "dev_data.json",
+          "raw_sha256": "889f4aeb478005a544a159a552ee7af0974dc78d41618299d8f4290e833d03e2",
+          "qas_in_release": 600,
+          "qas_written": 600
+        },
+        "test": {
+          "raw_file": "test_data.json",
+          "raw_sha256": "4bff7f83d9d7209108c9133f19de6037e8b979932b761050c67f9b5d2f50f292",
+          "qas_in_release": 299,
+          "qas_written": 299
+        }
+      },
+      "repairs": {
+        "dict_wrapped_paragraphs": "one dev article stores paragraphs as a dict; wrapped in a list, content unchanged",
+        "offset_corrected": 20,
+        "dropped_empty_text": 0,
+        "dropped_text_not_in_context": 0,
+        "dropped_ambiguous": 0,
+        "dropped_questions": 0
+      }
+    },
+    "dataset_manifest_available": true,
+    "lapt_corpus": "data/lapt/amharic.txt",
+    "lapt_corpus_sha256": "16a5041118febcade4a13efff9e91becf75de5433b0d262a894777ac923e0c64",
+    "fasttext": {
+      "tigrinya": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 156687,
+        "sha256": "7849aea1c4a07f5f835ef586a4cedd263fb1988cf3860e782d05d4d840241e59"
+      },
+      "amharic": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 165471,
+        "sha256": "13b7342b62cb265d58ad594a4702ef6bc5482db566e559878216668d229d4cb7"
+      }
+    },
+    "python": "3.13.11",
+    "packages": {
+      "torch": "2.5.1+cu118",
+      "transformers": "4.51.3",
+      "fasttext": "unavailable",
+      "numpy": "2.4.6"
+    }
+  },
+  "unavailable_hyperparameters": 1
+}
