@@ -1,23 +1,86 @@
 # Table 2 -- rankings and the LGSE-FOCUS comparison
 
+> ## WITHDRAWN AS A BASELINE (2026-10-19)
+>
+> **Do not cite the numbers in this file.** The September 2026 sweep reported
+> below is superseded on both language halves, each for a separate and
+> independently verifiable reason found during a later audit. The tables are
+> kept because they are the record of what was run, not because they measure
+> anything reportable.
+>
+> **Amharic: the wrong alignment matrix.** Every Amharic `lgse_lapt` run in
+> this sweep loaded `data/alignment/W_ti.npy`, the *Tigrinya* projection, on
+> Amharic data. The job logs state it directly, for example
+> `logs/sweep/p2_cell_0.out`:
+>
+> ```
+> lgse_lapt__ner__amharic__seed42
+> alignment matrix: W 768x768 from .../data/alignment/W_ti.npy
+> ```
+>
+> Verified for all fifteen Amharic `lgse_lapt` runs -- three tasks x five
+> seeds -- in `logs/sweep/p2_cell_0.out` through `p2_cell_14.out`; every one
+> loads `W_ti.npy`. The cause and blast radius are in
+> `IMPLEMENTATION_NOTES.md` 5d-v. Correcting it moves Amharic NER by +2.20 F1
+> on matched seeds (65.98 to 68.18). The Amharic half of this sweep therefore
+> measures the method through the wrong language's projection.
+>
+> **Tigrinya QA: a test set that no longer exists.** These runs were measured
+> on the superseded 797-pair TIGQA conversion, whose test split held 86 items.
+> That split was replaced in place on 2026-09-18 by the 1,517-pair extractive
+> conversion (151 test items). Because the replacement reused the same
+> directory, no run record names its split; it is recoverable from the test
+> exact-match, which must be k/n for integer k. These runs give 29.0698 =
+> 25/86. See `IMPLEMENTATION_NOTES.md` Section 5. At 86 items F1 moves in
+> 1.16-point steps, so the Tigrinya QA differences below span fewer than two
+> test examples.
+>
+> **Amharic TC additionally used a 24-item test set**, re-split per seed
+> (24/23/25/25/25 across seeds 42--46), where one example moves accuracy by
+> about 4.2 points.
+>
+> **What to cite instead.** The runs that survive this audit are
+> `results_hornmorpho_wam/` for Amharic (9 cells: XLM-R, FOCUS, LGSE x TC,
+> NER, QA; one config checksum; `W_am.npy`; 235-item TC) and
+> `results_tigrinya_gen2/` for Tigrinya (9 cells, same three systems;
+> `W_ti.npy`; 151-item QA). Those are two single-language protocols and must
+> not be pooled into one table. `scripts/build_paper_tables.py` generates the
+> Amharic tables from the run records.
+>
+> **Why this file is kept.** The per-run `experiment.json` files for the
+> Amharic half of this sweep were overwritten by a later run and do not
+> survive; the committed `report/per_seed_results.json` and the SLURM logs in
+> `logs/` are the only remaining record. All 75 Amharic values were traced
+> back to logs during the audit. Deleting the file would remove the evidence
+> that the sweep happened and that it was withdrawn.
+
 ## Note on interpretation
 
 The published Table 2 has no surviving end-to-end execution record: no
 complete configuration, run, or output log links to its printed numbers (see
-`IMPLEMENTATION_NOTES.md` Section 3). The results below, run in full in
-September 2026 using the released implementation with the documented choices
-for W (orthogonal Procrustes) and lambda (1.0), are therefore **the only
-measured result that exists for this method.**
+`IMPLEMENTATION_NOTES.md` Section 3). That remains true and is unaffected by
+the withdrawal above.
 
-That measurement does not reproduce the published ranking, margins, or
-winner. The primary criterion (LGSE > FOCUS) is met on 2 of 6 task/language
-cells and the secondary ordering (LGSE > FOCUS > Random > Default) is met on
-0 of 6; no comparison separates at one standard deviation; off-the-shelf
-XLM-R with no adaptation is the best system in 5 of the 6 cells. This is the
-reported result of the released code, not supporting evidence alongside a
-separately authoritative published table.
+What the withdrawal changes is the status of the sweep below. When this file
+was written the sweep was described as **the only measured result that exists
+for this method**, and reported as such rather than as supporting evidence
+alongside a separately authoritative published table. The first half of that
+framing was correct and still is: an unreproduced published value does not
+outrank a measurement. The second half was wrong, because this particular
+measurement is not sound -- it carries a language-mismatched projection on one
+half and a vanished test set on the other. Both failures were ours, both were
+found by auditing our own records, and neither was visible from the tables.
 
-For complete context on the relationship between published results and repository artifacts, see `IMPLEMENTATION_NOTES.md` Section 3: "Table 2 reproducibility."
+The sweep's stated outcome was: primary criterion (LGSE > FOCUS) met on 2 of
+6 task/language cells, secondary ordering (LGSE > FOCUS > Random > Default)
+met on 0 of 6, no comparison separated at one standard deviation, and
+off-the-shelf XLM-R the best system in 5 of 6 cells. That conclusion -- no
+measured effect for the method -- is reproduced independently by the 18 clean
+cells named above, which is why withdrawing this sweep does not change the
+finding. It changes which numbers may be cited for it.
+
+For the relationship between published results and repository artifacts, see
+`IMPLEMENTATION_NOTES.md` Section 3: "Table 2 reproducibility."
 
 ## Results from this implementation
 
