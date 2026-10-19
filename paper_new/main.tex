@@ -1,0 +1,646 @@
+% ACL conference style.
+% Template: https://www.overleaf.com/latex/templates/
+%           association-for-computational-linguistics-acl-conference/jvxskxpnznfj
+% acl.sty and acl_natbib.bst are ACL-distributed; see README.md.
+%
+% Every number in this paper is produced by scripts/build_paper_tables.py
+% from the per-run records. Nothing here is typed by hand.
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\title{Can Five Seeds Tell Embedding Initializers Apart?\\
+A Controlled Study of Vocabulary Extension for Amharic}
+
+\author{Hailay Kidu Teklehaymanot \\
+  Mekelle University, Ethiopia \\
+  \texttt{hailay.kidu@mu.edu.et} \\\And
+  Dren Fazlija \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{dren.fazlija@L3S.de} \\\And
+  Wolfgang Nejdl \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{nejdl@L3S.de} \\}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Extending a pretrained encoder's vocabulary to a new language requires an
+embedding for every added token, and several initialization strategies have
+been proposed to supply one. We ask whether the benchmarks commonly used for
+Amharic can distinguish between them. Under a single fixed protocol---one
+configuration, one set of rebuilt data splits, one untuned fine-tuning
+recipe, shared seeds---we compare morpheme-grounded initialization,
+overlap-based initialization, and no vocabulary extension at all, across
+text classification, named entity recognition and extractive question
+answering. Across six paired comparisons, every 95\% confidence interval
+contains zero. On all three tasks the seed-to-seed variation exceeds the
+entire spread between the three systems, and on text classification the
+smallest difference five seeds could detect at conventional power is 19.8
+macro-F1 points against an observed between-system spread of 9.0. A further property of the setup
+bounds what any such comparison can show: 6 of 60 runs never fit their
+training data and settle into degenerate predictors, distributed across all
+three systems and identifiable from training loss alone. We also record that
+a favourable comparison reported under a superseded protocol reverses under
+this one, and that the two protocols differ in test set, training set and
+class prior together, so the shift cannot be attributed to any single cause.
+We report means and intervals and claim no ordering. This paper replaces a
+retracted predecessor \citep{teklehaymanot-etal-2026-lgse}; all code, data
+manifests, per-run records and the script that generates every number are
+released.
+\end{abstract}
+
+\section{Introduction}
+
+A multilingual encoder adapted to a new language by vocabulary extension
+needs a vector for each token it has never seen. Random initialization
+discards what is known about the token's form. FOCUS
+\citep{dobler-de-melo-2023-focus} builds each new embedding from tokens it
+overlaps with in an auxiliary space. A morpheme-grounded alternative
+decomposes the token and averages over its morphemes, which is appealing for
+Amharic, where affixation is heavy and a frequency-driven tokenizer
+fragments surface forms arbitrarily.
+
+Papers in this area report differences of one to several points between such
+strategies, with standard deviations below one point, and conclude in favour
+of one of them. This paper asks a prior question: at the sample sizes
+conventionally used, can these benchmarks support such a conclusion at all?
+
+We answer it for Amharic by running three systems under one protocol and
+examining the variance structure rather than only the means. The answer is
+that they cannot. We also measure a fine-tuning instability that costs 10\%
+of runs, and we document a favourable comparison reported under a superseded
+protocol that reverses under this one.
+
+\paragraph{Relation to a retracted paper.} An earlier paper by these authors
+described the morpheme-grounded method and reported a results table for which
+no archived experimental record exists, a projection matrix that was never
+specified, and a dataset that was not constructed. That paper
+\citep{teklehaymanot-etal-2026-lgse} is retracted. The present paper replaces
+it. It shares no text and no results with it. All data splits were rebuilt
+from their original sources and are documented in \S\ref{sec:setup} and
+Appendix~\ref{app:prov}, which maps every number reported here to the job
+identifier, seed and result file it came from.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\itemsep0em
+\item A controlled three-way comparison on Amharic---60 runs, one
+  configuration, shared seeds---in which no paired confidence interval
+  excludes zero (\S\ref{sec:results}).
+\item A measurement of why: seed variation exceeds between-system spread on
+  every task, and the minimum detectable difference at five seeds is an
+  order of magnitude larger than the effects under discussion
+  (\S\ref{sec:resolution}).
+\item A characterization of a fine-tuning failure mode affecting 6 of 60
+  runs, separable from the method under test using training loss alone
+  (\S\ref{sec:failures}).
+\end{enumerate}
+
+\section{Systems}
+
+\paragraph{XLM-R.} Off-the-shelf XLM-R base
+\citep{conneau-etal-2020-unsupervised}, fine-tuned directly on each task. No
+vocabulary extension, no adaptive pretraining, no auxiliary embedding space.
+This is the far control: it bounds what the rest of the machinery is worth.
+
+\paragraph{FOCUS.} Vocabulary extension with FOCUS initialization
+\citep{dobler-de-melo-2023-focus}, followed by language-adaptive pretraining.
+Each new embedding is a weighted combination of overlapping tokens in a
+FastText space, projected into the model's space. This is the near control:
+it consumes the same auxiliary space and the same projection as the
+morpheme-grounded system, and differs only in not using morpheme
+segmentation.
+
+\paragraph{LGSE.} The morpheme-grounded initializer. A new token $t$ with
+decomposition $m_1 \dots m_k$ receives
+\begin{equation}
+e_{\text{new}} = \frac{1}{k}\sum_{j=1}^{k} W e_{m_j},
+\label{eq:lgse}
+\end{equation}
+where $e_{m_j}$ is a FastText vector and $W \in \mathbb{R}^{d \times d}$
+aligns the two spaces. Tokens without a decomposition fall back to a
+whole-token vector and then to character $n$-grams. During adaptive
+pretraining a term $\lambda \lVert e_{\text{new}} - \mu \rVert^2$ penalizes
+drift from the initialization.
+
+\paragraph{Two quantities the method does not fix.} Equation~\ref{eq:lgse}
+requires $W$, and the regularizer requires $\lambda$. Neither is determined
+by the method as described, and the retracted paper specified neither. We
+therefore chose both, documented the choice, and held it fixed for every
+run: $W$ is obtained by orthogonal Procrustes,
+$W^\star = \arg\min_{W^\top W = I}\lVert WX - Y\rVert_F$, on 5{,}910 surface
+anchors shared between the Amharic FastText model and XLM-R (residual
+Frobenius norm 423.0 against 633.0 unaligned), and $\lambda = 1.0$. These are
+our choices. A reader should treat the LGSE column as one faithful
+instantiation rather than the only one.
+
+We note one structural consequence. The initializer writes $We_{m_j}$ into
+the embedding matrix and the regularizer anchors to a constant, so nothing
+downstream is a function of $W$ once initialization is complete. $W$ is a
+fixed preprocessing transform here, not a learned parameter.
+
+\section{Setup}
+\label{sec:setup}
+
+\paragraph{One protocol.} All 60 runs share a single configuration file,
+verified by checksum: every run records the same \texttt{config\_sha256}.
+Fine-tuning uses a constant learning rate of $5\times10^{-5}$, no warmup,
+batch size 32, 10 epochs, and checkpoint selection by evaluation loss. This
+recipe is identical for all three systems and was not tuned for any of them;
+the selection metric is task-agnostic by construction. Appendix
+\ref{app:prov} records the checksum and the full recipe.
+
+\paragraph{Data.} For NER we take the MasakhaNER splits
+\citep{adelani-etal-2021-masakhaner} unchanged, and for question answering
+the AmQA splits \citep{taffa-etal-2024-amqa} unchanged. Text classification
+uses a
+2{,}499-row annotated educational-quality corpus, reduced to 2{,}340 after
+removing 2 spreadsheet-error rows and 157 exact duplicates, split
+1872/233/235 by a stratified procedure at seed 42 and verified
+leakage-free. The first author led that annotation. Each split carries a
+manifest with source, raw checksum and split seed.
+
+\paragraph{Metrics.} F1 for NER and QA. For text classification we report
+macro-F1 over the five classes present in the test split as the primary
+metric, with accuracy secondary. The majority class holds 66.4\% of the test
+set, so accuracy is dominated by it: the majority-class baseline is 66.38
+accuracy against 15.96 macro-F1. We also report the macro-F1 value recorded
+in the run files, which averages over six classes including one with no test
+instances and is therefore capped at five sixths of the attainable maximum.
+
+\paragraph{Seeds.} 42--46 for every cell, extended to 42--51 on NER for all
+three systems after the failure mode of \S\ref{sec:failures} appeared there.
+
+\paragraph{Scope.} Amharic only, three systems. Two further systems from the
+retracted design---adaptive pretraining alone, and extension with random
+initialization---were not run under this protocol, and
+\S\ref{sec:limitations} explains why results from an earlier batch cannot
+substitute for them.
+
+\section{Results}
+\label{sec:results}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llccc}
+\toprule
+Task & & LGSE & FOCUS & XLM-R \\
+\midrule
+\multirow{4}{*}{TC}
+ & macro-F1 & 45.61 & 54.56 & 45.59 \\
+ & sd       & 12.80 & 2.59  & 15.04 \\
+ & accuracy & 78.30 & 81.62 & 78.98 \\
+ & $n$ / fail & 5 / 2 & 5 / 0 & 5 / 2 \\
+\midrule
+\multirow{3}{*}{NER}
+ & F1  & 61.44 & 60.10 & 67.05 \\
+ & sd  & 21.64 & 21.30 & 2.55 \\
+ & $n$ / fail & 10 / 1 & 10 / 1 & 10 / 0 \\
+\midrule
+\multirow{3}{*}{QA}
+ & F1  & 58.23 & 59.41 & 59.54 \\
+ & sd  & 1.40  & 1.51  & 2.14 \\
+ & $n$ / fail & 5 / 0 & 5 / 0 & 5 / 0 \\
+\bottomrule
+\end{tabular}
+\caption{All 60 runs, one protocol. TC macro-F1 is over the five classes
+present in test; the majority-class baseline is 15.96 macro-F1 and 66.38
+accuracy. \emph{fail} counts runs that never fit their training data
+(\S\ref{sec:failures}); they are retained here. No ordering is claimed:
+see Table~\ref{tab:paired}.}
+\label{tab:main}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llcrc}
+\toprule
+Task & vs & $n$ & $\Delta$ & 95\% CI \\
+\midrule
+\multirow{2}{*}{TC}  & FOCUS & 5  & $-8.95$ & $[-23.74, +5.84]$ \\
+                     & XLM-R & 5  & $+0.03$ & $[-20.53, +20.58]$ \\
+\midrule
+\multirow{2}{*}{NER} & FOCUS & 10 & $+1.34$ & $[-21.61, +24.29]$ \\
+                     & XLM-R & 10 & $-5.61$ & $[-22.03, +10.80]$ \\
+\midrule
+\multirow{2}{*}{QA}  & FOCUS & 5  & $-1.17$ & $[-2.91, +0.56]$ \\
+                     & XLM-R & 5  & $-1.30$ & $[-3.12, +0.51]$ \\
+\bottomrule
+\end{tabular}
+\caption{Paired differences, LGSE minus comparator, on matched seeds.
+Positive favours LGSE. \textbf{Every interval contains zero.} Exact
+Wilcoxon agrees (0.188--0.812); at these sample sizes the smallest
+attainable two-sided exact $p$ is 0.062 at $n=5$ and 0.125 at $n=4$, so four
+of these six rows could not have reached $p<0.05$ at any effect size, and we
+do not report $p$-values as evidence.}
+\label{tab:paired}
+\end{table}
+
+Table~\ref{tab:main} gives the three systems under the common protocol and
+Table~\ref{tab:paired} the paired differences.
+
+\paragraph{No interval excludes zero.} The largest observed difference is
+$-8.95$ macro-F1 on text classification against FOCUS, with an interval
+spanning $-23.74$ to $+5.84$. The smallest is $+0.03$ against XLM-R, an
+interval 41 points wide. Nothing in Table~\ref{tab:paired} supports an
+ordering of the three systems.
+
+\paragraph{Win counts are more informative than the means, and still
+insufficient.} LGSE loses 4 of 5 QA seeds to each comparator and wins 0 of 5
+text-classification seeds against FOCUS, which is a consistent direction.
+But five paired observations cannot certify a direction at conventional
+thresholds, and \S\ref{sec:resolution} shows the margin by which they fall
+short.
+
+\paragraph{Off-the-shelf XLM-R is not separated from either extended
+system.} It reaches the highest mean on NER and QA while performing no
+vocabulary extension and no adaptive pretraining, at a fraction of the
+compute: its runs took 6--24 minutes against roughly 5 hours for the
+extended systems. We state this as a non-separation rather than a result in
+its favour; its text-classification standard deviation is the largest in the
+table, at 15.04.
+
+\section{Why the Comparison Does Not Resolve}
+\label{sec:resolution}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\toprule
+Task & Spread & Mean sd & Ratio \\
+\midrule
+TC  & 8.98 & 10.14 & 0.89 \\
+NER & 6.95 & 15.16 & 0.46 \\
+QA  & 1.30 & 1.68  & 0.77 \\
+\bottomrule
+\end{tabular}
+\caption{Between-system spread against within-system seed variation, all
+runs. A ratio below one means changing the seed moves a system more than
+changing the system does. All three are below one.}
+\label{tab:snr}
+\end{table}
+
+Table~\ref{tab:snr} compares the spread between the three systems against
+the spread between seeds of one system. On every task the second exceeds the
+first. Excluding the failed runs of \S\ref{sec:failures} does not change the
+conclusion: the ratios become 0.56, 0.64 and 0.77.
+
+The same point in units of detectable effect: using the observed
+paired-difference standard deviations, the minimum difference detectable at
+$\alpha = 0.05$ and 80\% power is 19.80 macro-F1 on text classification, 3.10
+F1 on NER and 2.32 F1 on QA. The text-classification figure is more than
+twice the entire observed spread between systems. Reaching a 2-point
+detectable difference there would require approximately 281 seeds per
+system. We report this as a property of the benchmark and the sample size,
+not of any system.
+
+\section{A Comparison That Did Not Survive Re-measurement}
+\label{sec:split}
+
+An earlier batch of runs, under a superseded protocol, reported the
+morpheme-grounded system ahead of FOCUS on text classification by 1.97
+accuracy points. Under the protocol of \S\ref{sec:setup} it trails by 3.32
+and wins no seed. We record this because the direction of a published
+comparison reversed, and because the reason is instructive about comparing
+across protocol revisions.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+ & Superseded & Current \\
+\midrule
+Test items            & 71     & 235 \\
+Majority-class share  & 35.21\% & 66.38\% \\
+Documents in corpus   & 700    & 2{,}340 \\
+\midrule
+LGSE (accuracy)       & 75.77  & 78.30 \\
+FOCUS (accuracy)      & 73.80  & 81.62 \\
+LGSE $-$ FOCUS        & $+1.97$ & $-3.32$ \\
+\bottomrule
+\end{tabular}
+\caption{The two text-classification protocols. They differ in test set,
+training set and class prior together, so the accuracy columns are not two
+measurements of one quantity and the per-system shifts are not interpretable
+as effects. What the table shows is that the comparison between the two
+systems reverses. Per-class supports are in Appendix~\ref{app:tcsplit}.}
+\label{tab:split}
+\end{table}
+
+\paragraph{The two protocols are not two measurements of the same task.}
+It would be convenient to read FOCUS's movement from 73.80 to 81.62 as the
+effect of a larger test set on a system that performs no morpheme
+segmentation. That reading is not available. Rebuilding the corpus changed
+the training split and the label distribution as well as the test split: the
+majority class holds 35.21\% of the superseded test set and 66.38\% of the
+current one, so a classifier that predicts only the majority label gains
+31.17 accuracy points from the change alone, with no change in capability.
+Accuracy on the two splits is scaled differently, and no per-system
+difference between the columns can be attributed to a single cause.
+
+\paragraph{What the reversal does establish.} Within the current protocol,
+measured on one split with one configuration and shared seeds, the
+morpheme-grounded system does not lead FOCUS on text classification; it
+trails by 3.32 points and loses every seed. That comparison is internally
+valid and is the one reported in Table~\ref{tab:main}. The earlier
+favourable comparison is superseded, not contradicted by a controlled
+intervention, and we do not claim to have isolated why it differed.
+
+\paragraph{Consequence for the missing systems.} Two systems from the
+original design were not run under the current protocol
+(\S\ref{sec:limitations}). Their numbers exist only in the superseded batch,
+on the 71-item split with a 35.21\% majority class. Placing those values in
+Table~\ref{tab:main} beside systems measured against a 66.38\% majority
+class would produce an ordering driven by the class prior rather than by the
+systems. We therefore leave those rows empty rather than fill them across
+protocols.
+
+\section{A Fine-Tuning Failure Mode}
+\label{sec:failures}
+
+Six of 60 runs never fit their training data. Their relative
+training-loss reduction from the first to the last logged epoch falls between
+21.7\% and 28.9\%, against 69.5\% to 97.9\% for every other run---a gap with
+no runs inside it. Any threshold between 28.9\% and 69.5\% selects the same
+six, so the classification does not depend on where in the gap it is placed.
+The rule uses training loss only and never a test score.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llcc}
+\toprule
+Task & System & Seed & Loss reduction \\
+\midrule
+NER & FOCUS & 44 & 24.1\% \\
+NER & LGSE  & 45 & 21.7\% \\
+TC  & LGSE  & 42 & 28.9\% \\
+TC  & LGSE  & 43 & 24.8\% \\
+TC  & XLM-R & 42 & 21.9\% \\
+TC  & XLM-R & 45 & 26.8\% \\
+\bottomrule
+\end{tabular}
+\caption{The six runs selected by the training-loss rule. They occur under
+all three systems, so the instability belongs to the fine-tuning setup
+rather than to any initializer.}
+\label{tab:fail}
+\end{table}
+
+The resulting predictors are degenerate in a task-specific way. On NER the
+tagger proposes no entity at all, giving precision, recall and F1 of exactly
+zero. On text classification the classifier never predicts class 3, which
+holds 19\% of the test set, and never predicts the two rarest classes;
+per-class F1 shows this as a partial label collapse rather than a total one.
+Dev scores track test scores in each case, so the failure is visible without
+touching the test set.
+
+These runs are not checkpoint mis-selection: the evaluation-loss minimum
+across all ten saved checkpoints is 0.77--0.80 in the failed runs against
+0.42--0.55 in the successful ones, so no available checkpoint was good. Nor
+is it overfitting: training loss stays high.
+
+We retain all six runs in Table~\ref{tab:main} and report a secondary
+analysis excluding them. Excluding them moves the text-classification means
+to 54.67, 54.56 and 56.45 for LGSE, FOCUS and XLM-R, on three, five and
+three runs, and the NER means to 68.27, 66.78 and 67.05 on nine, nine and
+ten runs. Neither policy separates the systems: the intervals remain wide
+and overlapping under both. We report both because the choice moves the
+text-classification means by nine points and the NER means by seven, and we
+see no principled basis for preferring one.
+
+\section{Recommendations}
+
+Each observation above has a cheap remedy that we would have benefited from.
+
+\paragraph{Check resolution before comparing.} Whether the between-system
+spread exceeds the between-seed spread is computable from a pilot, before any
+method is proposed. Where it does not, as in three of three tasks here, a
+five-seed comparison cannot support a ranking regardless of which system
+wins.
+
+\paragraph{Report the minimum detectable difference.} One line per
+comparison. It distinguishes ``no difference was found'' from ``no difference
+of this size could have been found''.
+
+\paragraph{Run a system that shares everything but the contribution.} FOCUS
+differs from LGSE only in morpheme segmentation, so the pair bounds what the
+segmentation itself can be worth. A system compared only against an
+unmodified baseline cannot separate the contribution from everything else
+that changed alongside it.
+
+\paragraph{Do not compare across protocol revisions.} When a corpus is
+rebuilt, the test set, the training set and the class prior can all move
+together, as they did here (\S\ref{sec:split}): the majority-class baseline
+went from 35.21\% to 66.38\%, which alone rescales accuracy by 31 points.
+Numbers from before and after such a change are not two measurements of one
+quantity, and a table that mixes them reports the revision rather than the
+systems. Re-run the baselines or leave the cells empty.
+
+\paragraph{Release the operator, not only the equation.} $W$ in
+Equation~\ref{eq:lgse} is 2.3\,MB. Releasing it, or the code that builds it,
+removes the largest obstacle to reproducing a method of this kind. We release
+ours with a sidecar recording its language, anchor count, objective and
+residual.
+
+\paragraph{Disclose degenerate runs.} A single all-\texttt{O} seed can move a
+mean by 13 points and inflate a standard deviation past 30. Neither silent
+exclusion nor silent averaging is adequate; report both and state the rule.
+
+\section{Related Work}
+
+\paragraph{Initialization for vocabulary extension.} WECHSEL
+\citep{minixhofer-etal-2022-wechsel} transfers embeddings through bilingual
+dictionaries and static vectors. FOCUS \citep{dobler-de-melo-2023-focus},
+our near control, builds each new embedding from overlapping tokens in an
+auxiliary FastText space. Both FOCUS and the morpheme-grounded method reduce
+to a whole-token vector when their respective condition---overlap, or a
+decomposition---is unavailable, which is why they are the right pair to
+compare and why their difference is bounded by how often that condition
+fires. \citet{csaki-etal-2023-efficiently} survey the adaptation pipeline.
+Our results do not argue against this line of work; they indicate that these
+benchmarks at these sample sizes cannot adjudicate between its members.
+
+\paragraph{Morphological resources for Ethio-Semitic languages.} Amharic is
+templatic and heavily affixing, which motivates morpheme-aware vocabulary
+construction. HornMorpho \citep{gasser-2011-hornmorpho} provides finite-state
+analysis for Amharic and Tigrinya and is enabled in the configuration used
+here; with it, 99 of the 198 added Amharic tokens (50.0\%) receive a
+decomposition into more than one morpheme, against 33 (16.7\%) from the
+static lexicon alone. We report these as properties of the pipeline and do
+not use them to explain the comparison outcomes.
+
+\paragraph{Reproduction and statistical practice.}
+\citet{belz-etal-2021-systematic} survey reproducibility in NLP. Our
+methodology is control-based: rather than reporting that numbers differ, we
+hold systems that should be unaffected by a change fixed and attribute the
+difference from their movement.
+
+\section{Conclusion}
+
+Under one protocol, on three Amharic tasks, no paired comparison between
+morpheme-grounded initialization, overlap-based initialization and no
+extension at all excludes zero. The reason is measurable and specific:
+changing the seed moves a system further than changing the system does, the
+smallest detectable difference on text classification is twice the observed
+spread, and a tenth of runs fail to fit their training data. A comparison
+reported under a superseded protocol reverses under this one.
+
+We do not conclude that these initializers are equivalent; our tests are too
+small to support that, and we say so. We conclude that this evaluation suite,
+at the sample sizes the field conventionally uses, does not answer the
+question it is being asked, and that the four properties above are worth
+measuring before the next comparison of this kind is published.
+
+\section*{Limitations}
+\label{sec:limitations}
+
+Our $W$ and $\lambda$ are documented substitutions, not values recovered
+from the original method, so the LGSE column is one faithful instantiation
+and the absolute numbers would differ under another.
+
+Two systems from the original design---adaptive pretraining alone, and
+extension with random initialization---were not run under this protocol. An
+earlier batch contains them, but evaluated text classification on the
+superseded 71-item test set, carries three different configuration
+checksums, and mixes two alignment matrices; \S\ref{sec:split} shows that
+placing those numbers beside these would create an ordering artifact of
+about 8 points. We therefore leave the rows empty rather than fill them from
+a different protocol. Completing them under this protocol would add two rows
+at five seeds each, which Table~\ref{tab:snr} and the detectable-difference
+figures indicate would not change the conclusion.
+
+The paired tests have five to ten observations. They establish that these
+data do not separate the systems, not that the systems are equivalent;
+distinguishing those readings would need many more seeds or benchmarks with
+a larger between-system spread.
+
+This study covers Amharic. No cell for a second language exists under this
+protocol, so we make no cross-linguistic claim.
+
+The text-classification corpus is small, its label distribution is heavily
+skewed, and one of its six labels has no test instances. Our primary metric
+excludes that label; the recorded six-class value is reported alongside for
+traceability.
+
+\section*{Ethics Statement}
+
+This paper replaces a retracted paper by the same authors. We report the
+outcome as measured, including where it contradicts our own earlier claims,
+and we document errors made during this work alongside those found in the
+original: a configuration error that applied the Tigrinya alignment matrix
+to Amharic runs, a morpheme-coverage figure initially over-reported before
+re-measurement, and three log-parsing defects in our own analysis code, each
+of which produced a wrong failure classification and is now pinned by a
+regression test. We found no evidence of fabrication in the original work;
+every discrepancy we traced is consistent with ordinary pipeline defects of
+the kind we also made here.
+
+Self-examination carries a conflict of interest. We mitigate it by
+pre-registering the one directional control before it ran
+(\S\ref{sec:split}), by releasing every per-run record so that each number
+can be recomputed independently, and by reporting the outcome least
+favourable to our own prior claim. Readers should weigh our conclusions
+accordingly.
+
+All datasets are publicly available or released by us. The Amharic
+educational-quality annotation was led by the first author. No human
+subjects were involved.
+
+\section*{Acknowledgments}
+
+We thank the reviewers of the earlier submission, whose questions prompted
+this study, and the L3S compute support team.
+
+\bibliography{custom}
+
+\appendix
+
+\section{Provenance}
+\label{app:prov}
+
+\paragraph{One script.} Every number in this paper is produced by
+\texttt{scripts/build\_paper\_tables.py}, which reads the per-run
+\texttt{experiment.json} records and emits Tables \ref{tab:main},
+\ref{tab:paired}, \ref{tab:snr}, \ref{tab:fail}, the per-class
+text-classification breakdown, the coverage counts, and a per-seed CSV.
+Running it reproduces every table; nothing in this paper was typed by hand.
+
+\paragraph{Runs.} 60 runs, all from
+\texttt{results\_hornmorpho\_wam/}: three systems $\times$ three tasks
+$\times$ five seeds, with NER extended to ten. Each record carries its
+commit, configuration checksum, alignment-matrix path, corpus checksum and
+per-seed dev and test metrics. All 60 share
+\texttt{config\_sha256} \texttt{3e51cdab\ldots}.
+
+\paragraph{Excluded directories.} Four other result directories exist and are
+excluded for protocol differences, never for their outcomes:
+\texttt{results\_gen2\_snapshot\_20260924} and \texttt{results} (150 runs
+each; three configuration checksums, two alignment matrices, 71-item
+text-classification test set), \texttt{results\_hornmorpho} (54 runs; mixes
+the two alignment matrices), and \texttt{results\_tigrinya\_gen2} (45 runs;
+Tigrinya only, no three-system comparison).
+
+\paragraph{Recipe.} Adaptive pretraining: frozen backbone, maximum length
+256, MLM probability 0.15, learning rate $5\times10^{-5}$ constant, batch
+size 32, 10 epochs, weight decay 0.01, AdamW, fp16. Fine-tuning: the same
+learning rate, schedule, batch size and epoch count, with checkpoint
+selection by evaluation loss. Identical for all three systems, untuned.
+FastText: skipgram, dimension 768, 5 epochs, minimum count 5, vocabulary
+165{,}471. Vocabulary extension adds 198 Amharic tokens.
+
+\paragraph{Compute.} Each extended-system run takes approximately 5 hours on
+one A100, dominated by adaptive pretraining, which is repeated per seed
+because the seed determines the initialization under test. XLM-R runs take
+6--24 minutes. The 60 runs total roughly 230 GPU-hours.
+
+\paragraph{Per-seed values.} Released as \texttt{tables/per\_seed.csv}: one
+row per (task, system, seed) with the score, the failure flag, the commit and
+the result file path.
+
+\section{The Two Text-Classification Protocols}
+\label{app:tcsplit}
+
+Per-class test supports, read from the run records of both batches. The
+superseded protocol is retained here only to document why its accuracy
+figures are not comparable with the current ones (\S\ref{sec:split}); no
+number from it enters Table~\ref{tab:main}.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Label & 1 & 2 & 3 & 4 & 5 & 6 & total \\
+\midrule
+Superseded & 25 & 24 & 13 & 7 & 0 & 2 & 71 \\
+Current    & 25 & 156 & 45 & 7 & 0 & 2 & 235 \\
+\bottomrule
+\end{tabular}
+\caption{Class 2 grows from 24 to 156 instances, taking the majority share
+from 35.21\% to 66.38\%. Label 5 occurs in training but in neither
+development nor test split under either protocol, which is why the recorded
+six-class macro-F1 is capped at five sixths of its maximum
+(\S\ref{sec:setup}).}
+\end{table}
+
+\end{document}
