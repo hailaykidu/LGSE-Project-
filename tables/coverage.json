@@ -1,0 +1,9 @@
+{
+  "n": 198,
+  "lexicon_only_multi": 33,
+  "lexicon_entries": 45,
+  "as_configured_multi": 99,
+  "analyzer_attached": true,
+  "lex_object_untouched": true,
+  "source": "scripts/build_paper_tables.py (analyzer path); cached because attaching amseg takes minutes"
+}
