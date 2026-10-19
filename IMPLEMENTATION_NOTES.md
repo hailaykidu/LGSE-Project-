@@ -426,7 +426,27 @@ the 797 from the prior conversion — with zero risk of a corrupted span**.
 
 `data/qa/tigqa_squad/{train,dev,test,manifest}.json` have been regenerated
 from this source and now hold 1,517 pairs (1189/177/151 over 85/10/12
-contexts, seed 42), replacing the prior 797-pair split in place. The old
+contexts, seed 42), replacing the prior 797-pair split in place. Verified
+against the files 2026-10-19: train 1189 pairs / 85 contexts, dev 177 / 10,
+test 151 / 12, total 1,517.
+
+**Which runs used which split, established arithmetically.** The replacement
+happened in place, so `data_dir` is identical before and after and a run
+record does not name its split. The split is nonetheless recoverable from the
+test `exact_match`, which must equal k/n_test for integer k:
+
+| Generation | test EM | implies n_test | split |
+|---|---|---|---|
+| `results/` | 29.0698 | 25/86 | 797-pair |
+| `results_gen2_snapshot_20260924/` | 29.0698 | 25/86 | 797-pair |
+| `results_tigrinya_gen2/` | 29.8013 | 45/151 | **1,517-pair** |
+
+So every Tigrinya QA number in `report/TABLE2_REPORT.md` and in the committed
+`report/per_seed_results.json` was measured on the 86-item test set, and only
+`results_tigrinya_gen2/` uses the current data. The two are not comparable:
+86 items move F1 in steps of 1.16, against 0.66 at 151.
+
+The old
 `TIGQA_squad_format.json`-derived numbers above are kept in this note as
 history, not as the current state — any Tigrinya QA result in
 `report/TABLE2_REPORT.md` predates this replacement and has not yet been

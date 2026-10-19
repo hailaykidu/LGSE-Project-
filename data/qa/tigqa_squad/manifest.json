@@ -13,5 +13,20 @@
     "train": 85,
     "dev": 10,
     "test": 12
-  }
+  },
+  "counts_are": "contexts per split (not QA pairs)",
+  "split_sizes": {
+    "qa_pairs": {
+      "train": 1189,
+      "dev": 177,
+      "test": 151
+    },
+    "contexts": {
+      "train": 85,
+      "dev": 10,
+      "test": 12
+    }
+  },
+  "supersedes": "TIGQA_squad_format.json (TIGQA-1.0), from which prepare_qa.py kept 797 pairs split 644/67/86 over 292/36/37 contexts. Any Tigrinya QA result produced before 2026-09-18 used that 797-pair split, not this 1,517-pair one; the two are not comparable. See IMPLEMENTATION_NOTES.md section 5.",
+  "note_on_provenance": "experiment.json records only data_dir, which is unchanged across the replacement, so a run record alone does not name its split. The split is instead recoverable from the test exact_match, which is k/n_test for integer k: Tigrinya QA runs in results/ and results_gen2_snapshot_20260924/ give EM 29.0698 = 25/86, the 797-pair split; results_tigrinya_gen2/ gives 29.8013 = 45/151, this 1,517-pair split. Verified 2026-10-19."
 }
