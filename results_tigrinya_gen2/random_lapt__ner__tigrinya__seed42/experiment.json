@@ -1,0 +1,139 @@
+{
+  "experiment": "random_lapt__ner__tigrinya__seed42",
+  "system": "random_lapt",
+  "system_description": "+Random+LAPT: Gaussian init at the pretrained embedding scale",
+  "task": "ner",
+  "language": "tigrinya",
+  "seed": 42,
+  "projection": {
+    "kind": "externally supplied alignment matrix (paper Sec 4.1)",
+    "source": "data/alignment/W_ti.npy",
+    "author_supplied": true,
+    "training_status": "author-required / unspecified in paper",
+    "trained_during_this_run": false
+  },
+  "reg_lambda": 1.0,
+  "reg_lambda_source": "unavailable -- not stated in the paper",
+  "model_path": "results_tigrinya_gen2/random_lapt__ner__tigrinya__seed42/lapt",
+  "dev": {
+    "precision": 70.39159503342884,
+    "recall": 75.20408163265306,
+    "f1": 72.71830291070548
+  },
+  "test": {
+    "precision": 70.53742802303263,
+    "recall": 74.61928934010153,
+    "f1": 72.52096694622595
+  },
+  "elapsed_seconds": 21284.2,
+  "config": {
+    "model": {
+      "name": "xlm-roberta-base"
+    },
+    "lgse": {
+      "ngram_min": 3,
+      "ngram_max": 5,
+      "reg_lambda": 1.0,
+      "alignment_matrix_path": "data/alignment/W_ti.npy",
+      "fasttext_dim": 768
+    },
+    "lapt": {
+      "freeze_backbone": true,
+      "max_length": 256,
+      "mlm_probability": 0.15,
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "weight_decay": 0.01,
+      "optimizer": "adamw",
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true
+    },
+    "finetune": {
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "max_length": 256,
+      "weight_decay": 0.01,
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true,
+      "warmup_ratio": 0.0
+    },
+    "evaluation": {
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "metric": "f1",
+      "model_selection": "dev"
+    },
+    "data": {
+      "fasttext": {
+        "amharic": {
+          "source": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz",
+          "citation": "Grave et al. (2018), FastText CC vectors",
+          "dimension": 300,
+          "usable_as_is": false
+        },
+        "tigrinya": {
+          "source": "https://huggingface.co/Hailay/fasttext-tigrinya",
+          "citation": "project-released Tigrinya FastText model",
+          "dimension": 300,
+          "usable_as_is": false
+        }
+      }
+    },
+    "output": {
+      "results_dir": "results",
+      "checkpoints_dir": "checkpoints",
+      "logs_dir": "logs"
+    }
+  },
+  "provenance": {
+    "commit": "0d6105f08154fbc9990c15303c6e5b2f439ec8e8",
+    "branch": "main",
+    "dirty": true,
+    "config_file": "configs/tigrinya.yaml",
+    "config_sha256": "0fe240d4f75000afca90a97bef404859b3a3892cd2357203034862cde8237c72",
+    "data_dir": "data/ner/tigrinya",
+    "dataset_manifest": {
+      "status": "unavailable",
+      "reason": "no manifest.json in data/ner/tigrinya",
+      "note": "splits cannot be traced to a source; prepare data with data/scripts/prepare_{ner,qa}.py, which writes a manifest recording source URL, raw checksum and split seed"
+    },
+    "dataset_manifest_available": false,
+    "lapt_corpus": "data/lapt/tigrinya.txt",
+    "lapt_corpus_sha256": "e006c5ff19e3ec63f29b862871607d2be1cb94d3fe5db8447cd0f17898e0f6ec",
+    "fasttext": {
+      "tigrinya": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 156687,
+        "sha256": "7849aea1c4a07f5f835ef586a4cedd263fb1988cf3860e782d05d4d840241e59"
+      },
+      "amharic": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 165471,
+        "sha256": "13b7342b62cb265d58ad594a4702ef6bc5482db566e559878216668d229d4cb7"
+      }
+    },
+    "python": "3.13.11",
+    "packages": {
+      "torch": "2.5.1+cu118",
+      "transformers": "4.51.3",
+      "fasttext": "unavailable",
+      "numpy": "2.4.6"
+    }
+  },
+  "unavailable_hyperparameters": 1
+}

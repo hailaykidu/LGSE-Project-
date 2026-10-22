@@ -29,9 +29,30 @@ wandb/
 *.ckpt
 *.safetensors
 *.h5
-results_hornmorpho/
 results_gen2_snapshot_20260924/
-results_tigrinya_gen2/
+
+# Three directories hold runs the reported table draws on. Their per-run
+# records are tracked so every published number can be checked against its
+# own provenance; the model checkpoints beside them are tens of GB and stay
+# out. The pattern admits only */experiment.json from each.
+#
+#   results_hornmorpho_wam/  Amharic XLM-R, FOCUS, LGSE (W_am, 235-item TC)
+#   results_hornmorpho/      Amharic +LAPT and +Random+LAPT. Its config names
+#                            W_ti, but neither system loads W -- W is read
+#                            only on the FastText path (lap_trainer.py:78),
+#                            and all ten NER runs are bit-identical to the
+#                            W_am snapshot. Its LGSE and FOCUS runs are NOT
+#                            usable; see IMPLEMENTATION_NOTES.md 5d-v.
+#   results_tigrinya_gen2/   all five Tigrinya systems (W_ti, 151-item QA)
+results_hornmorpho/*
+!results_hornmorpho/*/
+results_hornmorpho/*/*
+!results_hornmorpho/*/experiment.json
+
+results_tigrinya_gen2/*
+!results_tigrinya_gen2/*/
+results_tigrinya_gen2/*/*
+!results_tigrinya_gen2/*/experiment.json
 # Corrected-alignment-matrix rerun. The run records are tracked so the
 # published numbers can be checked against their own provenance (commit,
 # config sha256, W_am.npy, corpus checksum, per-seed metrics); the model

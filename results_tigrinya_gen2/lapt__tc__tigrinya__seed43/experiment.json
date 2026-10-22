@@ -1,0 +1,264 @@
+{
+  "experiment": "lapt__tc__tigrinya__seed43",
+  "system": "lapt",
+  "system_description": "+LAPT: vocabulary expanded, model's default init for new rows",
+  "task": "tc",
+  "language": "tigrinya",
+  "seed": 43,
+  "projection": {
+    "kind": "externally supplied alignment matrix (paper Sec 4.1)",
+    "source": "data/alignment/W_ti.npy",
+    "author_supplied": true,
+    "training_status": "author-required / unspecified in paper",
+    "trained_during_this_run": false
+  },
+  "reg_lambda": 1.0,
+  "reg_lambda_source": "unavailable -- not stated in the paper",
+  "model_path": "results_tigrinya_gen2/lapt__tc__tigrinya__seed43/lapt",
+  "dev": {
+    "accuracy": 36.486486486486484,
+    "macro_f1": 13.961038961038964,
+    "micro_f1": 36.486486486486484,
+    "per_class": {
+      "1": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 20
+      },
+      "2": {
+        "precision": 37.735849056603776,
+        "recall": 83.33333333333334,
+        "f1": 51.948051948051955,
+        "support": 24
+      },
+      "3": {
+        "precision": 33.33333333333333,
+        "recall": 30.434782608695656,
+        "f1": 31.818181818181824,
+        "support": 23
+      },
+      "4": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 5
+      },
+      "5": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "6": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      }
+    }
+  },
+  "test": {
+    "accuracy": 36.486486486486484,
+    "macro_f1": 14.94949494949495,
+    "micro_f1": 36.486486486486484,
+    "per_class": {
+      "1": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 20
+      },
+      "2": {
+        "precision": 33.33333333333333,
+        "recall": 58.333333333333336,
+        "f1": 42.42424242424242,
+        "support": 24
+      },
+      "3": {
+        "precision": 40.625,
+        "recall": 56.52173913043478,
+        "f1": 47.27272727272727,
+        "support": 23
+      },
+      "4": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 5
+      },
+      "5": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      },
+      "6": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 1
+      }
+    }
+  },
+  "elapsed_seconds": 21920.3,
+  "config": {
+    "model": {
+      "name": "xlm-roberta-base"
+    },
+    "lgse": {
+      "ngram_min": 3,
+      "ngram_max": 5,
+      "reg_lambda": 1.0,
+      "alignment_matrix_path": "data/alignment/W_ti.npy",
+      "fasttext_dim": 768
+    },
+    "lapt": {
+      "freeze_backbone": true,
+      "max_length": 256,
+      "mlm_probability": 0.15,
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "weight_decay": 0.01,
+      "optimizer": "adamw",
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true
+    },
+    "finetune": {
+      "learning_rate": 5e-05,
+      "lr_scheduler_type": "constant",
+      "batch_size": 32,
+      "epochs": 10,
+      "max_length": 256,
+      "weight_decay": 0.01,
+      "adam_epsilon": 1e-08,
+      "adam_beta1": 0.9,
+      "adam_beta2": 0.999,
+      "fp16": true,
+      "warmup_ratio": 0.0
+    },
+    "evaluation": {
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "metric": "f1",
+      "model_selection": "dev"
+    },
+    "data": {
+      "fasttext": {
+        "amharic": {
+          "source": "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz",
+          "citation": "Grave et al. (2018), FastText CC vectors",
+          "dimension": 300,
+          "usable_as_is": false
+        },
+        "tigrinya": {
+          "source": "https://huggingface.co/Hailay/fasttext-tigrinya",
+          "citation": "project-released Tigrinya FastText model",
+          "dimension": 300,
+          "usable_as_is": false
+        }
+      }
+    },
+    "output": {
+      "results_dir": "results",
+      "checkpoints_dir": "checkpoints",
+      "logs_dir": "logs"
+    }
+  },
+  "provenance": {
+    "commit": "0d6105f08154fbc9990c15303c6e5b2f439ec8e8",
+    "branch": "main",
+    "dirty": true,
+    "config_file": "configs/tigrinya.yaml",
+    "config_sha256": "0fe240d4f75000afca90a97bef404859b3a3892cd2357203034862cde8237c72",
+    "data_dir": "data/tc/tigrinya",
+    "dataset_manifest": {
+      "source": "data-is-better-together/fineweb-c (config tir_Ethi)",
+      "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
+      "documents": 745,
+      "labelled": 745,
+      "label_scale": "paper Sec 7, ordinal 1-5 plus a non-ordinal flag value 6",
+      "ordinal_scale": {
+        "None": "1",
+        "Minimal": "2",
+        "Basic": "3",
+        "Good": "4",
+        "Excellent": "5"
+      },
+      "non_ordinal_flag": {
+        "❗ Problematic Content ❗": "6",
+        "note": "Not a 6th point above 'Excellent' on the educational-quality scale -- a separate flag for unreadable/garbled/off-topic/inappropriate content, stored as label value 6 for classification purposes only. Scoring in src/evaluation/run_tc.py treats all six values as unordered classes (exact-match accuracy, per-class F1), so this does not affect metrics; it is a documentation distinction only."
+      },
+      "annotator_resolution": "majority",
+      "tie_break": "lower rating",
+      "problematic_flag_folded_into_rating": false,
+      "split": "stratified 80/10/10, duplicate texts grouped",
+      "seed": 42,
+      "split_sizes": {
+        "train": 597,
+        "dev": 74,
+        "test": 74
+      },
+      "label_distribution": {
+        "train": {
+          "1": 163,
+          "2": 189,
+          "3": 183,
+          "4": 44,
+          "5": 9,
+          "6": 9
+        },
+        "dev": {
+          "1": 20,
+          "2": 24,
+          "3": 23,
+          "4": 5,
+          "5": 1,
+          "6": 1
+        },
+        "test": {
+          "1": 20,
+          "2": 24,
+          "3": 23,
+          "4": 5,
+          "5": 1,
+          "6": 1
+        }
+      }
+    },
+    "dataset_manifest_available": true,
+    "lapt_corpus": "data/lapt/tigrinya.txt",
+    "lapt_corpus_sha256": "e006c5ff19e3ec63f29b862871607d2be1cb94d3fe5db8447cd0f17898e0f6ec",
+    "fasttext": {
+      "tigrinya": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 156687,
+        "sha256": "7849aea1c4a07f5f835ef586a4cedd263fb1988cf3860e782d05d4d840241e59"
+      },
+      "amharic": {
+        "source": "trained here: fasttext skipgram dim=768 epoch=5 minCount=5",
+        "dimension": 768,
+        "vocab_size": 165471,
+        "sha256": "13b7342b62cb265d58ad594a4702ef6bc5482db566e559878216668d229d4cb7"
+      }
+    },
+    "python": "3.13.11",
+    "packages": {
+      "torch": "2.5.1+cu118",
+      "transformers": "4.51.3",
+      "fasttext": "unavailable",
+      "numpy": "2.4.6"
+    }
+  },
+  "unavailable_hyperparameters": 1
+}
