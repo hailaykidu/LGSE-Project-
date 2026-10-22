@@ -111,16 +111,52 @@ EXPECTED_DATA_DIR = {
 # classes actually present, read per run from the per-class supports.
 TC_CLASSES_RECORDED = ["1", "2", "3", "4", "5", "6"]
 
+# Labels 1-5 are the educational-quality scale; 6 is a separate flag for
+# problematic content, following the FineWeb-C convention. The two live in one
+# column in the released splits, so the task runner sees six unordered
+# classes, but they are not one dimension: "6 instead of 2" is not a quality
+# error. The primary metric therefore averages over the quality scale only.
+#
+# This is not a cosmetic choice. Class 6 has 11 Amharic and 9 Tigrinya
+# training instances and 2 and 1 test instances, and its F1 is exactly zero
+# in all fifty TC runs -- no system on either language at any seed ever flags
+# a problematic document. Including it in a macro average donates a
+# guaranteed zero to one fifth or one sixth of the score, costing every
+# system about eleven points equally. Rankings are unaffected; absolute
+# values are not.
+TC_QUALITY_CLASSES = ["1", "2", "3", "4", "5"]
+TC_FLAG_CLASS = "6"
+
 
 def tc_classes_in_test(entry: dict) -> list[str]:
-    """Label values with at least one test instance, for this run."""
+    """Quality-scale labels with at least one test instance, for this run.
+
+    A class with no test instances contributes zero to a macro average
+    without measuring anything, so it is excluded; which quality levels occur
+    is a sampling matter and differs by language (the Amharic test split
+    contains no Excellent documents).
+    """
     pc = entry["record"]["test"]["per_class"]
-    return [c for c in TC_CLASSES_RECORDED
+    return [c for c in TC_QUALITY_CLASSES
             if c in pc and pc[c]["support"] > 0]
 
+
+def tc_flag_f1(entry: dict) -> float | None:
+    """F1 on the problematic-content flag, or None if it has no test support."""
+    pc = entry["record"]["test"]["per_class"]
+    cell = pc.get(TC_FLAG_CLASS)
+    if not cell or cell.get("support", 0) == 0:
+        return None
+    return cell["f1"]
+
 # Majority-class baselines, computed from the test splits (see --audit).
-MAJORITY = {"amharic": {"accuracy": 66.38, "macro_f1_5": 15.96},
-            "tigrinya": {"accuracy": 32.43, "macro_f1_5": None}}
+# Majority-class baselines. Accuracy is over the full test split; the macro
+# figure is over the quality scale only, matching the primary metric, and is
+# the score a classifier gets by always predicting the majority quality level.
+MAJORITY = {"amharic": {"accuracy": 66.38, "macro_quality": 20.05,
+                        "quality_items": 233, "flagged_items": 2},
+            "tigrinya": {"accuracy": 32.43, "macro_quality": 9.90,
+                         "quality_items": 73, "flagged_items": 1}}
 
 EXCLUDED_DIRS = [
     ("results_gen2_snapshot_20260924",
@@ -315,10 +351,11 @@ def print_tables(valid, out_dir: Path | None):
     print("=" * 78)
     for lang in LANGUAGES:
         maj = MAJORITY[lang]
-        extra = (f", macro-F1 {maj['macro_f1_5']}"
-                 if maj["macro_f1_5"] is not None else "")
         print(f"\n  {lang.upper()}   majority-class baseline: "
-              f"accuracy {maj['accuracy']}{extra}")
+              f"accuracy {maj['accuracy']}, quality macro-F1 "
+              f"{maj['macro_quality']:.2f}")
+        print(f"    test split: {maj['quality_items']} quality-rated items + "
+              f"{maj['flagged_items']} flagged as problematic content")
         for task in TASKS:
             primary = "macro-F1 (classes in test)" if task == "tc" else "F1"
             print(f"\n    {task.upper()}   primary: {primary}")
@@ -342,6 +379,22 @@ def print_tables(valid, out_dir: Path | None):
                     m6 = mean_sd_n([score(v, "macro_f1_6") for v in runs.values()])
                     line += f"{a[0]:9.2f}{a[1]:7.2f}{m6[0]:9.2f}"
                 print(line + ("  *" if abs(m - best) < 1e-9 else ""))
+    print("\n  PROBLEMATIC-CONTENT FLAG (label 6), reported separately")
+    print("  because it is not a point on the quality scale:")
+    for lang in LANGUAGES:
+        vals, runs_n = [], 0
+        for s in SYSTEMS:
+            for e in by[(lang, "tc", s)].values():
+                f = tc_flag_f1(e)
+                if f is not None:
+                    vals.append(f); runs_n += 1
+        if runs_n:
+            nz = sum(1 for v in vals if v > 0)
+            print(f"    {lang:9s} F1 > 0 in {nz} of {runs_n} TC runs"
+                  f"  (mean {st.mean(vals):.2f})")
+    print("  No system on either language at any seed flags a problematic")
+    print("  document. Including this class in the macro average would")
+    print("  donate a guaranteed zero to a fifth of the score.")
     print("\n  * = highest mean in the cell. fail = runs scoring exactly zero,")
     print("  excluded from the mean and counted here (see mean_sd_n).")
     print("  mF1(6) = the value recorded in the run files, which averages over")

@@ -1,0 +1,628 @@
+% ACL conference style. acl.sty and acl_natbib.bst are ACL-distributed; see
+% README.md. Every number in this paper is produced by
+% scripts/build_table2.py from the per-run records.
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\title{Morpheme-Grounded Embedding Initialization Does Not Outperform\\
+Random Initialization for Amharic and Tigrinya}
+
+\author{Hailay Kidu Teklehaymanot \\
+  Mekelle University, Ethiopia \\
+  \texttt{hailay.kidu@mu.edu.et} \\\And
+  Dren Fazlija \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{dren.fazlija@L3S.de} \\\And
+  Wolfgang Nejdl \\
+  L3S Research Center \\
+  Hannover, Germany \\
+  \texttt{nejdl@L3S.de} \\}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Extending a pretrained encoder's vocabulary to a new language requires an
+embedding for every added token, and several strategies have been proposed to
+supply one. We measure five of them under a single protocol per language --
+one configuration, one set of data splits, one untuned fine-tuning recipe,
+shared seeds -- across text classification, named entity recognition and
+extractive question answering, in Amharic and Tigrinya: 165 runs filling all
+thirty cells of the comparison. Morpheme-grounded initialization has the
+highest mean in 1 of 6 task--language cells. Off-the-shelf XLM-R, which
+expands no vocabulary and performs no adaptive pretraining at a twentieth of
+the compute, leads 3. Of 24 paired comparisons against the four baselines,
+morpheme-grounded initialization is ahead in 7, and no comparison against
+random Gaussian initialization separates in either direction on any task or
+language. We also report two properties of the setup that bound what such a
+comparison can show: seed variation is comparable to the entire spread
+between the five systems, and 6 of 165 runs settle into degenerate predictors
+identifiable from training loss alone. This paper replaces a retracted
+predecessor \citep{teklehaymanot-etal-2026-lgse}; all code, data manifests,
+per-run records and the script that generates every number are released.
+\end{abstract}
+
+\section{Introduction}
+
+A multilingual encoder adapted to a new language by vocabulary extension
+needs a vector for every token it has not seen. The choice of initializer is
+the subject of a small literature. Random initialization discards what is
+known about the token's form. FOCUS \citep{dobler-de-melo-2023-focus} builds
+each new embedding from tokens it overlaps with in an auxiliary space. A
+morpheme-grounded alternative decomposes the token and averages over its
+morphemes, which is appealing for Amharic and Tigrinya, where affixation is
+heavy and a frequency-driven tokenizer fragments surface forms arbitrarily.
+
+Papers in this area report differences of one to several points between such
+strategies, with standard deviations below one point, and conclude in favour
+of one of them. We measure the comparison directly, under one protocol per
+language, with all five systems and both languages present.
+
+The result is negative and specific. Morpheme-grounded initialization leads
+one cell of six. It is not separated from random Gaussian initialization
+anywhere. And the variance structure explains why a five-seed comparison on
+these benchmarks cannot resolve the question regardless of which systems are
+in it.
+
+\paragraph{Relation to a retracted paper.} An earlier paper by these authors
+described the morpheme-grounded method and reported a results table for which
+no archived execution record exists, a projection matrix that was never
+specified, and a dataset that was not constructed. That paper
+\citep{teklehaymanot-etal-2026-lgse} is retracted and this paper replaces it.
+This paper shares no text and no results with it. All data splits were
+rebuilt from their original sources and are documented in
+\S\ref{sec:setup} and Appendix~\ref{app:prov}, which maps every number
+reported here to the job identifier, seed and result file it came from.
+
+A first attempt at this measurement, run in September 2026, is also
+withdrawn, for two reasons found by auditing our own records: every Amharic
+run of the morpheme-grounded system loaded the \emph{Tigrinya} alignment
+matrix, and its Tigrinya question-answering used a test split that has since
+been replaced. Neither defect was visible from the tables. The runs reported
+here are a later, separately configured measurement; \S\ref{sec:setup} states
+the protocol each cell belongs to.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\itemsep0em
+\item A complete five-system comparison on two languages and three tasks ---
+  thirty cells, 165 runs, one protocol per language --- in which
+  morpheme-grounded initialization leads one cell
+  (\S\ref{sec:results}).
+\item The floor comparison the published evaluation omitted: against random
+  Gaussian initialization, the morpheme-grounded method is not separated on
+  any task in either language (\S\ref{sec:floor}).
+\item A measurement of the benchmarks' resolution: seed variation is
+  comparable to the whole between-system spread, and the minimum detectable
+  difference is several times the effects under discussion
+  (\S\ref{sec:resolution}).
+\item A fine-tuning failure mode affecting 6 of 165 runs, separable from the
+  method under test using training loss alone (\S\ref{sec:failures}).
+\end{enumerate}
+
+\section{Systems}
+
+All five systems share one backbone, XLM-R base
+\citep{conneau-etal-2020-unsupervised}, and differ only in whether the
+vocabulary is extended and how the new rows are initialized.
+
+\paragraph{XLM-R.} Fine-tuned directly. No vocabulary extension, no adaptive
+pretraining, no auxiliary space. The far control: it bounds what the rest of
+the machinery is worth.
+
+\paragraph{+LAPT.} Vocabulary extended, new rows left at the model's default
+initialization, then language-adaptive pretraining. Isolates the
+contribution of adaptive pretraining itself.
+
+\paragraph{+Random+LAPT.} New rows drawn from a Gaussian at the pretrained
+embedding scale. The floor: any initializer that does not beat this is not
+using the information it claims to use.
+
+\paragraph{+FOCUS+LAPT.} FOCUS initialization
+\citep{dobler-de-melo-2023-focus}: each new embedding a weighted combination
+of overlapping tokens in a FastText space, projected into the model's space.
+The near control --- it consumes the same auxiliary space and the same
+projection as the morpheme-grounded system and differs only in not using
+morpheme segmentation.
+
+\paragraph{+LGSE+LAPT.} The morpheme-grounded initializer. A new token $t$
+with decomposition $m_1 \dots m_k$ receives
+\begin{equation}
+e_{\text{new}} = \frac{1}{k}\sum_{j=1}^{k} W e_{m_j},
+\label{eq:lgse}
+\end{equation}
+with $e_{m_j}$ a FastText vector and $W \in \mathbb{R}^{d \times d}$ aligning
+the two spaces. Tokens without a decomposition fall back to a whole-token
+vector and then to character $n$-grams. During adaptive pretraining a term
+$\lambda\lVert e_{\text{new}} - \mu\rVert^2$ penalizes drift from the
+initialization.
+
+\paragraph{Two quantities the method does not fix.}
+Equation~\ref{eq:lgse} requires $W$ and the regularizer requires $\lambda$.
+Neither is determined by the method as described, and the retracted paper
+specified neither. We chose both, documented the choice, and held it fixed:
+$W$ by orthogonal Procrustes on surface anchors shared between each
+language's FastText model and XLM-R (5{,}910 anchors for Amharic, 3{,}875 for
+Tigrinya), and $\lambda = 1.0$. These are our choices; the
+\textsc{+LGSE+LAPT} column is one faithful instantiation rather than the only
+one.
+
+We note a structural consequence. The initializer writes $We_{m_j}$ into the
+embedding matrix and the regularizer anchors to a constant, so nothing
+downstream is a function of $W$ once initialization is complete. $W$ is a
+fixed preprocessing transform here, not a learned parameter --- and because
+$W$ is read only on the path that consumes FastText, \textsc{+LAPT} and
+\textsc{+Random+LAPT} never load it at all. That fact is used in
+Appendix~\ref{app:prov} and is verified there, not assumed.
+
+\section{Setup}
+\label{sec:setup}
+
+\paragraph{One protocol per language.} Every Amharic run shares one
+configuration file and every Tigrinya run shares another, each verified by
+checksum. The two differ only in what the language requires --- its
+alignment matrix, its adaptive-pretraining corpus, its task data --- and in
+one asymmetry stated below. Every hyperparameter is identical between them:
+fine-tuning uses a constant learning rate of $5\times10^{-5}$, no warmup,
+batch size 32, 10 epochs, and checkpoint selection by evaluation loss. This
+recipe is the same for all five systems and was not tuned for any of them;
+the selection metric is task-agnostic by construction.
+
+\paragraph{The one asymmetry.} The Amharic configuration enables the amseg
+morphological analyzer, which exists for Amharic and not for Tigrinya. The
+morpheme-grounded system therefore decomposes 99 of 198 added Amharic tokens
+(50.0\%) against 33 (16.7\%) from the static lexicon alone, while Tigrinya
+has the lexicon only. We report this as a property of the available
+resources. It favours the method on Amharic, which is where it leads a cell.
+
+\paragraph{Data.} Amharic NER uses the MasakhaNER splits
+\citep{adelani-etal-2021-masakhaner} unchanged and Amharic QA the AmQA splits
+\citep{taffa-etal-2024-amqa} unchanged. Tigrinya NER uses MasakhaNER
+likewise. Tigrinya QA is an extractive conversion of TIGQA keeping only spans
+that resolve verbatim in their context: 1{,}517 of 2{,}179 pairs, split
+1189/177/151 at seed 42. Amharic text classification uses a 2{,}499-row
+annotated educational-quality corpus, 2{,}340 after removing 2
+spreadsheet-error rows and 157 exact duplicates, split 1872/233/235. Tigrinya
+text classification uses FineWeb-C \texttt{tir\_Ethi} at 597/74/74. Each
+split carries a manifest with source, checksum and split seed. The first
+author led the Amharic annotation.
+
+\paragraph{The text-classification label set.} Both languages use the same
+six label values, following the FineWeb-C convention: 1--5 are an ordinal
+educational-quality scale (None, Minimal, Basic, Good, Excellent) and 6 is a
+separate flag for unreadable, garbled or off-topic content, not a sixth point
+above Excellent. The task runner treats all six as unordered classes. Which
+values occur in a given test split is a sampling matter and differs: the
+Amharic test split contains no Excellent documents and the Tigrinya one
+contains a single instance of that class.
+
+\paragraph{Metrics.} F1 for NER and QA. For text classification we report
+macro-F1 over the label values with at least one test instance as primary,
+read per run from the per-class supports, with accuracy secondary. A class
+with no test instances contributes zero to a macro average without measuring
+anything, so including it would depress one language's scores relative to the
+other by construction. Accuracy is secondary because of the class prior:
+Amharic's majority quality level holds 66.95\% of its quality-rated test
+items and Tigrinya's 32.88\%, so accuracy on the two is differently scaled
+and largely measures majority-level agreement on Amharic. The majority
+baselines are 66.38 accuracy and 20.05 quality macro-F1 for Amharic, 32.43
+and 9.90 for Tigrinya.
+
+\paragraph{Seeds.} 42--46 for every cell, extended to 42--51 on Amharic NER
+for the three systems available when the failure mode of
+\S\ref{sec:failures} appeared there.
+
+\paragraph{Across languages.} The two language columns are not two
+measurements of one quantity. Their text-classification tasks have different
+class priors and different test-set sizes (235 against 74 items), so the
+columns must not be pooled or averaged. All comparisons we report are within
+a language.
+
+\section{Results}
+\label{sec:results}
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{llcccccc}
+\toprule
+& & \multicolumn{3}{c}{\textbf{Amharic}} & \multicolumn{3}{c}{\textbf{Tigrinya}} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+System & & TC & NER & QA & TC & NER & QA \\
+\midrule
+XLM-R & & 56.98\,\small{$\pm$18.80} & 67.05\,\small{$\pm$2.55} & 59.54\,\small{$\pm$2.14} & \textbf{19.64}\,\small{$\pm$8.48} & \textbf{73.64}\,\small{$\pm$1.19} & \textbf{54.65}\,\small{$\pm$0.81} \\
+\textsc{+LAPT} & & \textbf{70.27}\,\small{$\pm$4.42} & 66.25\,\small{$\pm$1.95} & \textbf{59.87}\,\small{$\pm$1.40} & 16.82\,\small{$\pm$3.18} & 73.05\,\small{$\pm$0.77} & 52.18\,\small{$\pm$2.21} \\
+\textsc{+Random+LAPT} & & 65.73\,\small{$\pm$15.56} & 67.78\,\small{$\pm$3.25}$^\dagger$ & 58.02\,\small{$\pm$1.86} & 11.46\,\small{$\pm$2.18} & 73.52\,\small{$\pm$1.30} & 52.68\,\small{$\pm$3.33} \\
+\textsc{+FOCUS+LAPT} & & 68.20\,\small{$\pm$3.24} & 66.78\,\small{$\pm$2.93}$^\dagger$ & 59.41\,\small{$\pm$1.51} & 18.08\,\small{$\pm$7.14} & 72.97\,\small{$\pm$1.22} & 54.64\,\small{$\pm$4.16} \\
+\textsc{+LGSE+LAPT} & & 57.02\,\small{$\pm$15.99} & \textbf{68.27}\,\small{$\pm$1.52}$^\dagger$ & 58.23\,\small{$\pm$1.40} & 16.48\,\small{$\pm$9.89} & 72.76\,\small{$\pm$1.41}$^\dagger$ & 52.26\,\small{$\pm$1.50} \\
+\midrule
+\multicolumn{2}{l}{\emph{majority level}} & 20.05 & --- & --- & 9.90 & --- & --- \\
+\bottomrule
+\end{tabular}
+\caption{All thirty cells. TC is macro-F1 over the label values present in
+the test split; NER and QA are F1. Mean $\pm$ sample standard deviation over
+seeds, highest mean per column in \textbf{bold}. $^\dagger$ one run in the
+cell settled into a degenerate predictor and is excluded from the mean and
+counted in \S\ref{sec:failures}. The two language halves are not comparable
+with each other (\S\ref{sec:setup}); no ordering across them is implied.}
+\label{tab:main}
+\end{table*}
+
+Table~\ref{tab:main} gives the complete comparison.
+
+\paragraph{The morpheme-grounded system leads one cell of six.} Amharic NER,
+at 68.27 against 67.78 for the next system. It is last or next-to-last on the
+other five.
+
+\paragraph{Off-the-shelf XLM-R leads three.} All three Tigrinya tasks, while
+expanding no vocabulary and performing no adaptive pretraining. Its runs took
+6--24 minutes against roughly 5.5 hours for the extended systems, a factor of
+about twenty in compute. On Tigrinya question answering it also has the
+tightest variance in the table, $\pm0.81$.
+
+\paragraph{Adaptive pretraining alone leads two.} \textsc{+LAPT} --- extension
+with the model's default initialization --- has the highest mean on Amharic
+text classification and Amharic question answering. No principled initializer
+beats it on either.
+
+\paragraph{No system detects problematic content.} The flag's F1 is exactly
+zero in all fifty text-classification runs: five systems, two languages, five
+seeds, no exceptions. With 11 Amharic and 9 Tigrinya training instances this
+is not a task the released annotation can support, and we report it as a
+property of the corpora rather than of any system. It is excluded from the
+primary metric for that reason (\S\ref{sec:setup}).
+
+\paragraph{Text classification is where the systems spread most, and where
+they are least reliable.} The Amharic spread is 13.29 quality macro-F1 points
+with a mean within-system standard deviation of 11.60; on Tigrinya every
+system sits
+between 11.46 and 19.64 against a 9.90 majority baseline. The two systems
+with the widest Amharic spread, XLM-R and \textsc{+LGSE+LAPT}, are also the
+two with standard deviations above 12.
+
+\section{The Floor Comparison}
+\label{sec:floor}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llcr}
+\toprule
+Language & Task & $n$ & $\Delta$ \quad\quad 95\% CI \\
+\midrule
+\multirow{3}{*}{Amharic}
+ & TC  & 5 & $-8.71$ \quad $[-27.16, +9.73]$ \\
+ & NER & 3 & $-0.54$ \quad $[-6.70, +5.63]$ \\
+ & QA  & 5 & $+0.22$ \quad $[-1.32, +1.76]$ \\
+\midrule
+\multirow{3}{*}{Tigrinya}
+ & TC  & 5 & $+5.02$ \quad $[-8.04, +18.07]$ \\
+ & NER & 4 & $-0.97$ \quad $[-2.55, +0.62]$ \\
+ & QA  & 5 & $-0.42$ \quad $[-4.75, +3.91]$ \\
+\bottomrule
+\end{tabular}
+\caption{Morpheme-grounded initialization minus random Gaussian
+initialization, on matched converged seeds. Positive favours the
+morpheme-grounded system. \textbf{Every interval contains zero}, in both
+directions, on every task and both languages.}
+\label{tab:floor}
+\end{table}
+
+The comparison that matters most for a method claiming to use morphological
+information is against an initializer that uses none. The published
+evaluation of the morpheme-grounded method reported this baseline; the
+measurement in Table~\ref{tab:floor} is, to our knowledge, the first on a
+common protocol.
+
+The result is the same in all six cells: no separation. The differences range
+from $-8.71$ to $+5.02$ and every interval spans zero. Four favour random
+initialization, two favour the morpheme-grounded one.
+
+This is not a claim that the two are equivalent --- \S\ref{sec:resolution}
+shows these data cannot support that either. It is the narrower and firmer
+claim that on these benchmarks, at these sample sizes, decomposing a token
+into morphemes and averaging pretrained vectors over them yields no
+detectable advantage over drawing the same embeddings from a Gaussian.
+
+\section{Why the Comparison Does Not Resolve}
+\label{sec:resolution}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Language & Task & Spread & Mean sd & Ratio \\
+\midrule
+\multirow{3}{*}{Amharic}
+ & TC  & 10.63 & 9.28 & 1.15 \\
+ & NER & 2.02  & 2.44 & 0.83 \\
+ & QA  & 1.86  & 1.66 & 1.12 \\
+\midrule
+\multirow{3}{*}{Tigrinya}
+ & TC  & 6.81  & 5.15 & 1.32 \\
+ & NER & 0.87  & 1.18 & 0.74 \\
+ & QA  & 2.47  & 2.40 & 1.03 \\
+\bottomrule
+\end{tabular}
+\caption{The spread between the five system means, against the mean
+within-system standard deviation across seeds. A ratio near or below one
+means changing the seed moves a system about as much as changing the system
+does.}
+\label{tab:snr}
+\end{table}
+
+Table~\ref{tab:snr} compares the spread between the five systems against the
+spread between seeds of one system. The ratios run from 0.74 to 1.32: on two
+cells seed variation exceeds the entire between-system spread, and on the
+other four it is of the same order. No cell has a ratio where the systems are
+cleanly separable from seed noise.
+
+Two further properties of the design limit what any $p$-value here can mean.
+First, of the 24 paired comparisons in Table~\ref{tab:paired}, ten have an
+effective $n$ of five or fewer, where the smallest attainable two-sided exact
+Wilcoxon $p$ is 0.062 at $n=5$ and 0.125 at $n=4$: significance at the
+conventional threshold is unreachable by construction, and a $p$-value that
+cannot fall below the threshold is uninformative about the hypothesis.
+Second, the minimum difference detectable at $\alpha = 0.05$ and 80\% power,
+computed from the observed paired standard deviations, is well above the
+differences under discussion on text classification in both languages.
+
+We therefore report intervals and win counts, and claim no ordering.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llcrc}
+\toprule
+Lang. & Task & vs & $\Delta$ & W/L \\
+\midrule
+\multirow{4}{*}{Am.}
+ & TC  & \textsc{+LAPT}   & $-13.26$ & 1/4 \\
+ & TC  & \textsc{+FOCUS}  & $-11.19$ & 2/3 \\
+ & NER & \textsc{+FOCUS}  & $+1.78$  & 6/2 \\
+ & QA  & \textsc{+LAPT}   & $-1.64^{*}$ & 0/5 \\
+\midrule
+\multirow{3}{*}{Ti.}
+ & TC  & XLM-R            & $-2.63$  & 2/3 \\
+ & NER & XLM-R            & $-1.00^{*}$ & 0/4 \\
+ & QA  & XLM-R            & $-2.39^{*}$ & 1/4 \\
+\bottomrule
+\end{tabular}
+\caption{Selected rows from the 24 paired comparisons, morpheme-grounded
+minus baseline. $^{*}$ marks the three whose 95\% interval excludes zero ---
+all three against the morpheme-grounded system. The full set is in
+Appendix~\ref{app:paired}; across all 24 it is ahead in 7.}
+\label{tab:paired}
+\end{table}
+
+\section{A Fine-Tuning Failure Mode}
+\label{sec:failures}
+
+Six of the 165 runs never fit their training data. Their relative training-loss
+reduction from the first to the last logged epoch falls between 21.7\% and
+28.9\%, against 69.5\% to 97.9\% for every other run --- a gap with no runs
+inside it, so any threshold placed between the two bands selects the same six.
+The rule uses training loss only, never a test score.
+
+The resulting predictors are degenerate in a task-specific way: on NER the
+tagger proposes no entity at all, giving precision, recall and F1 of exactly
+zero; on text classification the classifier stops predicting a class holding
+19\% of the test set. Development scores track test scores in each case, so
+the failure is visible without touching the test set. The runs are not
+checkpoint mis-selection --- the evaluation-loss minimum across all ten saved
+checkpoints is 0.77--0.80 in the failed runs against 0.42--0.55 in the
+successful ones --- nor overfitting, since training loss stays high.
+
+The six occur under three different systems, so the instability belongs to the
+fine-tuning setup rather than to any initializer. We exclude them from the
+means in Table~\ref{tab:main}, mark the affected cells, and report the count.
+A single such run, averaged in, moves a cell mean by up to 13 points and
+inflates its standard deviation past 30.
+
+\section{Recommendations}
+
+\paragraph{Report the floor.} An initializer that claims to use structural
+information should be compared against one that uses none. That comparison
+costs one additional system and bounds every other claim in the table; here
+it is the difference between ``not separated from FOCUS'' and ``not separated
+from a Gaussian''.
+
+\paragraph{Check resolution before comparing.} Whether the between-system
+spread exceeds the between-seed spread is computable from a pilot, before any
+method is proposed. Where it does not, as in all six cells here, a five-seed
+comparison cannot support a ranking regardless of which system wins.
+
+\paragraph{State the attainable $p$.} At five paired seeds the smallest
+two-sided exact Wilcoxon $p$ is 0.062. Reporting $p > 0.05$ as evidence of no
+difference, in a design where $p < 0.05$ was impossible, misstates what was
+tested.
+
+\paragraph{Release the fitted operator, not only the equation.} $W$ in
+Equation~\ref{eq:lgse} is a $768 \times 768$ matrix, 2.3\,MB. Releasing it,
+or the code that builds it, removes the largest obstacle to reproducing a
+method of this kind. We release ours with a sidecar recording its language,
+anchor count, objective and residual --- and we found during this work that a
+language-mismatched matrix produces entirely plausible results, silently, for
+months.
+
+\paragraph{Disclose degenerate runs.} Neither silent exclusion nor silent
+averaging is adequate. Report the count, the rule, and the means both ways.
+
+\section{Related Work}
+
+\paragraph{Initialization for vocabulary extension.} WECHSEL
+\citep{minixhofer-etal-2022-wechsel} transfers embeddings through bilingual
+dictionaries and static vectors. FOCUS \citep{dobler-de-melo-2023-focus},
+our near control, builds each new embedding from overlapping tokens in an
+auxiliary FastText space. Both FOCUS and the morpheme-grounded method reduce
+to a whole-token vector when their condition --- overlap, or an available
+decomposition --- does not hold, which bounds how far apart they can be:
+their difference is limited by how often that condition fires.
+\citet{csaki-etal-2023-efficiently} survey the adaptation pipeline. Our
+results do not argue against this line of work; they indicate that these
+benchmarks at these sample sizes cannot adjudicate between its members.
+
+\paragraph{Morphological resources for Ethio-Semitic languages.} Amharic and
+Tigrinya are templatic and heavily affixing, which motivates morpheme-aware
+vocabulary construction. HornMorpho
+\citep{gasser-2011-hornmorpho} provides finite-state analysis and is enabled
+in our Amharic configuration; its absence for Tigrinya is the one asymmetry
+between our two protocols (\S\ref{sec:setup}).
+
+\paragraph{Reproduction and statistical practice.}
+\citet{belz-etal-2021-systematic} survey reproducibility in NLP. Our
+methodology is control-based: rather than reporting that numbers differ, we
+hold systems that should be unaffected by a change fixed and attribute the
+difference from their movement.
+
+\section{Conclusion}
+
+Across thirty cells on a common protocol per language, morpheme-grounded
+embedding initialization leads one. Off-the-shelf XLM-R leads three at a
+twentieth of the compute, and adaptive pretraining with default
+initialization leads two. Against random Gaussian initialization the
+morpheme-grounded method is not separated on any task in either language.
+
+We do not conclude that these initializers are equivalent; our tests are too
+small to support that and we say so. We conclude that the morpheme-grounded
+method as specified does not deliver a measurable advantage on these
+benchmarks, that the benchmarks themselves cannot resolve differences of the
+size under discussion at the sample sizes conventionally used, and that the
+floor comparison against random initialization --- cheap, and omitted from
+the published evaluation --- is what makes the first conclusion firm.
+
+\section*{Limitations}
+
+Our $W$ and $\lambda$ are documented substitutions, not values recovered from
+the original method, so the \textsc{+LGSE+LAPT} column is one faithful
+instantiation and absolute numbers would differ under another. A reader
+should treat our comparison as a test of the method as specified, not of
+every possible realization of it.
+
+The paired tests have three to ten observations. They establish that these
+data do not separate the systems, not that the systems are equivalent;
+distinguishing those readings would need many more seeds or benchmarks with a
+larger between-system spread. We did not run more seeds: at five, the
+attainable $p$ is already above the conventional threshold, so the useful
+next step is a different experiment rather than a larger one.
+
+The morpheme-grounded system decomposes 50.0\% of added Amharic tokens and
+16.7\% of them from the static lexicon alone, with no analyzer available for
+Tigrinya. Its mechanism is therefore exercised unevenly across our two
+languages, and more fully where it leads a cell than where it does not. A
+version of this study with a Tigrinya analyzer would test the method more
+symmetrically.
+
+Amharic text classification uses a corpus we annotated; its label
+distribution is skewed and its highest quality level, Excellent, has no test
+instances at all. Tigrinya text classification has 74 test items, where one example
+moves accuracy by 1.35 points. Neither text-classification cell should carry
+much weight.
+
+Two systems' Amharic runs were produced under a configuration whose
+alignment-matrix path names the Tigrinya matrix. Neither consumes it, which
+Appendix~\ref{app:prov} verifies rather than assumes, but a reader checking
+those records will see the path and should know why it is immaterial.
+
+\section*{Ethics Statement}
+
+This paper replaces a retracted paper by the same authors, and withdraws an
+intermediate measurement of our own. We report the outcome as measured,
+including where it contradicts our earlier claims, and we document errors
+made during this work alongside those found in the original: a configuration
+error that applied the Tigrinya alignment matrix to Amharic runs, a
+morpheme-coverage figure initially over-reported, a hardcoded label set that
+inflated one language's text-classification scores, and three log-parsing
+defects in our own analysis code. Each is recorded in the repository with the
+evidence that found it. We found no evidence of fabrication in the original
+work; every discrepancy we traced is consistent with ordinary pipeline
+defects of the kind we also made here.
+
+Self-examination carries a conflict of interest. We mitigate it by releasing
+every per-run record so that each number can be recomputed independently, by
+generating every table from a single committed script, and by reporting the
+outcome least favourable to our own prior claim. Readers should weigh our
+conclusions accordingly.
+
+All datasets are publicly available or released by us. The Amharic
+educational-quality annotation was led by the first author. No human subjects
+were involved.
+
+\section*{Acknowledgments}
+
+We thank the reviewers of the earlier submission, whose questions prompted
+this study, and the L3S compute support team.
+
+\bibliography{custom}
+
+\appendix
+
+\section{Provenance}
+\label{app:prov}
+
+\paragraph{One script.} Every number in this paper is produced by
+\texttt{scripts/build\_table2.py}, which reads the per-run
+\texttt{experiment.json} records and emits Tables
+\ref{tab:main}--\ref{tab:paired}, the per-seed CSV, and the audit below.
+Running it reproduces every figure; nothing here was typed by hand.
+
+\paragraph{Runs.} 165 runs across all thirty cells, 0 invalid: 27 cells at
+five seeds and the three Amharic NER cells available when the failure mode of
+\S\ref{sec:failures} appeared at ten. Each carries its commit, configuration
+checksum, alignment-matrix path, corpus checksum, and per-seed development
+and test metrics. The audit asserts, per cell, the configuration checksum,
+the data directory, and --- for the two systems that read it --- that the
+alignment matrix matches the language.
+
+\paragraph{Why two directories supply the Amharic column.} XLM-R, FOCUS and
+the morpheme-grounded system come from one directory
+(checksum \texttt{3e51cdab\ldots}); \textsc{+LAPT} and
+\textsc{+Random+LAPT} from another (\texttt{1fb98f62\ldots}). The two
+configurations differ only in the \texttt{alignment\_matrix\_path} line, and
+the second names the Tigrinya matrix. That disqualifies the second
+directory's FOCUS and morpheme-grounded runs, which is why they are not used.
+It does not disqualify \textsc{+LAPT} or \textsc{+Random+LAPT}: neither
+consumes FastText, and $W$ is read only on the FastText path. This is
+verified, not argued --- all ten of their NER runs are bit-identical to the
+corrected-matrix snapshot, difference 0.000000 on every seed, including one
+seed recorded under each matrix.
+
+\paragraph{Recipe.} Adaptive pretraining: frozen backbone, maximum length
+256, MLM probability 0.15, learning rate $5\times10^{-5}$ constant, batch
+size 32, 10 epochs, weight decay 0.01, AdamW, fp16. Fine-tuning: the same
+learning rate, schedule, batch size and epoch count, checkpoint selection by
+evaluation loss. Identical across all five systems and both languages,
+untuned.
+
+\paragraph{Compute.} Each extended-system run takes approximately 5.5 hours
+on one A100, dominated by adaptive pretraining, which repeats per seed
+because the seed determines the initialization under test. XLM-R runs take
+6--24 minutes. The 165 runs total roughly 800 GPU-hours.
+
+\section{All Paired Comparisons}
+\label{app:paired}
+
+The complete set of 24, with intervals, exact Wilcoxon $p$, and the smallest
+$p$ attainable at each effective $n$, is released as
+\texttt{tables/table2.txt}. Per-seed values for all 165 runs are in
+\texttt{tables/table2\_per\_seed.csv}, one row per
+(language, task, system, seed) with the score, the degeneracy flag, the
+source directory, the configuration checksum, the commit, and the result file
+path.
+
+\end{document}
