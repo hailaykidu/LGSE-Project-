@@ -72,11 +72,11 @@ TABLE 2   five systems, three tasks, two languages
 
     TC   primary: macro-F1 (classes in test)
       system            mean     sd   n  fail      acc     sd   mF1(6)
-      XLM-R            19.64   8.48   5     0    38.11   7.24    16.36  *
-      +LAPT            16.82   3.18   5     0    36.22   3.23    14.02
-      +Random+LAPT     11.46   2.18   5     0    32.16   1.76     9.55
-      +FOCUS+LAPT      18.08   7.14   5     0    38.11   5.92    15.07
-      +LGSE+LAPT       16.48   9.89   5     0    36.76   8.24    13.73
+      XLM-R            16.36   7.07   5     0    38.11   7.24    16.36  *
+      +LAPT            14.02   2.65   5     0    36.22   3.23    14.02
+      +Random+LAPT      9.55   1.82   5     0    32.16   1.76     9.55
+      +FOCUS+LAPT      15.07   5.95   5     0    38.11   5.92    15.07
+      +LGSE+LAPT       13.73   8.24   5     0    36.76   8.24    13.73
 
     NER   primary: F1
       system            mean     sd   n  fail
@@ -116,10 +116,10 @@ TABLE 3   LGSE minus each baseline, matched converged seeds
   amha qa   +Random+LAPT    5   +0.22       [-1.32,+1.76]   1.000  0.062  2/3/0
   amha qa   +FOCUS+LAPT     5   -1.17       [-2.91,+0.56]   0.188  0.062  1/4/0
   amha qa   XLM-R           5   -1.30       [-3.12,+0.51]   0.188  0.062  1/4/0
-  tigr tc   +LAPT           5   -0.34     [-12.20,+11.51]   0.625  0.062  1/4/0
-  tigr tc   +Random+LAPT    5   +5.02      [-8.04,+18.07]   0.625  0.062  3/2/0
-  tigr tc   +FOCUS+LAPT     5   -1.60      [-11.51,+8.31]   0.875  0.125  1/3/1
-  tigr tc   XLM-R           5   -3.16      [-14.76,+8.44]   0.625  0.062  2/3/0
+  tigr tc   +LAPT           5   -0.29      [-10.17,+9.60]   0.625  0.062  1/4/0
+  tigr tc   +Random+LAPT    5   +4.18      [-6.70,+15.06]   0.625  0.062  3/2/0
+  tigr tc   +FOCUS+LAPT     5   -1.34       [-9.60,+6.92]   0.875  0.125  1/3/1
+  tigr tc   XLM-R           5   -2.63      [-12.30,+7.04]   0.625  0.062  2/3/0
   tigr ner  +LAPT           4   -0.11       [-1.56,+1.34]   1.000  0.125  2/2/0
   tigr ner  +Random+LAPT    4   -0.97       [-2.55,+0.62]   0.125  0.125  0/4/0
   tigr ner  +FOCUS+LAPT     4   -0.05       [-1.03,+0.93]   1.000  0.125  2/2/0
@@ -142,7 +142,7 @@ Seed variation against between-system spread (descriptive)
   amharic   tc       10.63      9.28    1.15
   amharic   ner       2.02      2.44    0.83
   amharic   qa        1.86      1.66    1.12
-  tigrinya  tc        8.17      6.17    1.32
+  tigrinya  tc        6.81      5.15    1.32
   tigrinya  ner       0.87      1.18    0.74
   tigrinya  qa        2.47      2.40    1.03
 

@@ -102,12 +102,21 @@ EXPECTED_DATA_DIR = {
     ("tigrinya", "qa"): "data/qa/tigqa_squad",
 }
 
-# Amharic TC has six label values; label 5 occurs in train and in neither dev
-# nor test, so the macro_f1 recorded in the run files averages over an empty
-# class and is capped at 5/6 of its maximum. The primary metric averages over
-# the five classes present in test. Tigrinya TC has the same structure.
-TC_CLASSES_IN_TEST = ["1", "2", "3", "4", "6"]
+# Both TC tasks use six label values, but which of them occur in the test
+# split differs by language, so the set cannot be hardcoded. Amharic test
+# holds classes 1,2,3,4,6 -- label 5 occurs in train and in neither dev nor
+# test -- while Tigrinya test holds all six, class 5 with a single instance.
+# The recorded macro_f1 averages over all six regardless, so on Amharic it is
+# capped at five sixths of its maximum. The primary metric averages over the
+# classes actually present, read per run from the per-class supports.
 TC_CLASSES_RECORDED = ["1", "2", "3", "4", "5", "6"]
+
+
+def tc_classes_in_test(entry: dict) -> list[str]:
+    """Label values with at least one test instance, for this run."""
+    pc = entry["record"]["test"]["per_class"]
+    return [c for c in TC_CLASSES_RECORDED
+            if c in pc and pc[c]["support"] > 0]
 
 # Majority-class baselines, computed from the test splits (see --audit).
 MAJORITY = {"amharic": {"accuracy": 66.38, "macro_f1_5": 15.96},
@@ -193,7 +202,7 @@ def score(entry: dict, metric: str | None = None) -> float:
     task = entry["task"]
     name = metric or ("macro_f1_5" if task == "tc" else "f1")
     if name == "macro_f1_5":
-        return tc_macro(entry, TC_CLASSES_IN_TEST)
+        return tc_macro(entry, tc_classes_in_test(entry))
     if name == "macro_f1_6":
         return tc_macro(entry, TC_CLASSES_RECORDED)
     value = entry["record"]["test"][name]
