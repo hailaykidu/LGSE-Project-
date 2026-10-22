@@ -201,14 +201,17 @@ text classification uses FineWeb-C \texttt{tir\_Ethi} at 597/74/74. Each
 split carries a manifest with source, checksum and split seed. The first
 author led the Amharic annotation.
 
-\paragraph{The text-classification label set.} Both languages use the same
-six label values, following the FineWeb-C convention: 1--5 are an ordinal
-educational-quality scale (None, Minimal, Basic, Good, Excellent) and 6 is a
-separate flag for unreadable, garbled or off-topic content, not a sixth point
-above Excellent. The task runner treats all six as unordered classes. Which
-values occur in a given test split is a sampling matter and differs: the
+\paragraph{The text-classification label set.} The upstream annotation
+schemes record an educational-value level by name (None, Minimal, Basic,
+Good, Excellent) alongside a separate problematic-content flag. For
+classification we encode both in one integer column, 1--5 for the quality
+levels and 6 for the flag; that encoding is ours, and it is what the task
+runner sees, as six unordered classes. The flag is not a sixth point above
+Excellent, so it is not on the same dimension as the rest, which is why the
+primary metric below excludes it. Which quality levels occur in a given test
+split is a sampling matter and differs between the two languages: the
 Amharic test split contains no Excellent documents and the Tigrinya one
-contains a single instance of that class.
+contains a single instance.
 
 \paragraph{Metrics.} F1 for NER and QA. For text classification we report
 macro-F1 over the label values with at least one test instance as primary,
@@ -473,9 +476,10 @@ auxiliary FastText space. Both FOCUS and the morpheme-grounded method reduce
 to a whole-token vector when their condition --- overlap, or an available
 decomposition --- does not hold, which bounds how far apart they can be:
 their difference is limited by how often that condition fires.
-\citet{csaki-etal-2023-efficiently} survey the adaptation pipeline. Our
-results do not argue against this line of work; they indicate that these
-benchmarks at these sample sizes cannot adjudicate between its members.
+\citet{csaki-etal-2023-efficiently} combine tokenizer extension with a
+data-mixing recipe and evaluate it on Hungarian and Thai. Our results do not
+argue against this line of work; they indicate that these benchmarks at these
+sample sizes cannot adjudicate between its members.
 
 \paragraph{Morphological resources for Ethio-Semitic languages.} Amharic and
 Tigrinya are templatic and heavily affixing, which motivates morpheme-aware

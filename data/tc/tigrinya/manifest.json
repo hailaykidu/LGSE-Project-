@@ -3,7 +3,7 @@
   "source_url": "https://huggingface.co/datasets/data-is-better-together/fineweb-c",
   "documents": 745,
   "labelled": 745,
-  "label_scale": "paper Sec 7, ordinal 1-5 plus a non-ordinal flag value 6",
+  "label_scale": "integers 1-5 for the educational-value levels (None, Minimal, Basic, Good, Excellent) plus 6 for the problematic-content flag. The upstream annotation records the level by name and the flag as a separate field; this integer encoding is introduced here for classification and is not an upstream convention.",
   "ordinal_scale": {
     "None": "1",
     "Minimal": "2",
