@@ -63,3 +63,24 @@ results_hornmorpho_wam/*/*
 !results_hornmorpho_wam/*/experiment.json
 data/_incoming/
 .claude/
+
+# LaTeX build products and the Overleaf bundles, both regenerable:
+#   cd paper_arr && pdflatex main && bibtex main && pdflatex main && pdflatex main
+#   zip lgse_arr_overleaf.zip main.tex custom.bib acl.sty acl_natbib.bst
+*.aux
+*.bbl
+*.blg
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+paper*/main.pdf
+paper*/*.log
+*.zip
+
+# acl.sty and acl_natbib.bst are ACL-distributed and are not redistributed
+# here; fetch them from github.com/acl-org/acl-style-files. The inconsolata
+# stub exists only because this cluster lacks the package.
+paper*/acl.sty
+paper*/acl_natbib.bst
+paper*/stub/
