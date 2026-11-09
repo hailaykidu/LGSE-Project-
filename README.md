@@ -108,10 +108,12 @@ and split seed.
 
 - MasakhaNER does not cover Tigrinya. The two NER datasets use different tag
   sets (Tigrinya adds `MISC`) and are not compared with each other.
-- The TIGQA release reports about 2.68K questions; the converted file used
-  here has 2,179, of which the 1,517 with an exactly matching answer span are
-  kept. The difference is not reconciled, so Tigrinya QA results here are not
-  comparable to published TIGQA numbers.
+- TIGQA counts 2,685 question–answer pairs, with several reference answers
+  per evaluation question; the converted file has 2,179 single-answer pairs
+  over 107 passages, of which the 1,517 whose answer occurs verbatim are kept
+  (`scripts/tigqa_breakdown.py` classifies the rest). The counts are on
+  different bases, so Tigrinya QA results here are not comparable to
+  published TIGQA numbers.
 - The Amharic TC corpus was labelled by eleven annotators (one author and
   ten native-speaker volunteers) with a six-class rubric, one label per
   document, followed by a full adjudication pass. Labels were merged without
