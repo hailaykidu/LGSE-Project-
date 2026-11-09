@@ -277,7 +277,8 @@ def paired(a: dict[int, float], b: dict[int, float]) -> dict:
            "ties": sum(1 for d in diffs if d == 0)}
     if n < 2:
         out.update(mean_diff=float("nan"), ci=(float("nan"), float("nan")),
-                   p_wilcoxon=float("nan"), floor=float("nan"))
+                   p_wilcoxon=float("nan"), floor=float("nan"),
+                   mdd=float("nan"))
         return out
     mean_d, sd_d = st.mean(diffs), st.stdev(diffs)
     out["mean_diff"], out["sd_diff"] = mean_d, sd_d
@@ -285,6 +286,9 @@ def paired(a: dict[int, float], b: dict[int, float]) -> dict:
         from scipy import stats as sps
         half = sps.t.ppf(0.975, n - 1) * sd_d / math.sqrt(n)
         out["ci"] = (mean_d - half, mean_d + half)
+        # minimum detectable difference, alpha .05 two-sided, power .80
+        out["mdd"] = ((sps.t.ppf(0.975, n - 1) + sps.t.ppf(0.80, n - 1))
+                      * sd_d / math.sqrt(n))
         try:
             out["p_wilcoxon"] = sps.wilcoxon([a[s] for s in seeds],
                                              [b[s] for s in seeds]).pvalue
@@ -296,8 +300,88 @@ def paired(a: dict[int, float], b: dict[int, float]) -> dict:
                         if n_eff >= 1 else float("nan"))
     except ImportError:                                # pragma: no cover
         out.update(ci=(float("nan"), float("nan")),
-                   p_wilcoxon=float("nan"), floor=float("nan"))
+                   p_wilcoxon=float("nan"), floor=float("nan"),
+                   mdd=float("nan"))
     return out
+
+
+# --------------------------------------------------------------------------
+# exclusions: the training-loss rule, never a test score
+# --------------------------------------------------------------------------
+
+EXCLUSIONS = ROOT / "tables" / "loss_rule.json"
+
+
+def load_exclusions(path: Path) -> set[tuple[str, str, str, int]]:
+    """Runs the training-loss rule marks as failed (scripts/loss_rule.py).
+
+    The file records, per language, the runs whose relative training-loss
+    reduction falls below the midpoint of the empty interval between failed
+    and healthy runs. It is computed from training logs only.
+    """
+    if not path.exists():
+        raise SystemExit(f"{path} not found; run scripts/loss_rule.py "
+                         f"--write {path.relative_to(ROOT)} first")
+    data = json.load(open(path, encoding="utf-8"))
+    inv = {v: k for k, v in DISPLAY.items()}
+    out = set()
+    for lang, d in data["languages"].items():
+        for f in d["failed"]:
+            out.add((lang, f["task"], inv[f["system"]], int(f["seed"])))
+    return out
+
+
+# --------------------------------------------------------------------------
+# resolution: is the observed spread more than seed noise produces?
+# --------------------------------------------------------------------------
+
+D5 = 2.326          # expected range of five independent standard normals
+N_PERM = 20_000
+PERM_SEED = 20260101
+
+
+def cell_spread(cell: dict[str, dict[int, float]]) -> float:
+    means = [st.mean(v.values()) for v in cell.values() if v]
+    return max(means) - min(means)
+
+
+def permutation_p(cell: dict[str, dict[int, float]]) -> float:
+    """Share of label shuffles whose spread reaches the observed one.
+
+    Labels are shuffled within seed, among the systems that have a run at
+    that seed, so each system keeps its per-seed count (cells are unbalanced
+    after exclusions and after the Amharic NER seed extension).
+    """
+    import random
+    rng = random.Random(PERM_SEED)
+    systems = list(cell)
+    seeds = sorted({s for v in cell.values() for s in v})
+    observed = cell_spread(cell)
+    hits = 0
+    for _ in range(N_PERM):
+        shuf = {s: {} for s in systems}
+        for seed in seeds:
+            have = [s for s in systems if seed in cell[s]]
+            vals = [cell[s][seed] for s in have]
+            rng.shuffle(vals)
+            for s, v in zip(have, vals):
+                shuf[s][seed] = v
+        hits += cell_spread(shuf) >= observed - 1e-12
+    return hits / N_PERM
+
+
+def system_variance_share(cell: dict[str, dict[int, float]]) -> float:
+    """Share of variance attributable to the system, unbalanced one-way."""
+    groups = [list(v.values()) for v in cell.values() if v]
+    k = len(groups)
+    N = sum(len(g) for g in groups)
+    grand = st.mean(x for g in groups for x in g)
+    ssb = sum(len(g) * (st.mean(g) - grand) ** 2 for g in groups)
+    ssw = sum((x - st.mean(g)) ** 2 for g in groups for x in g)
+    msb, msw = ssb / (k - 1), ssw / (N - k)
+    n0 = (N - sum(len(g) ** 2 for g in groups) / N) / (k - 1)
+    s2 = max(0.0, (msb - msw) / n0)
+    return s2 / (s2 + msw) if (s2 + msw) else 0.0
 
 
 # --------------------------------------------------------------------------
@@ -340,10 +424,34 @@ def print_audit(valid, invalid):
         print(f"    {name}\n      {reason}")
 
 
-def print_tables(valid, out_dir: Path | None):
-    by = defaultdict(dict)
+def print_tables(valid, out_dir: Path | None, excluded: set):
+    by_all = defaultdict(dict)
     for e in valid:
-        by[(e["language"], e["task"], e["system"])][e["seed"]] = e
+        by_all[(e["language"], e["task"], e["system"])][e["seed"]] = e
+    # the analysis set: every run the training-loss rule does not mark
+    by = defaultdict(dict)
+    n_excl = Counter()
+    for k, runs in by_all.items():
+        for seed, e in runs.items():
+            if (k[0], k[1], k[2], seed) in excluded:
+                n_excl[k] += 1
+            else:
+                by[k][seed] = e
+    missing = [x for x in excluded
+               if x[3] not in by_all.get((x[0], x[1], x[2]), {})]
+    if missing:
+        raise SystemExit(f"exclusions name runs that do not exist: {missing}")
+    # a run scoring exactly zero is a collapsed predictor; every such run must
+    # already be caught by the loss rule, otherwise the rule is incomplete
+    stray = [(k, s) for k, runs in by.items() for s, e in runs.items()
+             if score(e) == 0.0]
+    if stray:
+        raise SystemExit(f"zero-score runs not caught by the loss rule: {stray}")
+    print(f"\n  excluded by the training-loss rule: {sum(n_excl.values())} runs "
+          f"({EXCLUSIONS.relative_to(ROOT)})")
+    for k in sorted(n_excl):
+        seeds = sorted(s for s in by_all[k] if (k[0], k[1], k[2], s) in excluded)
+        print(f"    {k[0]:9s}{k[1]:4s}{DISPLAY[k[2]]:14s} seeds {seeds}")
 
     # ---- Table 2 ------------------------------------------------------
     print("\n" + "=" * 78)
@@ -372,7 +480,8 @@ def print_tables(valid, out_dir: Path | None):
                 if not runs:
                     print(f"      {DISPLAY[s]:14s}  (no runs)")
                     continue
-                m, sd, n, fail = mean_sd_n([score(v) for v in runs.values()])
+                m, sd, n, _ = mean_sd_n([score(v) for v in runs.values()])
+                fail = n_excl[(lang, task, s)]
                 line = f"      {DISPLAY[s]:14s}{m:8.2f}{sd:7.2f}{n:4d}{fail:6d}"
                 if task == "tc":
                     a = mean_sd_n([score(v, "accuracy") for v in runs.values()])
@@ -395,8 +504,15 @@ def print_tables(valid, out_dir: Path | None):
     print("  No system on either language at any seed flags a problematic")
     print("  document. Including this class in the macro average would")
     print("  donate a guaranteed zero to a fifth of the score.")
-    print("\n  * = highest mean in the cell. fail = runs scoring exactly zero,")
-    print("  excluded from the mean and counted here (see mean_sd_n).")
+    print("\n  * = highest mean in the cell. fail = runs the training-loss rule")
+    print("  excludes (scripts/loss_rule.py); n counts the runs kept.")
+    print("\n  with excluded runs restored (reported both ways):")
+    for k in sorted(n_excl):
+        m0, sd0, _, _ = mean_sd_n([score(v) for v in by[k].values()])
+        allv = [score(v) for v in by_all[k].values()]
+        print(f"    {k[0]:9s}{k[1]:4s}{DISPLAY[k[2]]:14s}"
+              f"{m0:7.2f} +/- {sd0:5.2f}  ->  {st.mean(allv):7.2f} +/- "
+              f"{st.stdev(allv):5.2f}")
     print("  mF1(6) = the value recorded in the run files, which averages over")
     print("  a sixth class with no test instances.")
 
@@ -405,9 +521,10 @@ def print_tables(valid, out_dir: Path | None):
     print("TABLE 3   LGSE minus each baseline, matched converged seeds")
     print("=" * 78)
     print(f"\n  {'lang':5s}{'task':5s}{'vs':14s}{'n':>3s}{'delta':>8s}"
-          f"{'95% CI':>20s}{'p_wilc':>8s}{'floor':>7s}  W/L/T")
+          f"{'95% CI':>20s}{'p_wilc':>8s}{'floor':>7s}{'MDD':>7s}  W/L/T")
     ahead = total = 0
     excluding = []
+    mdd_rows = []
     for lang in LANGUAGES:
         for task in TASKS:
             L = {k: score(v) for k, v in by[(lang, task, "lgse_lapt")].items()}
@@ -421,16 +538,86 @@ def print_tables(valid, out_dir: Path | None):
                 lo, hi = r["ci"]
                 if lo * hi > 0:
                     excluding.append(f"{lang[:2]}/{task} vs {DISPLAY[opp]}")
+                mdd_rows.append((lang, task, abs(r["mean_diff"]), r["mdd"],
+                                 r["floor"]))
                 print(f"  {lang[:4]:5s}{task:5s}{DISPLAY[opp]:14s}{r['n']:3d}"
                       f"{r['mean_diff']:+8.2f}"
                       f"{f'[{lo:+.2f},{hi:+.2f}]':>20s}"
-                      f"{r['p_wilcoxon']:8.3f}{r['floor']:7.3f}"
+                      f"{r['p_wilcoxon']:8.3f}{r['floor']:7.3f}{r['mdd']:7.2f}"
                       f"  {r['wins']}/{r['losses']}/{r['ties']}")
     print(f"\n  LGSE ahead in {ahead} of {total} comparisons.")
     print(f"  intervals excluding zero: {len(excluding)}"
           + (f"  {excluding}" if excluding else ""))
     print("  floor = smallest attainable two-sided exact Wilcoxon p at the")
     print("  effective n; where it exceeds 0.05 no result can be significant.")
+    print("  MDD = (t.975 + t.80) * sd_d / sqrt(n): alpha .05 two-sided, power .80.")
+
+    # ---- MDD summary ---------------------------------------------------
+    print("\n" + "=" * 78)
+    print("MDD summary   |delta| against the minimum detectable difference")
+    print("=" * 78)
+    print(f"\n  {'lang':10s}{'task':5s}{'|delta| range':>16s}{'MDD range':>14s}"
+          f"{'<MDD':>7s}")
+    below = unreach = 0
+    for lang in LANGUAGES:
+        for task in TASKS:
+            rr = [x for x in mdd_rows if x[0] == lang and x[1] == task]
+            d = [x[2] for x in rr]; m = [x[3] for x in rr]
+            b = sum(1 for x in rr if x[2] < x[3])
+            below += b
+            unreach += sum(1 for x in rr if x[4] > 0.05)
+            print(f"  {lang:10s}{task:5s}{min(d):7.2f}--{max(d):<7.2f}"
+                  f"{min(m):6.1f}--{max(m):<6.1f}{b:4d}/{len(rr)}")
+    print(f"\n  below MDD: {below} of {len(mdd_rows)}   "
+          f"p < .05 unreachable (floor > .05): {unreach} of {len(mdd_rows)}")
+
+    # ---- floor table ---------------------------------------------------
+    print("\n" + "=" * 78)
+    print("FLOOR   each system minus +Random+LAPT, matched kept seeds")
+    print("=" * 78)
+    print(f"\n  {'lang':5s}{'task':5s}{'system':14s}{'n':>3s}{'delta':>8s}"
+          f"{'95% CI':>20s}")
+    floor_sep, floor_n = [], []
+    for lang in LANGUAGES:
+        for task in TASKS:
+            R = {k: score(v) for k, v in by[(lang, task, "random_lapt")].items()}
+            for s in ["xlmr", "lapt", "focus_lapt", "lgse_lapt"]:
+                S = {k: score(v) for k, v in by[(lang, task, s)].items()}
+                r = paired(S, R)
+                lo, hi = r["ci"]
+                floor_n.append(r["n"])
+                mark = ""
+                if lo * hi > 0:
+                    floor_sep.append(f"{lang[:2]}/{task} {DISPLAY[s]} "
+                                     f"{r['mean_diff']:+.2f}")
+                    mark = "  SEPARATES"
+                print(f"  {lang[:4]:5s}{task:5s}{DISPLAY[s]:14s}{r['n']:3d}"
+                      f"{r['mean_diff']:+8.2f}"
+                      f"{f'[{lo:+.2f},{hi:+.2f}]':>20s}{mark}")
+    print(f"\n  intervals excluding zero: {len(floor_sep)} of {len(floor_n)}"
+          + (f"  {floor_sep}" if floor_sep else ""))
+    print(f"  effective n: {min(floor_n)} to {max(floor_n)}")
+
+    # ---- resolution ----------------------------------------------------
+    print("\n" + "=" * 78)
+    print("RESOLUTION   observed spread against the no-difference null")
+    print("=" * 78)
+    print(f"\n  {'cell':8s}{'n':>3s}{'spread':>8s}{'s_bar':>7s}{'E0':>7s}"
+          f"{'ratio':>7s}{'p_perm':>8s}{'var_sys':>9s}")
+    print(f"  ({N_PERM} label shuffles within seed, RNG seed {PERM_SEED};"
+          f" E0 = {D5} * s_bar / sqrt(n))")
+    for lang in LANGUAGES:
+        for task in TASKS:
+            cell = {s: {k: score(v) for k, v in by[(lang, task, s)].items()}
+                    for s in SYSTEMS}
+            n = min(len(v) for v in cell.values())
+            sds = [st.stdev(v.values()) for v in cell.values()]
+            sbar = st.mean(sds)
+            e0 = D5 * sbar / math.sqrt(n)
+            spr = cell_spread(cell)
+            print(f"  {lang[:2]}/{task.upper():5s}{n:3d}{spr:8.2f}{sbar:7.2f}"
+                  f"{e0:7.2f}{spr / e0:7.2f}{permutation_p(cell):8.3f}"
+                  f"{100 * system_variance_share(cell):8.1f}%")
 
     # ---- seed variation ----------------------------------------------
     print("\n" + "=" * 78)
@@ -463,13 +650,13 @@ def print_tables(valid, out_dir: Path | None):
             w = csv.writer(fh)
             w.writerow(["language", "task", "system", "seed", "primary_metric",
                         "score", "tc_accuracy", "tc_macro_f1_6class",
-                        "degenerate", "source_dir", "config_sha256",
+                        "excluded_loss_rule", "source_dir", "config_sha256",
                         "commit", "result_file"])
             for lang in LANGUAGES:
                 for task in TASKS:
                     for s in SYSTEMS:
-                        for seed in sorted(by[(lang, task, s)]):
-                            e = by[(lang, task, s)][seed]
+                        for seed in sorted(by_all[(lang, task, s)]):
+                            e = by_all[(lang, task, s)][seed]
                             v = score(e)
                             prov = e["record"]["provenance"]
                             w.writerow([
@@ -478,7 +665,8 @@ def print_tables(valid, out_dir: Path | None):
                                 f"{v:.4f}",
                                 f"{score(e,'accuracy'):.4f}" if task == "tc" else "",
                                 f"{score(e,'macro_f1_6'):.4f}" if task == "tc" else "",
-                                int(v == 0.0), e["source_dir"],
+                                int((lang, task, s, seed) in excluded),
+                                e["source_dir"],
                                 prov.get("config_sha256", "")[:16],
                                 prov.get("commit", "")[:12],
                                 str(e["path"].relative_to(ROOT)),
@@ -487,7 +675,7 @@ def print_tables(valid, out_dir: Path | None):
             shown = path.relative_to(ROOT)
         except ValueError:
             shown = path
-        print(f"\nwrote {shown} ({sum(len(by[k]) for k in by)} rows)")
+        print(f"\nwrote {shown} ({sum(len(by_all[k]) for k in by_all)} rows)")
 
 
 def main() -> int:
@@ -498,6 +686,8 @@ def main() -> int:
                     help="print the run audit and exit")
     ap.add_argument("--out", type=Path, default=None,
                     help="directory for the per-seed CSV")
+    ap.add_argument("--exclusions", type=Path, default=EXCLUSIONS,
+                    help="loss-rule output (scripts/loss_rule.py --write)")
     args = ap.parse_args()
 
     valid, invalid = load_runs()
@@ -507,7 +697,7 @@ def main() -> int:
     print_audit(valid, invalid)
     if args.audit:
         return 0
-    print_tables(valid, args.out)
+    print_tables(valid, args.out, load_exclusions(args.exclusions))
     return 0
 
 

@@ -165,14 +165,24 @@ alignment matrix the run used. No number in any paper directory is typed by
 hand; each is regenerated from those records.
 
 ```bash
-python3 scripts/build_paper_tables.py --out tables   # every table and statistic
-python3 scripts/build_paper_tables.py --audit        # which result dirs are used, and why
+python3 scripts/loss_rule.py --write tables/loss_rule.json  # failed runs, from training logs
+python3 scripts/build_table2.py --out tables                 # every table and statistic
+python3 scripts/build_table2.py --audit                      # which runs are used, and why
+python3 scripts/token_share.py                               # new-token share (paper section 7)
 ```
 
-`build_paper_tables.py` reads only `results_hornmorpho_wam/`, the one
-directory holding a single common protocol (one `config_sha256` across all
-systems and tasks). The other four are excluded for protocol differences
-rather than for their numbers; `--audit` prints each with its reason.
+`build_table2.py` reads 165 runs from three directories, each for a stated
+reason given in its docstring: `results_hornmorpho_wam/` (Amharic XLM-R,
++FOCUS+LAPT, +LGSE+LAPT), `results_hornmorpho/` (Amharic +LAPT and
++Random+LAPT only; its config names the Tigrinya matrix, which those two
+systems never read), and `results_tigrinya_gen2/` (all Tigrinya). Other
+result directories are excluded for protocol differences, never for their
+outcomes; `--audit` prints each with its reason. Exclusions come only from
+the training-loss rule (`IMPLEMENTATION_NOTES.md` §5d-vii).
+
+`scripts/build_paper_tables.py` belongs to the earlier `paper_final/`
+write-up. It reads one directory only and its failure rule covers three
+Amharic systems; do not use it for `paper_arr/` numbers.
 
 **The full comparison has been run end-to-end** — five systems, three tasks,
 two languages, five seeds (165 runs; W via orthogonal Procrustes, λ=1.0). The

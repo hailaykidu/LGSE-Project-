@@ -1131,8 +1131,8 @@ path ends in `W_am.npy` and that `W_am.json` declares `language: amharic`.
 > **Superseded as an exclusion criterion.** This section describes runs
 > identified by a *test-score* rule (F1 exactly 0.0) over the 387-run
 > superset of all result directories. `paper_arr/` does not use that rule.
-> It uses a *training-loss* rule over the 165 runs of the single common
-> protocol, which selects **six** runs, not four — see §5d-vii. A rule that
+> It uses a *training-loss* rule applied to all 165 runs behind the paper's
+> tables, which selects **nine** runs — see §5d-vii. A rule that
 > consults test scores cannot decide what counts as a measurement, which is
 > why the paper does not use one. The observations below about what a
 > degenerate run looks like remain accurate.
@@ -1167,44 +1167,86 @@ Baseline re-evaluation on the rebuilt split (xlmr, lapt, random_lapt)
 deferred: estimated several days on the current cluster queue. † cells remain
 on the previous test set until rerun.
 
-### 5d-vii. The exclusion rule used by `paper_arr/` (training loss only)
+### 5d-vii. The exclusion rule used by `paper_arr/` (training loss only, all 165 runs)
 
-The rule the submission uses consults **training logs only**, never test
-scores. For each run, compute the relative reduction in training loss from
-the first to the last logged epoch. On Amharic the distribution is bimodal
-with an empty interval between the modes, so the threshold is not a free
-parameter:
+**Rule.** For each run, the relative reduction in fine-tuning training loss
+from the first to the last logged value. Computed per language over every
+system, task and seed; the threshold is the midpoint of the empty interval
+between the failed and the healthy runs, so it is not a free parameter. No
+test score decides an exclusion.
+
+**Implementation.** `scripts/loss_rule.py` writes `tables/loss_rule.json`;
+`scripts/build_table2.py` reads it and refuses to run if any zero-score run
+is left uncaught. Test scores are used for one thing only: matching each
+committed record to the log region that produced it, because several runs
+appear in more than one log (reruns, superseded sweeps) with different
+outcomes. The match anchors on the runner's per-run summary line
+(`seed N  dev ...  test ...`), not on the `=== run ===` banner, because job
+layouts disagree on whether the banner precedes or follows the training
+output. 165 of 165 records match; one (Amharic TC +FOCUS+LAPT s43) matches two
+logs, at 86.3% and 87.0%, which decide it the same way.
 
 ```
-failed runs:     21.7% .. 28.9%
-successful runs: 69.5% .. 97.9%
-gap: CLEAR  -- any threshold in (28.9%, 69.5%) selects the same runs
-threshold used: 49.2% (the midpoint)
+python3 scripts/loss_rule.py --write tables/loss_rule.json
+python3 scripts/build_table2.py --out tables
 ```
 
-Six of the 165 runs are selected:
+**Result, verified 2026-11-09.**
 
-| Task | System | Seed | Loss reduction |
-|---|---|---|---|
-| NER | +FOCUS+LAPT | 44 | 24.1% |
-| NER | +LGSE+LAPT | 45 | 21.7% |
-| TC | +LGSE+LAPT | 42 | 28.9% |
-| TC | +LGSE+LAPT | 43 | 24.8% |
-| TC | XLM-R | 42 | 21.9% |
-| TC | XLM-R | 45 | 26.8% |
+| Language | Runs ruled | Failed | Healthy | Threshold |
+|---|---|---|---|---|
+| Amharic | 90 | 20.62% – 32.62% | 69.45% – 97.91% | 51.04% |
+| Tigrinya (NER, QA) | 50 | 10.91% | 58.75% – 95.87% | 34.83% |
+| Tigrinya TC | 25 | reported, not ruled: flat, 2.9% – 8.8% | | |
 
-All six are Amharic. Reproduce with:
+Nine runs are excluded:
 
-```bash
-python3 scripts/build_paper_tables.py --out tables   # FAILURE RULE block
-```
+| Lang | Task | System | Seed | Reduction |
+|---|---|---|---|---|
+| am | NER | +Random+LAPT | 46 | 20.6% |
+| am | NER | +LGSE+LAPT | 45 | 21.7% |
+| am | NER | +FOCUS+LAPT | 44 | 24.1% |
+| am | TC | XLM-R | 42 | 21.9% |
+| am | TC | +LGSE+LAPT | 43 | 24.8% |
+| am | TC | XLM-R | 45 | 26.8% |
+| am | TC | +LGSE+LAPT | 42 | 28.9% |
+| am | TC | +Random+LAPT | 42 | 32.6% |
+| ti | NER | +LGSE+LAPT | 45 | 10.9% |
 
-**The rule is not applied to Tigrinya TC.** There the loss is flat for every
-system and seed (2.9%–8.8% reduction), with no bimodal structure and no gap,
-so the Amharic threshold would mark all fifteen runs. Absolute loss
-reduction is not comparable across corpora of different sizes — 597 Tigrinya
-training documents against 1,872 Amharic. Nothing is excluded in that cell
-and it is reported without a ranking.
+The four NER runs are the all-`O` collapse (F1 exactly 0). The five TC runs
+predict only quality levels 1 and 2, never 3 or 4.
+
+**History: why this replaced a narrower rule.** The first version of the rule
+lived in `build_paper_tables.py`, which reads only `results_hornmorpho_wam/`
+and so scanned three Amharic systems (XLM-R, +FOCUS+LAPT, +LGSE+LAPT) and no
+Tigrinya run. It found six failures. Two further zero-score runs (am NER
++Random+LAPT s46, ti NER +LGSE+LAPT s45) were then excluded on their test
+score, and the Table 1 values for the four TC exclusions were computed outside
+any committed script. Applying the same rule to every run found both
+zero-score runs from their logs and **one run the narrower rule had missed:
+Amharic TC +Random+LAPT s42 (32.6%)**, which had been averaged in. Excluding it
+moves that cell from 65.73 ± 15.56 to 72.68 ± 0.94, two Amharic TC floor
+comparisons from +4.54 and +2.47 to −3.14 and −3.82 (all still containing
+zero), and the am/TC resolution ratio from 0.55 to 0.93 (p 0.976 → 0.536). No
+other number in the paper changes, and no conclusion does.
+
+**Seed extension.** Seeds 47–51 were run for Amharic NER XLM-R, +FOCUS+LAPT
+and +LGSE+LAPT. That set is not the set with degenerate runs: +Random+LAPT
+has one and was not extended; XLM-R has none and was.
+
+### 5d-viii. New-token share (paper section 7), and 196 vs 198 Tigrinya rows
+
+`scripts/token_share.py` reproduces the section 7 table exactly (verified
+2026-11-09): per test split, the share of tokens that the extended tokenizer
+maps to an added row. Items counted: each TC document, each NER sentence, and
+for QA each distinct context once plus each question once. Counting QA as
+question+context per question instead gives 134,171 / 156 (0.12%) for Amharic
+and 150,933 / 403 (0.27%) for Tigrinya; every share stays below 1% either way.
+
+The Tigrinya tokenizer lists 198 added tokens, but two are exact strings
+already in XLM-R's vocabulary and keep their pretrained ids, so 196 new rows
+exist (ids 250002–250197). Amharic adds 198 rows. Coverage figures in the paper
+are over the 198 selected tokens.
 
 ## 6. NER sources: two different datasets, one per language
 
