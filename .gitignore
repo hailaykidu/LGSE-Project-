@@ -84,3 +84,6 @@ paper*/*.log
 paper*/acl.sty
 paper*/acl_natbib.bst
 paper*/stub/
+
+# ARR submission lives in the private Lgse repo while under anonymous review
+paper_arr/
