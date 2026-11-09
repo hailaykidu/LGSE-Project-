@@ -44,7 +44,7 @@ results_gen2_snapshot_20260924/
 #                            only on the FastText path (lap_trainer.py:78),
 #                            and all ten NER runs are bit-identical to the
 #                            W_am snapshot. Its LGSE and FOCUS runs are NOT
-#                            usable; see IMPLEMENTATION_NOTES.md 5d-v.
+#                            usable; see README.md.
 #   results_tigrinya_gen2/   all five Tigrinya systems (W_ti, 151-item QA)
 results_hornmorpho/*
 !results_hornmorpho/*/

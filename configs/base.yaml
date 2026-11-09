@@ -16,7 +16,7 @@
 # Tigrinya, so the same values populate both sections.
 #
 # One value remains `unavailable`: the regularization strength lambda, which
-# the paper introduces in Sec 4.2 but never assigns. See IMPLEMENTATION_NOTES.md #8.
+# the paper introduces in Sec 4.2 but never assigns. See README.md.
 
 model:
   name: xlm-roberta-base            # source: paper (Sec 6.1)
@@ -24,7 +24,7 @@ model:
 lgse:
   # W is a square learned linear map (d x d), paper Sec 4.1. FastText must
   # therefore be trained at the model's embedding width, not 300-dim --
-  # build_projection refuses a rectangular map. See IMPLEMENTATION_NOTES.md section 1.
+  # build_projection refuses a rectangular map. See README.md.
   ngram_min: 3                      # source: implementation (not in the paper)
   ngram_max: 5                      # source: implementation (not in the paper)
   # MANDATORY. lambda in L_reg = lambda*||e_new - mu||^2 (paper Sec 4.2).
@@ -45,7 +45,7 @@ lgse:
   # There is no default, not even the identity: the identity would assert the
   # two embedding spaces are already aligned, which is the claim W exists to
   # avoid making. Leaving this empty makes LGSE runs FAIL.
-  # See IMPLEMENTATION_NOTES.md 1a.
+  # See README.md.
   #
   # base.yaml is the Amharic config, so this must be W_am.npy. It briefly
   # held W_ti.npy (introduced in 7f4e3ca, reverted here): Tigrinya runs used
@@ -105,7 +105,7 @@ data:
   #   fasttext skipgram -input <corpus> -output <model> -dim 768
   #
   # The code refuses mismatched vectors rather than reshaping them; see
-  # IMPLEMENTATION_NOTES.md section 1.
+  # README.md.
   fasttext:
     amharic:
       source: https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.am.300.bin.gz

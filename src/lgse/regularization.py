@@ -16,7 +16,7 @@ class LGSERegularizer:
     deviation of new embeddings from their initialization" asks for.
 
     lambda is mandatory: the paper introduces it but never assigns a value.
-    See LGSEConfig.reg_lambda and IMPLEMENTATION_NOTES.md section 8a.
+    See LGSEConfig.reg_lambda and README.md.
     """
 
     def __init__(self,

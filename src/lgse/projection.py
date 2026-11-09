@@ -15,7 +15,7 @@ Two properties follow, and both are enforced here:
     `requires_grad=False`, and excluded from the optimizer. Initialization
     writes W's output into the embedding through `.data`, so no gradient
     path reaches W. `scripts/build_alignment_matrix.py` constructs W before
-    training; see IMPLEMENTATION_NOTES.md section 1a.
+    training; see README.md.
 
 W has no default: `build_projection` requires an explicit matrix and raises
 `MissingAlignmentMatrix` without one. The identity is not applied as a
@@ -43,7 +43,7 @@ class AlignmentProjection(nn.Module):
     applied as a fallback.
 
     W is fixed: `requires_grad=False`, excluded from the optimizer. See
-    IMPLEMENTATION_NOTES.md section 1a.
+    README.md.
     """
 
     def __init__(self, dim: int, weight: torch.Tensor,
@@ -59,7 +59,7 @@ class AlignmentProjection(nn.Module):
             raise MissingAlignmentMatrix(
                 "AlignmentProjection requires an explicit weight matrix; "
                 "there is no default. See build_projection() for the "
-                "user-facing error and IMPLEMENTATION_NOTES.md section 1a.")
+                "user-facing error and README.md.")
         if tuple(weight.shape) != (dim, dim):
             raise ValueError(
                 f"alignment matrix W must be square {dim}x{dim}, got "
@@ -167,7 +167,7 @@ def check_dimensions(fasttext_dim: int, embedding_dim: int,
         f"\n"
         f"The {fasttext_dim}-dim vectors are not reshaped, truncated, "
         f"zero-padded or rectangularly projected to fit. See "
-        f"IMPLEMENTATION_NOTES.md section 1.")
+        f"README.md.")
 
 
 def build_projection(source_dim: int, target_dim: int,
@@ -199,7 +199,7 @@ def build_projection(source_dim: int, target_dim: int,
             f"with:\n"
             f"    python scripts/build_alignment_matrix.py --language <am|ti>\n"
             f"\n"
-            f"See IMPLEMENTATION_NOTES.md section 1a.")
+            f"See README.md.")
 
     weight = load_alignment_matrix(alignment_matrix_path, source_dim)
     return AlignmentProjection(source_dim, weight=weight,

@@ -16,7 +16,7 @@ is not arbitrary and is asserted at load time rather than assumed:
                             Its config names W_ti.npy, which would normally
                             disqualify an Amharic run -- and does disqualify
                             that directory's LGSE and FOCUS runs
-                            (IMPLEMENTATION_NOTES.md 5d-v). It does not
+                            (README.md). It does not
                             disqualify these two systems, because neither
                             consumes FastText and W is read only on the
                             FastText path (src/lgse/lap_trainer.py:78). That

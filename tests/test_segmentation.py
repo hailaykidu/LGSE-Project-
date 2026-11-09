@@ -71,7 +71,7 @@ def test_from_file_against_real_lexicon():
     seg = MorphologicalSegmenter.from_file(REAL_LEXICON_PATH)
     # The file originally held 226 lines, 210 of which parsed. It was later
     # expanded with 10,218 amseg/HornMorpho-derived Amharic entries
-    # (IMPLEMENTATION_NOTES.md 5c), so this asserts a lower bound on what
+    # (README.md), so this asserts a lower bound on what
     # parses rather than an exact count that has to be edited on every
     # lexicon change. The Tigrinya entry below is one of the originals and
     # must survive the merge.

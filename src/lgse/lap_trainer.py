@@ -121,7 +121,7 @@ class LGSELAPTrainer:
                       "spaces are already aligned -- a strong claim the paper "
                       "does not make. Recorded in the run record.")
             print("[LGSELAPTrainer] W training status: author-required / "
-                  "unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a")
+                  "unspecified in paper -- W is frozen; see README.md")
 
         # 5) initialization: LGSE, or one of the Table 2 baselines
         vocab = self.tokenizer.get_vocab()
@@ -234,7 +234,7 @@ class LGSELAPTrainer:
         #
         # If an author later supplies a training objective for W, both this
         # list and the objective itself must change together; see
-        # IMPLEMENTATION_NOTES.md section 1a.
+        # README.md.
         self.optimizer = AdamW([embedding_layer.weight],
                                lr=config.learning_rate)
 

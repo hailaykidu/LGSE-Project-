@@ -173,7 +173,7 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
             f"It is lambda in L_reg = lambda * ||e_new - mu||^2 (paper Sec "
             f"4.2). The paper introduces lambda but never states its value, "
             f"so there is no default to apply -- set it explicitly under "
-            f"`lgse:` in your config. See IMPLEMENTATION_NOTES.md section 8.")
+            f"`lgse:` in your config. See README.md.")
 
     # W is mandatory for the systems that consume FastText (lgse, focus).
     # Checked here so the run stops before downloading a backbone and
@@ -195,10 +195,9 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
             f"d x d matrix.\n"
             f"\n"
             f"Any result produced without one is NOT faithful to the "
-            f"published method. See IMPLEMENTATION_NOTES.md section 1a.")
+            f"published method. See README.md.")
 
-    # data/new_tokens.txt is Tigrinya vocabulary (see IMPLEMENTATION_NOTES.md
-    # section 5c): words like ትግራዋይ and the ኣ-prefixed negation pattern are
+    # data/new_tokens.txt is Tigrinya vocabulary: words like ትግራዋይ and the ኣ-prefixed negation pattern are
     # not Amharic. It was the sole default for both languages until this
     # per-language file existed. data/new_tokens_amharic.txt is a
     # corpus-derived Amharic OOV list (data/tc/amharic + data/ner/amharic

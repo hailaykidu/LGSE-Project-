@@ -90,9 +90,7 @@ Nine of the 165 runs failed to fit their training data. They are identified
 from training loss alone (`scripts/loss_rule.py`), never from test scores,
 and `build_table2.py` prints each affected mean both with and without them.
 
-Choices this implementation had to make where the paper is silent, and the
-provenance of every data split, are recorded in
-[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md).
+The provenance of every data split is in its `manifest.json`.
 
 ## Data
 
