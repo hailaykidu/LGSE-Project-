@@ -1,6 +1,16 @@
 {
-  "source": "Self-annotated Amharic Educational Quality dataset (monolingual Amharic). Annotation led by Hailay Kidu Teklehaymanot.",
-  "annotation_lead": "Hailay Kidu Teklehaymanot",
+  "source": "Amharic Educational Quality dataset (monolingual Amharic), annotated for this work.",
+  "annotation": {
+    "annotators": 11,
+    "composition": "one author plus 10 native Amharic-speaking volunteers (student and community networks), unpaid",
+    "period": "2024-12-20 to 2025-04-04",
+    "rubric": "6-class educational-value rubric with worked examples, retained in data/Dataset_Educational_classifier_annotated.tsv (header block)",
+    "assignment": "corpus partitioned among annotators after a joint calibration session; one label per document",
+    "adjudication": "one author reviewed 100% of the 2499 rows and resolved adjacent-class boundary cases",
+    "inter_annotator_agreement": null,
+    "agreement_note": "Not computable. Labels were merged into a single table without per-annotator identifiers or timestamps, so no multi-annotator statistic (e.g. Fleiss' Kappa) can be derived from the records. Treat as single-annotation with an adjudication pass.",
+    "identifiers_withheld": "Annotator names and contact handles are deliberately not released, to protect participant privacy."
+  },
   "raw_file": "data/merged_dataset_first_2500_rows.csv",
   "raw_sha256": "64dca1207da4907aab21c9d6daa52fc3af78913a23b5c2f80ee7127bbf0bec3c",
   "raw_rows": 2499,

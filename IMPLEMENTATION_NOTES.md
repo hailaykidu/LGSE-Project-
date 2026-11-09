@@ -593,6 +593,40 @@ of 235 items against the previous 71, so TC results measured on the two are
 not comparable and the TC column requires rerunning before it can be read
 alongside the earlier one.
 
+### 5a-ii. Amharic TC annotation protocol (supplied by the author 2026-11-09)
+
+Recorded here because the data files themselves carry only `Text` and
+`Label`, so none of it is recoverable from the corpus.
+
+| | |
+|---|---|
+| Annotators | 11 — one author plus 10 native Amharic-speaking volunteers, from student and community networks |
+| Period | 2024-12-20 to 2025-04-04 |
+| Rubric | 6 classes with worked examples, in `data/Dataset_Educational_classifier_annotated.tsv` (lines 1–80) |
+| Assignment | corpus partitioned among annotators after a joint calibration session; **one label per document** |
+| Adjudication | one author reviewed 100% of the 2,499 rows, resolving adjacent-class boundary cases |
+| Agreement | **not computable** — labels were merged without per-annotator identifiers or timestamps |
+
+**Verified against the files 2026-11-09.** The rubric is physically present
+in the TSV header block (6 classes, matching the 1–6 encoding used by
+`run_tc.py`). The annotated TSV holds 822 text+label rows, of which 793
+(96.5%) appear verbatim in `merged_dataset_first_2500_rows.csv`; 8 carry a
+different label in the merged file and 3 differ only by a `::` prefix
+artifact. That is consistent with the described adjudication pass. Both
+files carry two columns only — no annotator column exists in either, which
+is the direct reason Fleiss' Kappa cannot be reported.
+
+This also explains the inconsistency noted below (the 8 short
+menu/navigation texts recurring with different labels): those are different
+volunteers labelling the same short string differently, not a formatting
+defect. Keeping them unresolved remains correct — there is no per-annotator
+record by which to prefer one label.
+
+**Reporting.** `paper_arr/` §3 states the annotator count, the rubric, the
+single-annotation-plus-adjudication design, and that no agreement statistic
+can be computed; the Ethics Statement records that the volunteers were
+unpaid and that no annotator-identifying data is released.
+
 **Amharic TC source replaced 2026-09-18.** The Amharic file was replaced with
 a larger raw annotation export, `data/Dataset_Educational_classifier_annotated.tsv`
 (829 parseable data rows), superseding the earlier 236-document
