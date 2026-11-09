@@ -150,7 +150,7 @@ def main():
     out = args.out_dir / "tigrinya"
     manifest = {
         "source": TIGRINYA_URL,
-        "citation": "Yohannes and Amagasa (2022)",
+        "citation": "Yohannes and Amagasa (2022), A method of named entity recognition for Tigrinya, ACM SIGAPP Applied Computing Review 22(3):56-68, doi:10.1145/3570733.3570737",
         "raw_sha256": sha256(raw),
         "split": "random 80/10/10 (paper Sec 6.3); seed recorded below",
         "seed": args.seed,

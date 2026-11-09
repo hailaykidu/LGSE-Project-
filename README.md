@@ -100,7 +100,7 @@ and split seed.
 | Task | Language | Source | Split |
 |---|---|---|---|
 | NER | Amharic | MasakhaNER (Adelani et al., 2021) | official |
-| NER | Tigrinya | Tigrinya NER (Yohannes & Amagasa, 2022) | 80/10/10, seed 42 |
+| NER | Tigrinya | Tigrinya NER (Yohannes & Amagasa, 2022, *ACM SIGAPP Applied Computing Review*) | 80/10/10, seed 42 |
 | QA | Amharic | AmQA (Taffa et al., 2024) | as released |
 | QA | Tigrinya | extractive conversion of TIGQA (Teklehaymanot et al., 2024) | seed 42 |
 | TC | Amharic | annotated for this work | 1872/233/235 |

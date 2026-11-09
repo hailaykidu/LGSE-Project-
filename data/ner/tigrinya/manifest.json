@@ -1,9 +1,9 @@
 {
   "source": "https://raw.githubusercontent.com/mehari-eng/Tigrinya-NER/main/Tigrinya-NER-Dataset.txt",
-  "citation": "Yohannes and Amagasa (2022)",
+  "citation": "Yohannes and Amagasa (2022), A method of named entity recognition for Tigrinya, ACM SIGAPP Applied Computing Review 22(3):56-68, doi:10.1145/3570733.3570737",
   "split": "random 80/10/10 derived here (the release ships no official split); seed recorded below",
   "seed": 42,
-  "note": "Not MasakhaNER. MasakhaNER 1.0 and 2.0 do not include Tigrinya. Tag set includes MISC, which MasakhaNER 2.0 does not use. A handful of malformed tags in the release ('B-DATe','IO','BO','B-LO') are normalised by data/scripts/prepare_ner.py.",
+  "note": "Not MasakhaNER: MasakhaNER 1.0 and 2.0 do not include Tigrinya. The tag set includes MISC, which MasakhaNER 2.0 does not use. data/scripts/prepare_ner.py skips 6 source lines that have no tag column and normalises malformed tags: B-DATe -> B-DATE; IO and BO -> O. One B-LO tag (train only) is left as it is.",
   "files": {
     "train": {
       "sha256": "01a9968d78ce30c9c3ca84ab290ea192a31683409d971e3c3e15f6f32683fc64",
