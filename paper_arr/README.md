@@ -23,6 +23,18 @@ Note: the preamble includes `inconsolata`, which is standard in TeX Live and
 on Overleaf but absent from the cluster used for development. A local build
 there needs a stub providing `\ProvidesPackage{inconsolata}`.
 
+## Before sharing an artifact link with reviewers
+
+The submission is anonymous, but this repository is not anonymised:
+
+- `data/tc/amharic/manifest.json` names the annotation lead in `source` and
+  in `annotation_lead`.
+- The root `README.md` and `IMPLEMENTATION_NOTES.md` name the LREC paper and
+  its authors throughout.
+
+Mask those fields, or point reviewers at an anonymised copy, before giving
+out any link. Nothing in `paper_arr/` itself carries an identity.
+
 ## Page budget
 
 Countable body (Introduction through Conclusion) is 8 pages, at the ACL long

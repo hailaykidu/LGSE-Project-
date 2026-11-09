@@ -412,6 +412,15 @@ the same 107 TIGQA context rows but records *how* each answer's
 necessarily the *correct* substring), `unmatched`/`no_answer_chunk` (no
 usable span; `is_impossible: true`, original text kept in `raw_answer`).
 
+**The 2,179 does not reconcile with the published release, and we have not
+reconciled it.** The TIGQA publication reports about 2.68K questions. The
+converted file holds 2,179 QA pairs over 107 contexts; the *first*
+conversion held 2,108 over 433 contexts. Three counts of the same release
+disagree with each other, and nothing in this repository explains the
+difference. Consequence, carried into `paper_arr/` §3: **Tigrinya QA results
+here are not comparable to published TIGQA numbers.** Closing this requires
+counting the original release and diffing its question IDs against the 2,179.
+
 Verified directly against the file (2,179 total QA pairs): 1,517 `exact`,
 148 `fuzzy`, 498 `unmatched`, 16 `no_answer_chunk`. Every `exact` and every
 `fuzzy` span was checked to resolve correctly at its `answer_start` offset
@@ -1085,6 +1094,15 @@ path ends in `W_am.npy` and that `W_am.json` declares `language: amharic`.
 
 ### 5d-vi. Degenerate NER fine-tuning runs (~1% of all runs)
 
+> **Superseded as an exclusion criterion.** This section describes runs
+> identified by a *test-score* rule (F1 exactly 0.0) over the 387-run
+> superset of all result directories. `paper_arr/` does not use that rule.
+> It uses a *training-loss* rule over the 165 runs of the single common
+> protocol, which selects **six** runs, not four — see §5d-vii. A rule that
+> consults test scores cannot decide what counts as a measurement, which is
+> why the paper does not use one. The observations below about what a
+> degenerate run looks like remain accurate.
+
 Four of 387 runs recorded precision, recall and F1 of exactly 0.0 on both
 dev and test: `random_lapt__ner__amharic__seed46` (present in the frozen
 snapshot and in every directory derived from it) and
@@ -1115,7 +1133,54 @@ Baseline re-evaluation on the rebuilt split (xlmr, lapt, random_lapt)
 deferred: estimated several days on the current cluster queue. † cells remain
 on the previous test set until rerun.
 
-## 6. MasakhaNER source
+### 5d-vii. The exclusion rule used by `paper_arr/` (training loss only)
+
+The rule the submission uses consults **training logs only**, never test
+scores. For each run, compute the relative reduction in training loss from
+the first to the last logged epoch. On Amharic the distribution is bimodal
+with an empty interval between the modes, so the threshold is not a free
+parameter:
+
+```
+failed runs:     21.7% .. 28.9%
+successful runs: 69.5% .. 97.9%
+gap: CLEAR  -- any threshold in (28.9%, 69.5%) selects the same runs
+threshold used: 49.2% (the midpoint)
+```
+
+Six of the 165 runs are selected:
+
+| Task | System | Seed | Loss reduction |
+|---|---|---|---|
+| NER | +FOCUS+LAPT | 44 | 24.1% |
+| NER | +LGSE+LAPT | 45 | 21.7% |
+| TC | +LGSE+LAPT | 42 | 28.9% |
+| TC | +LGSE+LAPT | 43 | 24.8% |
+| TC | XLM-R | 42 | 21.9% |
+| TC | XLM-R | 45 | 26.8% |
+
+All six are Amharic. Reproduce with:
+
+```bash
+python3 scripts/build_paper_tables.py --out tables   # FAILURE RULE block
+```
+
+**The rule is not applied to Tigrinya TC.** There the loss is flat for every
+system and seed (2.9%–8.8% reduction), with no bimodal structure and no gap,
+so the Amharic threshold would mark all fifteen runs. Absolute loss
+reduction is not comparable across corpora of different sizes — 597 Tigrinya
+training documents against 1,872 Amharic. Nothing is excluded in that cell
+and it is reported without a ranking.
+
+## 6. NER sources: two different datasets, one per language
+
+**The two NER columns do not come from the same dataset and are not
+comparable.** This was stated incorrectly in an earlier revision of this
+section, which implied a shared MasakhaNER provenance and a matching label
+inventory. Both claims are wrong. Verified against the prepared splits
+2026-11-09.
+
+### Amharic — MasakhaNER, official splits
 
 The paper uses MasakhaNER (Adelani et al., 2021) for Amharic NER. The
 HuggingFace mirrors — `masakhane/masakhaner`, `masakhane/masakhaner2`,
@@ -1128,7 +1193,39 @@ files directly from the project's own repository,
 `masakhane-io/masakhane-ner/data/amh/{train,dev,test}.txt`. These are the
 official splits, used as released — no partition is derived. Counts:
 1,750 / 250 / 500 sentences (25,819 / 3,749 / 7,449 tokens), tag set
-PER/ORG/LOC/DATE, matching the Tigrinya label inventory.
+PER/ORG/LOC/DATE.
+
+### Tigrinya — not MasakhaNER
+
+**Neither MasakhaNER 1.0 nor MasakhaNER 2.0 covers Tigrinya.** Tigrinya NER
+uses the Tigrinya NER dataset of Yohannes and Amagasa (2022), SAC,
+doi:10.1145/3477314.3507066, downloaded by `prepare_ner.py` from
+`mehari-eng/Tigrinya-NER` (`TIGRINYA_URL`, line 20). The release ships no
+official partition, so a random 80/10/10 split is derived here with seed 42:
+4,562 / 570 / 571 sentences. See `data/ner/tigrinya/manifest.json`.
+
+### The label inventories differ
+
+| | Amharic | Tigrinya |
+|---|---|---|
+| Source | MasakhaNER | Yohannes & Amagasa (2022) |
+| Split | official | derived, seed 42 |
+| Sentences | 1,750 / 250 / 500 | 4,562 / 570 / 571 |
+| Tags | PER, ORG, LOC, DATE | PER, ORG, LOC, DATE, **MISC** |
+
+Tigrinya carries `MISC`, which the MasakhaNER schema does not. Any
+cross-language NER comparison is therefore invalid, and none is made
+anywhere in `paper_arr/`.
+
+### Tag normalisation, and one stray tag
+
+A handful of tags in the Tigrinya release are typos (`B-DATe`) or malformed
+(`IO`, `BO`). `normalize_tag()` maps the typo and drops the malformed ones.
+`VALID_PREFIXES` accepts any `B-`/`I-` prefix, so **one `B-LO` token
+survives normalisation** as a singleton label. It falls in the train split
+only (0 in dev, 0 in test), so it cannot affect any reported score. Left as
+is rather than patched, so the prepared files stay a pure function of the
+script plus the release.
 
 ## 7. Single seed
 

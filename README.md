@@ -10,6 +10,12 @@ Paper: https://aclanthology.org/2026.lrec-1.812/
 It implements the method described in the paper for **Amharic** and
 **Tigrinya**, two morphologically rich Ethio-Semitic languages.
 
+> **On the measured results.** The controlled five-system comparison run in
+> this repository does not reproduce the ranking reported in the LREC paper.
+> Read [`paper_arr/`](paper_arr/) and
+> [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) before quoting any
+> number from here.
+
 ---
 
 ## Overview
@@ -152,29 +158,48 @@ LGSE-Project/
 
 ## Reproducibility
 
-Results are produced by running the pipeline; none are committed to this
-repository. `scripts/aggregate_results.py` builds a table from your own runs
-in `results/`, recording for each figure the commit, configuration hash,
-dataset manifest, seeds and environment that produced it, and which alignment
-matrix the run used.
+Per-run records **are** committed, under `results_hornmorpho_wam/` and the
+other `results*/` directories: one `experiment.json` per run, each recording
+the commit, configuration hash, dataset manifest, seed, environment and which
+alignment matrix the run used. No number in any paper directory is typed by
+hand; each is regenerated from those records.
 
-The paper's reported numbers are not copied into this repository; the tables
-here are built from runs performed in this repository.
+```bash
+python3 scripts/build_paper_tables.py --out tables   # every table and statistic
+python3 scripts/build_paper_tables.py --audit        # which result dirs are used, and why
+```
 
-**Table 2 has been run end-to-end** (five systems, three tasks, two
-languages, five seeds; W via orthogonal Procrustes, λ=1.0 -- see
-[`report/TABLE2_REPORT.md`](report/TABLE2_REPORT.md)). The published Table 2
-has no surviving execution record to reproduce against, so this run is the
-only measured result that exists for the method. It does not reproduce the
-published ranking, margins, or winner: LGSE beats FOCUS on 2 of 6
-task/language cells, the paper's full ordering holds on 0 of 6, no comparison
-separates at one standard deviation, and unmodified XLM-R is the best system
-in 5 of 6 cells.
+`build_paper_tables.py` reads only `results_hornmorpho_wam/`, the one
+directory holding a single common protocol (one `config_sha256` across all
+systems and tasks). The other four are excluded for protocol differences
+rather than for their numbers; `--audit` prints each with its reason.
+
+**The full comparison has been run end-to-end** — five systems, three tasks,
+two languages, five seeds (165 runs; W via orthogonal Procrustes, λ=1.0). The
+published LREC Table 2 has no surviving execution record to reproduce
+against, so this run is the only measured result that exists for the method,
+and **it does not reproduce the published ranking, margins, or winner.** The
+current analysis of those runs is the ARR submission in
+[`paper_arr/`](paper_arr/); see also
+[`report/TABLE2_REPORT.md`](report/TABLE2_REPORT.md).
 
 [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records each point where
 an implementation choice is supplied alongside the published specification,
 and [`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
 validation.
+
+---
+
+## Paper directories
+
+| Directory | Status |
+|---|---|
+| [`paper_arr/`](paper_arr/) | **Current.** ACL Rolling Review submission, anonymous. Standalone five-system comparison. |
+| `paper_final/` | Earlier full-disclosure write-up. Superseded. |
+| `paper_new/`, `paper/` | Earlier drafts. Superseded, and containing figures since corrected — do not cite from them. |
+
+Numbers quoted anywhere outside `paper_arr/` may predate corrections
+recorded in `IMPLEMENTATION_NOTES.md`.
 
 ---
 
@@ -186,19 +211,37 @@ resources exist.
 
 ---
 
-## Data annotation
+## Data sources
 
-The Amharic Educational Quality text-classification dataset
-(`data/tc/amharic/`) was human-annotated for this work, with
-**Hailay Kidu Teklehaymanot** as annotation lead. It is monolingual
-Amharic and independent of FineWeb-C; per-file provenance, cleaning
-counts and split sizes are in `data/tc/amharic/manifest.json`.
+Every split carries a manifest recording source, raw checksum, cleaning
+counts and split seed.
 
-The Tigrinya QA data derives from **TIGQA** (Teklehaymanot et al.,
-LREC-COLING 2024), an expert-annotated Tigrinya reading-comprehension
-dataset. The Tigrinya text-classification data comes from FineWeb-C
-(`tir_Ethi`). Both carry their own manifests recording source, licence
-and how the splits used here were constructed.
+| Task | Language | Source | Split |
+|---|---|---|---|
+| NER | Amharic | MasakhaNER, Adelani et al. (2021) | official |
+| NER | Tigrinya | Tigrinya NER, Yohannes & Amagasa (2022) — **not MasakhaNER** | derived 80/10/10, seed 42 |
+| QA | Amharic | AmQA, Taffa et al. (2024) | as released |
+| QA | Tigrinya | extractive SQuAD conversion of TIGQA, Teklehaymanot et al. (2024) | derived, seed 42 |
+| TC | Tigrinya | FineWeb-C (`tir_Ethi`) | 597 / 74 / 74 |
+| TC | Amharic | annotated within this project | 1872 / 233 / 235 |
+
+Two cautions, both carried into the paper:
+
+- **Neither MasakhaNER release covers Tigrinya.** The two NER columns are
+  different datasets with different tag sets (Tigrinya has `MISC`), so they
+  are never compared against each other. See `IMPLEMENTATION_NOTES.md` §6.
+- **Tigrinya QA is not comparable to published TIGQA numbers.** The release
+  reports ~2.68K questions; the SQuAD-format file converted here yields
+  2,179, of which 1,517 have an exactly matching answer span. That
+  difference has not been reconciled against the original release. See
+  `IMPLEMENTATION_NOTES.md` §5.
+
+The Amharic text-classification corpus (`data/tc/amharic/`) was annotated
+within this project on FineWeb-C's five-level quality scale plus its
+problematic-content flag. **No inter-annotator agreement was computed**, and
+it is the only resource here that is neither externally released nor
+independently validated. Per-file provenance and cleaning counts are in
+`data/tc/amharic/manifest.json`.
 
 ---
 
@@ -213,7 +256,7 @@ and how the splits used here were constructed.
 ## Citation
 
 ```bibtex
-@@inproceedings{teklehaymanot-etal-2026-lgse,
+@inproceedings{teklehaymanot-etal-2026-lgse,
   title = {LGSE: Lexically Grounded Subword Embedding Initialization for Low-Resource Language Adaptation},
   author = {Teklehaymanot, Hailay Kidu and Fazlija, Dren and Nejdl, Wolfgang},
   booktitle = {Proceedings of the Fifteenth Language Resources and Evaluation Conference (LREC 2026)},
