@@ -30,9 +30,9 @@ AUDIT
 
   excluded (protocol differences, not outcomes):
     results_gen2_snapshot_20260924
-      the September sweep. Withdrawn: all fifteen Amharic LGSE runs loaded W_ti.npy on Amharic data, and its Tigrinya QA used the superseded 86-item split. See report/TABLE2_REPORT.md.
+      the September sweep. Withdrawn: all fifteen Amharic LGSE runs loaded W_ti.npy on Amharic data, and its Tigrinya QA used the superseded 86-item split.
     results
-      same sweep, and its Amharic records were overwritten by a later run; only the committed report/per_seed_results.json preserves them
+      same sweep, and its Amharic records were overwritten by a later run; only the git history preserves them
     results_hornmorpho (LGSE and FOCUS runs)
       those two systems consume FastText and so loaded the W_ti.npy this directory's config names; its +LAPT and +Random+LAPT runs are used
     results_b

@@ -1,0 +1,32 @@
+==========================================
+SLURM_JOB_ID = 95411
+SLURM_NODELIST = gpunode02
+==========================================
+  guards OK: W_am, rebuilt split, seed not yet done
+=== xlmr__qa__amharic__seed42 (rebuilt split) ===
+{'loss': 3.6811, 'grad_norm': 15.410659790039062, 'learning_rate': 4.7752293577981654e-05, 'epoch': 0.46}
+{'loss': 2.4137, 'grad_norm': 28.678207397460938, 'learning_rate': 4.545871559633028e-05, 'epoch': 0.92}
+{'loss': 1.7686, 'grad_norm': 25.99236297607422, 'learning_rate': 4.31651376146789e-05, 'epoch': 1.38}
+{'loss': 1.466, 'grad_norm': 24.734111785888672, 'learning_rate': 4.087155963302752e-05, 'epoch': 1.83}
+{'loss': 1.2668, 'grad_norm': 32.209285736083984, 'learning_rate': 3.8577981651376146e-05, 'epoch': 2.29}
+{'loss': 1.1309, 'grad_norm': 37.645652770996094, 'learning_rate': 3.628440366972477e-05, 'epoch': 2.75}
+{'loss': 0.8864, 'grad_norm': 19.373584747314453, 'learning_rate': 3.39908256880734e-05, 'epoch': 3.21}
+{'loss': 0.803, 'grad_norm': 17.77052879333496, 'learning_rate': 3.1697247706422016e-05, 'epoch': 3.67}
+{'loss': 0.735, 'grad_norm': 9.289204597473145, 'learning_rate': 2.9403669724770643e-05, 'epoch': 4.13}
+{'loss': 0.6018, 'grad_norm': 29.887056350708008, 'learning_rate': 2.7110091743119266e-05, 'epoch': 4.59}
+{'loss': 0.5488, 'grad_norm': 23.228151321411133, 'learning_rate': 2.4816513761467892e-05, 'epoch': 5.05}
+{'loss': 0.4334, 'grad_norm': 28.44809913635254, 'learning_rate': 2.2522935779816515e-05, 'epoch': 5.5}
+{'loss': 0.4363, 'grad_norm': 16.510046005249023, 'learning_rate': 2.022935779816514e-05, 'epoch': 5.96}
+{'loss': 0.3176, 'grad_norm': 29.267887115478516, 'learning_rate': 1.7935779816513762e-05, 'epoch': 6.42}
+{'loss': 0.3102, 'grad_norm': 23.2674560546875, 'learning_rate': 1.5642201834862385e-05, 'epoch': 6.88}
+{'loss': 0.2481, 'grad_norm': 13.290518760681152, 'learning_rate': 1.334862385321101e-05, 'epoch': 7.34}
+{'loss': 0.2326, 'grad_norm': 22.247989654541016, 'learning_rate': 1.1055045871559635e-05, 'epoch': 7.8}
+{'loss': 0.2199, 'grad_norm': 19.1332950592041, 'learning_rate': 8.761467889908258e-06, 'epoch': 8.26}
+{'loss': 0.1743, 'grad_norm': 38.3115119934082, 'learning_rate': 6.467889908256881e-06, 'epoch': 8.72}
+{'loss': 0.1563, 'grad_norm': 14.18588638305664, 'learning_rate': 4.174311926605505e-06, 'epoch': 9.17}
+{'loss': 0.1331, 'grad_norm': 9.806463241577148, 'learning_rate': 1.8807339449541286e-06, 'epoch': 9.63}
+{'train_runtime': 527.1375, 'train_samples_per_second': 66.169, 'train_steps_per_second': 2.068, 'train_loss': 0.828357962512095, 'epoch': 10.0}
+seed 42  dev F1 62.48  test F1 61.60
+=== xlmr__qa__amharic__seed42 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model xlm-roberta-base --data-dir data/qa/amqa --seed 42 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/xlmr__qa__amharic__seed42/qa
+xlmr__qa__amharic__seed42: test f1 61.60

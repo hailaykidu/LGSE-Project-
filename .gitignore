@@ -15,6 +15,8 @@ results/
 results_b/
 checkpoints/
 outputs/
+# logs/ is ignored; only the fine-tuning logs scripts/loss_rule.py reads
+# are tracked (added with -f)
 logs/
 wandb/
 
@@ -64,9 +66,7 @@ results_hornmorpho_wam/*/*
 data/_incoming/
 .claude/
 
-# LaTeX build products and the Overleaf bundles, both regenerable:
-#   cd paper_arr && pdflatex main && bibtex main && pdflatex main && pdflatex main
-#   zip lgse_arr_overleaf.zip main.tex custom.bib acl.sty acl_natbib.bst
+# LaTeX build products and zip bundles, both regenerable
 *.aux
 *.bbl
 *.blg
@@ -85,5 +85,5 @@ paper*/acl.sty
 paper*/acl_natbib.bst
 paper*/stub/
 
-# ARR submission lives in the private Lgse repo while under anonymous review
-paper_arr/
+# paper sources are kept outside this repository
+paper*/

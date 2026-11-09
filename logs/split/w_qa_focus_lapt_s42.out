@@ -1,0 +1,50 @@
+==========================================
+SLURM_JOB_ID = 84950
+SLURM_NODELIST = gpunode04
+==========================================
+  guards OK: W_am confirmed Amharic, seed not yet done
+=== focus_lapt__qa__amharic__seed42 (hornmorpho, W_am, split) ===
+=== focus_lapt__qa__amharic__seed42 ===
+Loaded morphological lexicon: 10650 words
+{'loss': 3.608, 'grad_norm': 17.570981979370117, 'learning_rate': 4.7752293577981654e-05, 'epoch': 0.46}
+{'loss': 2.4699, 'grad_norm': 22.828201293945312, 'learning_rate': 4.545871559633028e-05, 'epoch': 0.92}
+{'loss': 1.7749, 'grad_norm': 28.410924911499023, 'learning_rate': 4.31651376146789e-05, 'epoch': 1.38}
+{'loss': 1.4745, 'grad_norm': 39.070064544677734, 'learning_rate': 4.087155963302752e-05, 'epoch': 1.83}
+{'loss': 1.276, 'grad_norm': 21.938491821289062, 'learning_rate': 3.8577981651376146e-05, 'epoch': 2.29}
+{'loss': 1.0734, 'grad_norm': 18.6146183013916, 'learning_rate': 3.628440366972477e-05, 'epoch': 2.75}
+{'loss': 0.9119, 'grad_norm': 15.763752937316895, 'learning_rate': 3.39908256880734e-05, 'epoch': 3.21}
+{'loss': 0.7836, 'grad_norm': 27.08677101135254, 'learning_rate': 3.1697247706422016e-05, 'epoch': 3.67}
+{'loss': 0.7345, 'grad_norm': 20.656076431274414, 'learning_rate': 2.9403669724770643e-05, 'epoch': 4.13}
+{'loss': 0.5685, 'grad_norm': 35.235416412353516, 'learning_rate': 2.7110091743119266e-05, 'epoch': 4.59}
+{'loss': 0.5307, 'grad_norm': 21.059757232666016, 'learning_rate': 2.4816513761467892e-05, 'epoch': 5.05}
+{'loss': 0.3979, 'grad_norm': 28.18016242980957, 'learning_rate': 2.2522935779816515e-05, 'epoch': 5.5}
+{'loss': 0.3763, 'grad_norm': 10.051194190979004, 'learning_rate': 2.022935779816514e-05, 'epoch': 5.96}
+{'loss': 0.2853, 'grad_norm': 7.753069877624512, 'learning_rate': 1.7935779816513762e-05, 'epoch': 6.42}
+{'loss': 0.3133, 'grad_norm': 18.938295364379883, 'learning_rate': 1.5642201834862385e-05, 'epoch': 6.88}
+{'loss': 0.2361, 'grad_norm': 9.575608253479004, 'learning_rate': 1.334862385321101e-05, 'epoch': 7.34}
+{'loss': 0.1959, 'grad_norm': 12.921042442321777, 'learning_rate': 1.1055045871559635e-05, 'epoch': 7.8}
+{'loss': 0.1777, 'grad_norm': 23.130748748779297, 'learning_rate': 8.761467889908258e-06, 'epoch': 8.26}
+{'loss': 0.1446, 'grad_norm': 22.290250778198242, 'learning_rate': 6.467889908256881e-06, 'epoch': 8.72}
+{'loss': 0.1522, 'grad_norm': 9.211786270141602, 'learning_rate': 4.174311926605505e-06, 'epoch': 9.17}
+{'loss': 0.1119, 'grad_norm': 21.29261589050293, 'learning_rate': 1.8807339449541286e-06, 'epoch': 9.63}
+{'train_runtime': 530.0667, 'train_samples_per_second': 65.388, 'train_steps_per_second': 2.056, 'train_loss': 0.8122177334006774, 'epoch': 10.0}
+seed 42  dev F1 61.31  test F1 60.34
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] FOCUS init: 198/198 unique rows, per-dim std 0.06917
+[LGSELAPTrainer] avg loss this epoch: 3.2734 (mlm=3.2532 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2701 (mlm=3.3236 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2653 (mlm=1.7661 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2646 (mlm=2.5384 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2607 (mlm=2.9014 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2610 (mlm=3.7266 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2593 (mlm=3.4401 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2548 (mlm=4.1233 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2620 (mlm=2.2781 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2595 (mlm=2.2599 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/focus_lapt__qa__amharic__seed42/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/focus_lapt__qa__amharic__seed42/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model results_hornmorpho_wam/focus_lapt__qa__amharic__seed42/lapt --data-dir data/qa/amqa --seed 42 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/focus_lapt__qa__amharic__seed42/qa
+focus_lapt__qa__amharic__seed42: test f1 60.34

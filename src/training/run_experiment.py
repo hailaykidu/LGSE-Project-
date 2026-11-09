@@ -219,8 +219,8 @@ def run_lapt(cfg, system_cfg, language: str, seed: int, corpus: Path,
         ngram_max=cfg["lgse"]["ngram_max"],
         reg_lambda=cfg["lgse"]["reg_lambda"],
         alignment_matrix_path=cfg["lgse"].get("alignment_matrix_path", ""),
-        # Off unless a run config turns it on, so the default reproduces the
-        # lexicon-only runs in report/TABLE2_REPORT.md.
+        # Off unless a run config turns it on, so the default reproduces
+        # lexicon-only runs.
         use_hornmorpho=cfg["lgse"].get("use_hornmorpho", False),
         seed=seed,
         learning_rate=cfg["lapt"]["learning_rate"],

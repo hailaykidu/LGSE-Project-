@@ -1,0 +1,145 @@
+==========================================
+SLURM_JOB_ID = 80579
+SLURM_NODELIST = gpunode04
+==========================================
+  guards OK; W -> data/alignment/W_ti.npy
+=== lgse_lapt__tc__tigrinya__seed43 ===
+{'eval_loss': 1.4151709079742432, 'eval_runtime': 0.2554, 'eval_samples_per_second': 289.741, 'eval_steps_per_second': 11.746, 'epoch': 1.0}
+{'eval_loss': 1.3899446725845337, 'eval_runtime': 0.2526, 'eval_samples_per_second': 292.961, 'eval_steps_per_second': 11.877, 'epoch': 2.0}
+{'loss': 1.4868, 'grad_norm': 3.7710390090942383, 'learning_rate': 3.710526315789474e-05, 'epoch': 2.63}
+{'eval_loss': 1.3973485231399536, 'eval_runtime': 0.2509, 'eval_samples_per_second': 294.968, 'eval_steps_per_second': 11.958, 'epoch': 3.0}
+{'eval_loss': 1.3888471126556396, 'eval_runtime': 0.2509, 'eval_samples_per_second': 294.916, 'eval_steps_per_second': 11.956, 'epoch': 4.0}
+{'eval_loss': 1.3850735425949097, 'eval_runtime': 0.2502, 'eval_samples_per_second': 295.742, 'eval_steps_per_second': 11.99, 'epoch': 5.0}
+{'loss': 1.4198, 'grad_norm': 2.3768844604492188, 'learning_rate': 2.394736842105263e-05, 'epoch': 5.26}
+{'eval_loss': 1.3827524185180664, 'eval_runtime': 0.2502, 'eval_samples_per_second': 295.774, 'eval_steps_per_second': 11.991, 'epoch': 6.0}
+{'eval_loss': 1.3829494714736938, 'eval_runtime': 0.2503, 'eval_samples_per_second': 295.63, 'eval_steps_per_second': 11.985, 'epoch': 7.0}
+{'loss': 1.4046, 'grad_norm': 2.0537610054016113, 'learning_rate': 1.0789473684210526e-05, 'epoch': 7.89}
+{'eval_loss': 1.3815335035324097, 'eval_runtime': 0.2507, 'eval_samples_per_second': 295.13, 'eval_steps_per_second': 11.965, 'epoch': 8.0}
+{'eval_loss': 1.3803315162658691, 'eval_runtime': 0.251, 'eval_samples_per_second': 294.841, 'eval_steps_per_second': 11.953, 'epoch': 9.0}
+{'eval_loss': 1.3803938627243042, 'eval_runtime': 0.2507, 'eval_samples_per_second': 295.127, 'eval_steps_per_second': 11.965, 'epoch': 10.0}
+{'train_runtime': 241.907, 'train_samples_per_second': 24.679, 'train_steps_per_second': 0.785, 'train_loss': 1.430752844559519, 'epoch': 10.0}
+seed 43  dev AC 32.43  test AC 32.43  (test macro F1 8.16)
+=== lgse_lapt__tc__tigrinya__seed43 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9242 (mlm=4.0765 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8778 (mlm=3.9774 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8609 (mlm=3.4493 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9133 (mlm=4.0628 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9213 (mlm=4.2313 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8382 (mlm=3.7795 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8268 (mlm=3.8458 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8389 (mlm=4.5452 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8155 (mlm=3.4341 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8160 (mlm=3.9115 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed43/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed43/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_tc.py --model results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed43/lapt --data-dir data/tc/tigrinya --seed 43 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed43/tc
+lgse_lapt__tc__tigrinya__seed43: test accuracy 32.43
+=== lgse_lapt__tc__tigrinya__seed44 ===
+{'eval_loss': 1.3887752294540405, 'eval_runtime': 0.256, 'eval_samples_per_second': 289.066, 'eval_steps_per_second': 11.719, 'epoch': 1.0}
+{'eval_loss': 1.3958226442337036, 'eval_runtime': 0.2549, 'eval_samples_per_second': 290.313, 'eval_steps_per_second': 11.769, 'epoch': 2.0}
+{'loss': 1.4599, 'grad_norm': 1.6551809310913086, 'learning_rate': 3.710526315789474e-05, 'epoch': 2.63}
+{'eval_loss': 1.3865481615066528, 'eval_runtime': 0.2536, 'eval_samples_per_second': 291.822, 'eval_steps_per_second': 11.831, 'epoch': 3.0}
+{'eval_loss': 1.3868372440338135, 'eval_runtime': 0.2516, 'eval_samples_per_second': 294.116, 'eval_steps_per_second': 11.924, 'epoch': 4.0}
+{'eval_loss': 1.3478494882583618, 'eval_runtime': 0.2527, 'eval_samples_per_second': 292.83, 'eval_steps_per_second': 11.871, 'epoch': 5.0}
+{'loss': 1.3926, 'grad_norm': 1.48686945438385, 'learning_rate': 2.394736842105263e-05, 'epoch': 5.26}
+{'eval_loss': 1.3295788764953613, 'eval_runtime': 0.2535, 'eval_samples_per_second': 291.947, 'eval_steps_per_second': 11.836, 'epoch': 6.0}
+{'eval_loss': 1.3086172342300415, 'eval_runtime': 0.2534, 'eval_samples_per_second': 292.005, 'eval_steps_per_second': 11.838, 'epoch': 7.0}
+{'loss': 1.3614, 'grad_norm': 3.6717522144317627, 'learning_rate': 1.0789473684210526e-05, 'epoch': 7.89}
+{'eval_loss': 1.298087239265442, 'eval_runtime': 0.2531, 'eval_samples_per_second': 292.369, 'eval_steps_per_second': 11.853, 'epoch': 8.0}
+{'eval_loss': 1.2786633968353271, 'eval_runtime': 0.2523, 'eval_samples_per_second': 293.354, 'eval_steps_per_second': 11.893, 'epoch': 9.0}
+{'eval_loss': 1.278696060180664, 'eval_runtime': 0.2531, 'eval_samples_per_second': 292.318, 'eval_steps_per_second': 11.851, 'epoch': 10.0}
+{'train_runtime': 252.7835, 'train_samples_per_second': 23.617, 'train_steps_per_second': 0.752, 'train_loss': 1.3836196698640522, 'epoch': 10.0}
+seed 44  dev AC 45.95  test AC 51.35  (test macro F1 26.52)
+=== lgse_lapt__tc__tigrinya__seed44 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9121 (mlm=3.8888 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9323 (mlm=3.6330 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8683 (mlm=4.0898 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8577 (mlm=3.4792 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8408 (mlm=3.8734 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8545 (mlm=3.9474 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8905 (mlm=3.7205 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8291 (mlm=3.9297 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8285 (mlm=3.7206 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8366 (mlm=3.0988 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed44/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed44/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_tc.py --model results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed44/lapt --data-dir data/tc/tigrinya --seed 44 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed44/tc
+lgse_lapt__tc__tigrinya__seed44: test accuracy 51.35
+=== lgse_lapt__tc__tigrinya__seed45 ===
+{'eval_loss': 1.6545383930206299, 'eval_runtime': 0.257, 'eval_samples_per_second': 287.977, 'eval_steps_per_second': 11.675, 'epoch': 1.0}
+{'eval_loss': 1.388213872909546, 'eval_runtime': 0.2543, 'eval_samples_per_second': 291.023, 'eval_steps_per_second': 11.798, 'epoch': 2.0}
+{'loss': 1.4649, 'grad_norm': 3.6931068897247314, 'learning_rate': 3.710526315789474e-05, 'epoch': 2.63}
+{'eval_loss': 1.4033081531524658, 'eval_runtime': 0.2525, 'eval_samples_per_second': 293.124, 'eval_steps_per_second': 11.883, 'epoch': 3.0}
+{'eval_loss': 1.3891972303390503, 'eval_runtime': 0.2527, 'eval_samples_per_second': 292.825, 'eval_steps_per_second': 11.871, 'epoch': 4.0}
+{'eval_loss': 1.3695449829101562, 'eval_runtime': 0.2529, 'eval_samples_per_second': 292.613, 'eval_steps_per_second': 11.863, 'epoch': 5.0}
+{'loss': 1.4213, 'grad_norm': 3.9256057739257812, 'learning_rate': 2.394736842105263e-05, 'epoch': 5.26}
+{'eval_loss': 1.3508851528167725, 'eval_runtime': 0.252, 'eval_samples_per_second': 293.631, 'eval_steps_per_second': 11.904, 'epoch': 6.0}
+{'eval_loss': 1.3833096027374268, 'eval_runtime': 0.2522, 'eval_samples_per_second': 293.43, 'eval_steps_per_second': 11.896, 'epoch': 7.0}
+{'loss': 1.4127, 'grad_norm': 3.009091377258301, 'learning_rate': 1.0789473684210526e-05, 'epoch': 7.89}
+{'eval_loss': 1.3608379364013672, 'eval_runtime': 0.253, 'eval_samples_per_second': 292.473, 'eval_steps_per_second': 11.857, 'epoch': 8.0}
+{'eval_loss': 1.3395190238952637, 'eval_runtime': 0.2532, 'eval_samples_per_second': 292.285, 'eval_steps_per_second': 11.849, 'epoch': 9.0}
+{'eval_loss': 1.3347736597061157, 'eval_runtime': 0.2535, 'eval_samples_per_second': 291.872, 'eval_steps_per_second': 11.833, 'epoch': 10.0}
+{'train_runtime': 258.9039, 'train_samples_per_second': 23.059, 'train_steps_per_second': 0.734, 'train_loss': 1.4244623886911492, 'epoch': 10.0}
+seed 45  dev AC 29.73  test AC 35.14  (test macro F1 17.65)
+=== lgse_lapt__tc__tigrinya__seed45 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9202 (mlm=3.6564 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9012 (mlm=4.2266 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8658 (mlm=3.8647 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8444 (mlm=3.7684 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8623 (mlm=3.5368 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8360 (mlm=3.5938 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8260 (mlm=3.5391 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8211 (mlm=3.8836 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8128 (mlm=3.6916 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8057 (mlm=4.0544 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed45/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed45/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_tc.py --model results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed45/lapt --data-dir data/tc/tigrinya --seed 45 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed45/tc
+lgse_lapt__tc__tigrinya__seed45: test accuracy 35.14
+=== lgse_lapt__tc__tigrinya__seed46 ===
+{'eval_loss': 1.3942162990570068, 'eval_runtime': 0.2591, 'eval_samples_per_second': 285.607, 'eval_steps_per_second': 11.579, 'epoch': 1.0}
+{'eval_loss': 1.376415491104126, 'eval_runtime': 0.2534, 'eval_samples_per_second': 291.976, 'eval_steps_per_second': 11.837, 'epoch': 2.0}
+{'loss': 1.4656, 'grad_norm': 3.1365551948547363, 'learning_rate': 3.710526315789474e-05, 'epoch': 2.63}
+{'eval_loss': 1.4013922214508057, 'eval_runtime': 0.253, 'eval_samples_per_second': 292.515, 'eval_steps_per_second': 11.859, 'epoch': 3.0}
+{'eval_loss': 1.456653356552124, 'eval_runtime': 0.2528, 'eval_samples_per_second': 292.689, 'eval_steps_per_second': 11.866, 'epoch': 4.0}
+{'eval_loss': 1.3908696174621582, 'eval_runtime': 0.2516, 'eval_samples_per_second': 294.067, 'eval_steps_per_second': 11.922, 'epoch': 5.0}
+{'loss': 1.4093, 'grad_norm': 2.549541473388672, 'learning_rate': 2.394736842105263e-05, 'epoch': 5.26}
+{'eval_loss': 1.3897297382354736, 'eval_runtime': 0.2519, 'eval_samples_per_second': 293.742, 'eval_steps_per_second': 11.908, 'epoch': 6.0}
+{'eval_loss': 1.386275291442871, 'eval_runtime': 0.2531, 'eval_samples_per_second': 292.403, 'eval_steps_per_second': 11.854, 'epoch': 7.0}
+{'loss': 1.4138, 'grad_norm': 1.9309563636779785, 'learning_rate': 1.0789473684210526e-05, 'epoch': 7.89}
+{'eval_loss': 1.3819292783737183, 'eval_runtime': 0.2511, 'eval_samples_per_second': 294.728, 'eval_steps_per_second': 11.948, 'epoch': 8.0}
+{'eval_loss': 1.384394645690918, 'eval_runtime': 0.2517, 'eval_samples_per_second': 293.993, 'eval_steps_per_second': 11.919, 'epoch': 9.0}
+{'eval_loss': 1.3817508220672607, 'eval_runtime': 0.2518, 'eval_samples_per_second': 293.902, 'eval_steps_per_second': 11.915, 'epoch': 10.0}
+{'train_runtime': 258.1825, 'train_samples_per_second': 23.123, 'train_steps_per_second': 0.736, 'train_loss': 1.4265989403975636, 'epoch': 10.0}
+seed 46  dev AC 32.43  test AC 32.43  (test macro F1 8.16)
+=== lgse_lapt__tc__tigrinya__seed46 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9457 (mlm=3.5859 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8755 (mlm=3.9817 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8465 (mlm=3.9140 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8634 (mlm=3.8784 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8492 (mlm=3.8128 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8318 (mlm=3.3619 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8287 (mlm=4.3005 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8377 (mlm=3.8966 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9924 (mlm=3.9196 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8241 (mlm=3.4237 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed46/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed46/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_tc.py --model results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed46/lapt --data-dir data/tc/tigrinya --seed 46 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__tc__tigrinya__seed46/tc
+lgse_lapt__tc__tigrinya__seed46: test accuracy 32.43

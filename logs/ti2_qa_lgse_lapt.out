@@ -1,0 +1,237 @@
+==========================================
+SLURM_JOB_ID = 80581
+SLURM_NODELIST = gpunode03
+==========================================
+  guards OK; W -> data/alignment/W_ti.npy
+=== lgse_lapt__qa__tigrinya__seed43 ===
+{'loss': 2.5906, 'grad_norm': 7.036513805389404, 'learning_rate': 4.8661202185792353e-05, 'epoch': 0.27}
+{'loss': 1.7237, 'grad_norm': 41.342227935791016, 'learning_rate': 4.7295081967213114e-05, 'epoch': 0.55}
+{'loss': 1.3706, 'grad_norm': 10.011415481567383, 'learning_rate': 4.592896174863388e-05, 'epoch': 0.82}
+{'loss': 1.325, 'grad_norm': 17.3678035736084, 'learning_rate': 4.456284153005464e-05, 'epoch': 1.09}
+{'loss': 1.1113, 'grad_norm': 12.609014511108398, 'learning_rate': 4.319672131147541e-05, 'epoch': 1.37}
+{'loss': 1.1237, 'grad_norm': 15.3771390914917, 'learning_rate': 4.183060109289618e-05, 'epoch': 1.64}
+{'loss': 1.1857, 'grad_norm': 20.260154724121094, 'learning_rate': 4.046448087431694e-05, 'epoch': 1.91}
+{'loss': 1.6942, 'grad_norm': 10.77699089050293, 'learning_rate': 3.909836065573771e-05, 'epoch': 2.19}
+{'loss': 0.9039, 'grad_norm': 14.038128852844238, 'learning_rate': 3.7732240437158475e-05, 'epoch': 2.46}
+{'loss': 0.9149, 'grad_norm': 18.114410400390625, 'learning_rate': 3.6366120218579236e-05, 'epoch': 2.73}
+{'loss': 0.8927, 'grad_norm': 11.707664489746094, 'learning_rate': 3.5e-05, 'epoch': 3.01}
+{'loss': 0.8179, 'grad_norm': 23.482770919799805, 'learning_rate': 3.363387978142077e-05, 'epoch': 3.28}
+{'loss': 0.6995, 'grad_norm': 15.050941467285156, 'learning_rate': 3.226775956284153e-05, 'epoch': 3.55}
+{'loss': 0.7662, 'grad_norm': 10.428470611572266, 'learning_rate': 3.090163934426229e-05, 'epoch': 3.83}
+{'loss': 0.7062, 'grad_norm': 15.945110321044922, 'learning_rate': 2.9535519125683058e-05, 'epoch': 4.1}
+{'loss': 0.5905, 'grad_norm': 18.488746643066406, 'learning_rate': 2.816939890710383e-05, 'epoch': 4.37}
+{'loss': 0.6154, 'grad_norm': 19.390968322753906, 'learning_rate': 2.680327868852459e-05, 'epoch': 4.64}
+{'loss': 0.591, 'grad_norm': 17.963090896606445, 'learning_rate': 2.5437158469945354e-05, 'epoch': 4.92}
+{'loss': 0.4712, 'grad_norm': 15.23314094543457, 'learning_rate': 2.4071038251366122e-05, 'epoch': 5.19}
+{'loss': 0.4202, 'grad_norm': 34.73563003540039, 'learning_rate': 2.2704918032786886e-05, 'epoch': 5.46}
+{'loss': 0.4715, 'grad_norm': 29.46015739440918, 'learning_rate': 2.133879781420765e-05, 'epoch': 5.74}
+{'loss': 0.487, 'grad_norm': 17.550426483154297, 'learning_rate': 1.997267759562842e-05, 'epoch': 6.01}
+{'loss': 0.34, 'grad_norm': 29.069923400878906, 'learning_rate': 1.860655737704918e-05, 'epoch': 6.28}
+{'loss': 0.3483, 'grad_norm': 7.172664642333984, 'learning_rate': 1.7240437158469947e-05, 'epoch': 6.56}
+{'loss': 0.3945, 'grad_norm': 11.326842308044434, 'learning_rate': 1.587431693989071e-05, 'epoch': 6.83}
+{'loss': 0.3171, 'grad_norm': 19.588329315185547, 'learning_rate': 1.4508196721311476e-05, 'epoch': 7.1}
+{'loss': 0.346, 'grad_norm': 41.464744567871094, 'learning_rate': 1.3142076502732242e-05, 'epoch': 7.38}
+{'loss': 0.3021, 'grad_norm': 22.122610092163086, 'learning_rate': 1.1775956284153006e-05, 'epoch': 7.65}
+{'loss': 0.3101, 'grad_norm': 26.404741287231445, 'learning_rate': 1.040983606557377e-05, 'epoch': 7.92}
+{'loss': 0.2019, 'grad_norm': 19.528762817382812, 'learning_rate': 9.043715846994535e-06, 'epoch': 8.2}
+{'loss': 0.2175, 'grad_norm': 29.383947372436523, 'learning_rate': 7.677595628415301e-06, 'epoch': 8.47}
+{'loss': 0.2401, 'grad_norm': 14.047554969787598, 'learning_rate': 6.311475409836066e-06, 'epoch': 8.74}
+{'loss': 0.2263, 'grad_norm': 10.714591979980469, 'learning_rate': 4.9453551912568304e-06, 'epoch': 9.02}
+{'loss': 0.1487, 'grad_norm': 5.322019100189209, 'learning_rate': 3.5792349726775956e-06, 'epoch': 9.29}
+{'loss': 0.1969, 'grad_norm': 43.906009674072266, 'learning_rate': 2.213114754098361e-06, 'epoch': 9.56}
+{'loss': 0.2018, 'grad_norm': 10.845938682556152, 'learning_rate': 8.469945355191256e-07, 'epoch': 9.84}
+{'train_runtime': 889.3035, 'train_samples_per_second': 65.714, 'train_steps_per_second': 2.058, 'train_loss': 0.6931628717099383, 'epoch': 10.0}
+seed 43  dev F1 50.00  test F1 54.28
+=== lgse_lapt__qa__tigrinya__seed43 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9290 (mlm=4.1034 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8820 (mlm=4.0180 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8772 (mlm=3.4458 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8589 (mlm=4.0520 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8340 (mlm=4.2113 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8381 (mlm=3.7747 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8246 (mlm=3.8360 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8434 (mlm=4.5460 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8507 (mlm=3.4341 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8280 (mlm=3.9168 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed43/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed43/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed43/lapt --data-dir data/qa/tigqa_squad --seed 43 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed43/qa
+lgse_lapt__qa__tigrinya__seed43: test f1 54.28
+=== lgse_lapt__qa__tigrinya__seed44 ===
+{'loss': 3.2591, 'grad_norm': 6.544190883636475, 'learning_rate': 4.8661202185792353e-05, 'epoch': 0.27}
+{'loss': 1.952, 'grad_norm': 8.1024169921875, 'learning_rate': 4.7295081967213114e-05, 'epoch': 0.55}
+{'loss': 1.8465, 'grad_norm': 5.447641849517822, 'learning_rate': 4.592896174863388e-05, 'epoch': 0.82}
+{'loss': 1.7688, 'grad_norm': 3.9758193492889404, 'learning_rate': 4.456284153005464e-05, 'epoch': 1.09}
+{'loss': 1.7489, 'grad_norm': 12.708415985107422, 'learning_rate': 4.319672131147541e-05, 'epoch': 1.37}
+{'loss': 1.4125, 'grad_norm': 14.361200332641602, 'learning_rate': 4.183060109289618e-05, 'epoch': 1.64}
+{'loss': 1.2309, 'grad_norm': 18.265125274658203, 'learning_rate': 4.046448087431694e-05, 'epoch': 1.91}
+{'loss': 1.157, 'grad_norm': 24.968921661376953, 'learning_rate': 3.909836065573771e-05, 'epoch': 2.19}
+{'loss': 0.9977, 'grad_norm': 12.360342025756836, 'learning_rate': 3.7732240437158475e-05, 'epoch': 2.46}
+{'loss': 0.9413, 'grad_norm': 12.640375137329102, 'learning_rate': 3.6366120218579236e-05, 'epoch': 2.73}
+{'loss': 1.0548, 'grad_norm': 14.287039756774902, 'learning_rate': 3.5e-05, 'epoch': 3.01}
+{'loss': 0.8308, 'grad_norm': 15.797072410583496, 'learning_rate': 3.363387978142077e-05, 'epoch': 3.28}
+{'loss': 0.8357, 'grad_norm': 17.445999145507812, 'learning_rate': 3.226775956284153e-05, 'epoch': 3.55}
+{'loss': 0.7941, 'grad_norm': 11.944602012634277, 'learning_rate': 3.090163934426229e-05, 'epoch': 3.83}
+{'loss': 0.7639, 'grad_norm': 16.436840057373047, 'learning_rate': 2.9535519125683058e-05, 'epoch': 4.1}
+{'loss': 0.6177, 'grad_norm': 17.6700496673584, 'learning_rate': 2.816939890710383e-05, 'epoch': 4.37}
+{'loss': 0.6456, 'grad_norm': 14.38471794128418, 'learning_rate': 2.680327868852459e-05, 'epoch': 4.64}
+{'loss': 0.6858, 'grad_norm': 16.6856632232666, 'learning_rate': 2.5437158469945354e-05, 'epoch': 4.92}
+{'loss': 0.589, 'grad_norm': 12.111893653869629, 'learning_rate': 2.4071038251366122e-05, 'epoch': 5.19}
+{'loss': 0.5574, 'grad_norm': 27.02391242980957, 'learning_rate': 2.2704918032786886e-05, 'epoch': 5.46}
+{'loss': 0.5511, 'grad_norm': 16.650981903076172, 'learning_rate': 2.133879781420765e-05, 'epoch': 5.74}
+{'loss': 0.502, 'grad_norm': 12.407509803771973, 'learning_rate': 1.997267759562842e-05, 'epoch': 6.01}
+{'loss': 0.4111, 'grad_norm': 20.480886459350586, 'learning_rate': 1.860655737704918e-05, 'epoch': 6.28}
+{'loss': 0.4088, 'grad_norm': 17.467004776000977, 'learning_rate': 1.7240437158469947e-05, 'epoch': 6.56}
+{'loss': 0.4792, 'grad_norm': 15.103416442871094, 'learning_rate': 1.587431693989071e-05, 'epoch': 6.83}
+{'loss': 0.3483, 'grad_norm': 15.36121654510498, 'learning_rate': 1.4508196721311476e-05, 'epoch': 7.1}
+{'loss': 0.32, 'grad_norm': 25.322065353393555, 'learning_rate': 1.3142076502732242e-05, 'epoch': 7.38}
+{'loss': 0.3299, 'grad_norm': 19.913026809692383, 'learning_rate': 1.1775956284153006e-05, 'epoch': 7.65}
+{'loss': 0.3348, 'grad_norm': 22.47791290283203, 'learning_rate': 1.040983606557377e-05, 'epoch': 7.92}
+{'loss': 0.2393, 'grad_norm': 11.807560920715332, 'learning_rate': 9.043715846994535e-06, 'epoch': 8.2}
+{'loss': 0.2745, 'grad_norm': 37.87538528442383, 'learning_rate': 7.677595628415301e-06, 'epoch': 8.47}
+{'loss': 0.3275, 'grad_norm': 11.562832832336426, 'learning_rate': 6.311475409836066e-06, 'epoch': 8.74}
+{'loss': 0.2693, 'grad_norm': 14.694299697875977, 'learning_rate': 4.9453551912568304e-06, 'epoch': 9.02}
+{'loss': 0.2378, 'grad_norm': 24.82903289794922, 'learning_rate': 3.5792349726775956e-06, 'epoch': 9.29}
+{'loss': 0.2004, 'grad_norm': 13.984818458557129, 'learning_rate': 2.213114754098361e-06, 'epoch': 9.56}
+{'loss': 0.22, 'grad_norm': 29.81113052368164, 'learning_rate': 8.469945355191256e-07, 'epoch': 9.84}
+{'train_runtime': 887.8512, 'train_samples_per_second': 65.822, 'train_steps_per_second': 2.061, 'train_loss': 0.7996291165794831, 'epoch': 10.0}
+seed 44  dev F1 49.20  test F1 50.66
+=== lgse_lapt__qa__tigrinya__seed44 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9046 (mlm=3.8950 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8498 (mlm=3.6235 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8328 (mlm=3.9334 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8230 (mlm=3.4604 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8305 (mlm=3.8536 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8159 (mlm=3.6986 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8113 (mlm=3.7213 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8583 (mlm=3.8850 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8297 (mlm=3.7164 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8103 (mlm=3.0937 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed44/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed44/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed44/lapt --data-dir data/qa/tigqa_squad --seed 44 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed44/qa
+lgse_lapt__qa__tigrinya__seed44: test f1 50.66
+=== lgse_lapt__qa__tigrinya__seed45 ===
+{'loss': 2.6525, 'grad_norm': 3.446061134338379, 'learning_rate': 4.8661202185792353e-05, 'epoch': 0.27}
+{'loss': 1.9524, 'grad_norm': 6.638020038604736, 'learning_rate': 4.7295081967213114e-05, 'epoch': 0.55}
+{'loss': 1.8562, 'grad_norm': 5.378556728363037, 'learning_rate': 4.592896174863388e-05, 'epoch': 0.82}
+{'loss': 1.5367, 'grad_norm': 23.24314308166504, 'learning_rate': 4.456284153005464e-05, 'epoch': 1.09}
+{'loss': 1.2416, 'grad_norm': 16.883991241455078, 'learning_rate': 4.319672131147541e-05, 'epoch': 1.37}
+{'loss': 1.0336, 'grad_norm': 13.627840995788574, 'learning_rate': 4.183060109289618e-05, 'epoch': 1.64}
+{'loss': 1.2304, 'grad_norm': 10.140891075134277, 'learning_rate': 4.046448087431694e-05, 'epoch': 1.91}
+{'loss': 0.9973, 'grad_norm': 10.952998161315918, 'learning_rate': 3.909836065573771e-05, 'epoch': 2.19}
+{'loss': 1.0036, 'grad_norm': 14.773069381713867, 'learning_rate': 3.7732240437158475e-05, 'epoch': 2.46}
+{'loss': 0.9648, 'grad_norm': 11.531912803649902, 'learning_rate': 3.6366120218579236e-05, 'epoch': 2.73}
+{'loss': 0.9048, 'grad_norm': 12.538814544677734, 'learning_rate': 3.5e-05, 'epoch': 3.01}
+{'loss': 0.7413, 'grad_norm': 14.565716743469238, 'learning_rate': 3.363387978142077e-05, 'epoch': 3.28}
+{'loss': 0.7072, 'grad_norm': 15.798124313354492, 'learning_rate': 3.226775956284153e-05, 'epoch': 3.55}
+{'loss': 0.8282, 'grad_norm': 14.089911460876465, 'learning_rate': 3.090163934426229e-05, 'epoch': 3.83}
+{'loss': 0.6736, 'grad_norm': 10.619311332702637, 'learning_rate': 2.9535519125683058e-05, 'epoch': 4.1}
+{'loss': 0.564, 'grad_norm': 33.55472946166992, 'learning_rate': 2.816939890710383e-05, 'epoch': 4.37}
+{'loss': 0.6188, 'grad_norm': 16.200834274291992, 'learning_rate': 2.680327868852459e-05, 'epoch': 4.64}
+{'loss': 0.6319, 'grad_norm': 6.603575706481934, 'learning_rate': 2.5437158469945354e-05, 'epoch': 4.92}
+{'loss': 0.5181, 'grad_norm': 21.393712997436523, 'learning_rate': 2.4071038251366122e-05, 'epoch': 5.19}
+{'loss': 0.437, 'grad_norm': 16.020320892333984, 'learning_rate': 2.2704918032786886e-05, 'epoch': 5.46}
+{'loss': 0.4896, 'grad_norm': 9.777082443237305, 'learning_rate': 2.133879781420765e-05, 'epoch': 5.74}
+{'loss': 0.4474, 'grad_norm': 11.221662521362305, 'learning_rate': 1.997267759562842e-05, 'epoch': 6.01}
+{'loss': 0.3517, 'grad_norm': 14.007901191711426, 'learning_rate': 1.860655737704918e-05, 'epoch': 6.28}
+{'loss': 0.3483, 'grad_norm': 24.541975021362305, 'learning_rate': 1.7240437158469947e-05, 'epoch': 6.56}
+{'loss': 0.4018, 'grad_norm': 11.942554473876953, 'learning_rate': 1.587431693989071e-05, 'epoch': 6.83}
+{'loss': 0.3308, 'grad_norm': 5.896418571472168, 'learning_rate': 1.4508196721311476e-05, 'epoch': 7.1}
+{'loss': 0.2313, 'grad_norm': 18.464664459228516, 'learning_rate': 1.3142076502732242e-05, 'epoch': 7.38}
+{'loss': 0.311, 'grad_norm': 17.031686782836914, 'learning_rate': 1.1775956284153006e-05, 'epoch': 7.65}
+{'loss': 0.3063, 'grad_norm': 26.760927200317383, 'learning_rate': 1.040983606557377e-05, 'epoch': 7.92}
+{'loss': 0.2542, 'grad_norm': 21.28847312927246, 'learning_rate': 9.043715846994535e-06, 'epoch': 8.2}
+{'loss': 0.263, 'grad_norm': 10.340791702270508, 'learning_rate': 7.677595628415301e-06, 'epoch': 8.47}
+{'loss': 0.1893, 'grad_norm': 13.864574432373047, 'learning_rate': 6.311475409836066e-06, 'epoch': 8.74}
+{'loss': 0.2234, 'grad_norm': 22.799938201904297, 'learning_rate': 4.9453551912568304e-06, 'epoch': 9.02}
+{'loss': 0.1822, 'grad_norm': 16.751876831054688, 'learning_rate': 3.5792349726775956e-06, 'epoch': 9.29}
+{'loss': 0.1894, 'grad_norm': 16.029958724975586, 'learning_rate': 2.213114754098361e-06, 'epoch': 9.56}
+{'loss': 0.1813, 'grad_norm': 7.426945209503174, 'learning_rate': 8.469945355191256e-07, 'epoch': 9.84}
+{'train_runtime': 891.7411, 'train_samples_per_second': 65.535, 'train_steps_per_second': 2.052, 'train_loss': 0.7085029028803924, 'epoch': 10.0}
+seed 45  dev F1 49.89  test F1 52.85
+=== lgse_lapt__qa__tigrinya__seed45 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9201 (mlm=3.6694 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8595 (mlm=4.2296 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8500 (mlm=3.8503 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8340 (mlm=3.7649 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8321 (mlm=3.5368 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8395 (mlm=3.5825 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8357 (mlm=3.5360 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8204 (mlm=3.8755 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8089 (mlm=3.6962 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8063 (mlm=4.0571 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed45/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed45/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed45/lapt --data-dir data/qa/tigqa_squad --seed 45 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed45/qa
+lgse_lapt__qa__tigrinya__seed45: test f1 52.85
+=== lgse_lapt__qa__tigrinya__seed46 ===
+{'loss': 2.9034, 'grad_norm': 4.413266181945801, 'learning_rate': 4.8661202185792353e-05, 'epoch': 0.27}
+{'loss': 1.7884, 'grad_norm': 5.2415385246276855, 'learning_rate': 4.7295081967213114e-05, 'epoch': 0.55}
+{'loss': 1.7602, 'grad_norm': 6.842370510101318, 'learning_rate': 4.592896174863388e-05, 'epoch': 0.82}
+{'loss': 1.4682, 'grad_norm': 2433.050537109375, 'learning_rate': 4.456284153005464e-05, 'epoch': 1.09}
+{'loss': 1.2652, 'grad_norm': 100.57453918457031, 'learning_rate': 4.319672131147541e-05, 'epoch': 1.37}
+{'loss': 1.2279, 'grad_norm': 16.467294692993164, 'learning_rate': 4.183060109289618e-05, 'epoch': 1.64}
+{'loss': 1.1656, 'grad_norm': 18.2923526763916, 'learning_rate': 4.046448087431694e-05, 'epoch': 1.91}
+{'loss': 1.0469, 'grad_norm': 11.164942741394043, 'learning_rate': 3.909836065573771e-05, 'epoch': 2.19}
+{'loss': 0.9082, 'grad_norm': 9.311019897460938, 'learning_rate': 3.7732240437158475e-05, 'epoch': 2.46}
+{'loss': 0.9839, 'grad_norm': 13.997111320495605, 'learning_rate': 3.6366120218579236e-05, 'epoch': 2.73}
+{'loss': 0.9757, 'grad_norm': 10.853917121887207, 'learning_rate': 3.5e-05, 'epoch': 3.01}
+{'loss': 0.7782, 'grad_norm': 10.925668716430664, 'learning_rate': 3.363387978142077e-05, 'epoch': 3.28}
+{'loss': 0.7638, 'grad_norm': 17.965492248535156, 'learning_rate': 3.226775956284153e-05, 'epoch': 3.55}
+{'loss': 0.8233, 'grad_norm': 24.487178802490234, 'learning_rate': 3.090163934426229e-05, 'epoch': 3.83}
+{'loss': 0.6876, 'grad_norm': 21.761878967285156, 'learning_rate': 2.9535519125683058e-05, 'epoch': 4.1}
+{'loss': 0.6856, 'grad_norm': 10.321840286254883, 'learning_rate': 2.816939890710383e-05, 'epoch': 4.37}
+{'loss': 0.6186, 'grad_norm': 18.39788818359375, 'learning_rate': 2.680327868852459e-05, 'epoch': 4.64}
+{'loss': 0.6345, 'grad_norm': 9.977628707885742, 'learning_rate': 2.5437158469945354e-05, 'epoch': 4.92}
+{'loss': 0.5061, 'grad_norm': 15.941006660461426, 'learning_rate': 2.4071038251366122e-05, 'epoch': 5.19}
+{'loss': 0.5108, 'grad_norm': 12.1170072555542, 'learning_rate': 2.2704918032786886e-05, 'epoch': 5.46}
+{'loss': 0.497, 'grad_norm': 12.080355644226074, 'learning_rate': 2.133879781420765e-05, 'epoch': 5.74}
+{'loss': 0.5084, 'grad_norm': 8.187729835510254, 'learning_rate': 1.997267759562842e-05, 'epoch': 6.01}
+{'loss': 0.3236, 'grad_norm': 26.28618812561035, 'learning_rate': 1.860655737704918e-05, 'epoch': 6.28}
+{'loss': 0.3923, 'grad_norm': 27.22603416442871, 'learning_rate': 1.7240437158469947e-05, 'epoch': 6.56}
+{'loss': 0.4341, 'grad_norm': 14.517641067504883, 'learning_rate': 1.587431693989071e-05, 'epoch': 6.83}
+{'loss': 0.3629, 'grad_norm': 29.57414436340332, 'learning_rate': 1.4508196721311476e-05, 'epoch': 7.1}
+{'loss': 0.3157, 'grad_norm': 12.1458158493042, 'learning_rate': 1.3142076502732242e-05, 'epoch': 7.38}
+{'loss': 0.2731, 'grad_norm': 10.070037841796875, 'learning_rate': 1.1775956284153006e-05, 'epoch': 7.65}
+{'loss': 0.2711, 'grad_norm': 2.9225616455078125, 'learning_rate': 1.040983606557377e-05, 'epoch': 7.92}
+{'loss': 0.2692, 'grad_norm': 13.1371431350708, 'learning_rate': 9.043715846994535e-06, 'epoch': 8.2}
+{'loss': 0.2381, 'grad_norm': 12.412708282470703, 'learning_rate': 7.677595628415301e-06, 'epoch': 8.47}
+{'loss': 0.2684, 'grad_norm': 11.780303955078125, 'learning_rate': 6.311475409836066e-06, 'epoch': 8.74}
+{'loss': 0.2184, 'grad_norm': 12.315028190612793, 'learning_rate': 4.9453551912568304e-06, 'epoch': 9.02}
+{'loss': 0.1886, 'grad_norm': 14.874261856079102, 'learning_rate': 3.5792349726775956e-06, 'epoch': 9.29}
+{'loss': 0.2301, 'grad_norm': 22.50138282775879, 'learning_rate': 2.213114754098361e-06, 'epoch': 9.56}
+{'loss': 0.1818, 'grad_norm': 7.494809627532959, 'learning_rate': 8.469945355191256e-07, 'epoch': 9.84}
+{'train_runtime': 890.958, 'train_samples_per_second': 65.592, 'train_steps_per_second': 2.054, 'train_loss': 0.7265882968902588, 'epoch': 10.0}
+seed 46  dev F1 49.63  test F1 50.90
+=== lgse_lapt__qa__tigrinya__seed46 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_ti.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+[LGSELAPTrainer] avg loss this epoch: 3.9522 (mlm=3.6192 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9114 (mlm=4.0507 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8996 (mlm=3.9430 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8961 (mlm=3.9031 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8830 (mlm=3.8574 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8525 (mlm=3.3801 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8397 (mlm=4.3274 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8338 (mlm=3.9076 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.8231 (mlm=3.9053 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.9327 (mlm=3.4170 reg=0.0000 on last batch)
+Saved alignment matrix W to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed46/lapt/projection.pt
+Saved LGSE-specialized model to results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed46/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_qa.py --model results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed46/lapt --data-dir data/qa/tigqa_squad --seed 46 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_tigrinya_gen2/lgse_lapt__qa__tigrinya__seed46/qa
+lgse_lapt__qa__tigrinya__seed46: test f1 50.90

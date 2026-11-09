@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Generate the complete Table 2: five systems, three tasks, two languages.
 
-Single source of truth for every number in the replacement paper's main
-table. Nothing is typed by hand; running this reproduces the tables.
+Single source of truth for every number in the comparison's tables.
+Nothing is typed by hand; running this reproduces the tables.
 
 WHERE THE RUNS COME FROM, AND WHY
 ---------------------------------
-Three directories supply the 150 runs, each for a stated reason. The split
+Three directories supply the 165 runs, each for a stated reason. The split
 is not arbitrary and is asserted at load time rather than assumed:
 
   results_hornmorpho_wam/   Amharic XLM-R, FOCUS, LGSE.
@@ -162,10 +162,10 @@ EXCLUDED_DIRS = [
     ("results_gen2_snapshot_20260924",
      "the September sweep. Withdrawn: all fifteen Amharic LGSE runs loaded "
      "W_ti.npy on Amharic data, and its Tigrinya QA used the superseded "
-     "86-item split. See report/TABLE2_REPORT.md."),
+     "86-item split."),
     ("results",
      "same sweep, and its Amharic records were overwritten by a later run; "
-     "only the committed report/per_seed_results.json preserves them"),
+     "only the git history preserves them"),
     ("results_hornmorpho (LGSE and FOCUS runs)",
      "those two systems consume FastText and so loaded the W_ti.npy this "
      "directory's config names; its +LAPT and +Random+LAPT runs are used"),

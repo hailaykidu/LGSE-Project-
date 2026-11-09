@@ -1,0 +1,32 @@
+==========================================
+SLURM_JOB_ID = 95910
+SLURM_NODELIST = gpunode03
+==========================================
+  guards OK: rebuilt split, seed not yet done
+=== xlmr__ner__amharic__seed47 (rebuilt split, seed parity) ===
+{'loss': 0.7632, 'grad_norm': 4.142208099365234, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.4176342785358429, 'eval_runtime': 0.2172, 'eval_samples_per_second': 1151.052, 'eval_steps_per_second': 36.834, 'epoch': 1.0}
+{'loss': 0.3092, 'grad_norm': 3.4359378814697266, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.2136174589395523, 'eval_runtime': 0.2169, 'eval_samples_per_second': 1152.46, 'eval_steps_per_second': 36.879, 'epoch': 2.0}
+{'loss': 0.1592, 'grad_norm': 6.302734375, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.1991722136735916, 'eval_runtime': 0.2173, 'eval_samples_per_second': 1150.29, 'eval_steps_per_second': 36.809, 'epoch': 3.0}
+{'loss': 0.1176, 'grad_norm': 3.568059206008911, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.2140178382396698, 'eval_runtime': 0.217, 'eval_samples_per_second': 1151.833, 'eval_steps_per_second': 36.859, 'epoch': 4.0}
+{'loss': 0.0857, 'grad_norm': 1.9166826009750366, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.20798856019973755, 'eval_runtime': 0.2167, 'eval_samples_per_second': 1153.609, 'eval_steps_per_second': 36.915, 'epoch': 5.0}
+{'loss': 0.0604, 'grad_norm': 2.827530860900879, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.22192321717739105, 'eval_runtime': 0.2175, 'eval_samples_per_second': 1149.267, 'eval_steps_per_second': 36.777, 'epoch': 6.0}
+{'loss': 0.0492, 'grad_norm': 3.687715768814087, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.22865955531597137, 'eval_runtime': 0.2163, 'eval_samples_per_second': 1155.636, 'eval_steps_per_second': 36.98, 'epoch': 7.0}
+{'loss': 0.0362, 'grad_norm': 2.953984022140503, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.234371617436409, 'eval_runtime': 0.2158, 'eval_samples_per_second': 1158.389, 'eval_steps_per_second': 37.068, 'epoch': 8.0}
+{'loss': 0.0266, 'grad_norm': 1.0607719421386719, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.24737665057182312, 'eval_runtime': 0.2166, 'eval_samples_per_second': 1154.165, 'eval_steps_per_second': 36.933, 'epoch': 9.0}
+{'loss': 0.0221, 'grad_norm': 1.4317049980163574, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0199, 'grad_norm': 6.00458288192749, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.24702395498752594, 'eval_runtime': 0.2027, 'eval_samples_per_second': 1233.137, 'eval_steps_per_second': 39.46, 'epoch': 10.0}
+{'train_runtime': 470.3998, 'train_samples_per_second': 37.202, 'train_steps_per_second': 1.169, 'train_loss': 0.14993974533948032, 'epoch': 10.0}
+seed 47  dev F1 68.31  test F1 66.67
+=== xlmr__ner__amharic__seed47 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 47 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/xlmr__ner__amharic__seed47/ner
+xlmr__ner__amharic__seed47: test f1 66.67

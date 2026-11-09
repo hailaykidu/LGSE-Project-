@@ -1,0 +1,213 @@
+==========================================
+SLURM_JOB_ID = 75114
+SLURM_NODELIST = gpunode02
+==========================================
+  W -> /homes/neumann/teklehaymanot/lgse-repro/data/alignment/W_am.npy
+{'loss': 0.7015, 'grad_norm': 4.750218391418457, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.3978908061981201, 'eval_runtime': 0.2135, 'eval_samples_per_second': 1171.131, 'eval_steps_per_second': 37.476, 'epoch': 1.0}
+{'loss': 0.2896, 'grad_norm': 3.682368755340576, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.23119549453258514, 'eval_runtime': 0.213, 'eval_samples_per_second': 1173.601, 'eval_steps_per_second': 37.555, 'epoch': 2.0}
+{'loss': 0.1561, 'grad_norm': 4.945826530456543, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.2160465121269226, 'eval_runtime': 0.2151, 'eval_samples_per_second': 1162.16, 'eval_steps_per_second': 37.189, 'epoch': 3.0}
+{'loss': 0.1177, 'grad_norm': 4.7487568855285645, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.18573784828186035, 'eval_runtime': 0.2145, 'eval_samples_per_second': 1165.491, 'eval_steps_per_second': 37.296, 'epoch': 4.0}
+{'loss': 0.0841, 'grad_norm': 5.744734764099121, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.22326040267944336, 'eval_runtime': 0.2147, 'eval_samples_per_second': 1164.584, 'eval_steps_per_second': 37.267, 'epoch': 5.0}
+{'loss': 0.0662, 'grad_norm': 2.6480793952941895, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.2109680473804474, 'eval_runtime': 0.2137, 'eval_samples_per_second': 1170.019, 'eval_steps_per_second': 37.441, 'epoch': 6.0}
+{'loss': 0.0473, 'grad_norm': 2.801584243774414, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.2290099561214447, 'eval_runtime': 0.2136, 'eval_samples_per_second': 1170.522, 'eval_steps_per_second': 37.457, 'epoch': 7.0}
+{'loss': 0.0405, 'grad_norm': 1.5999979972839355, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.2443290799856186, 'eval_runtime': 0.2145, 'eval_samples_per_second': 1165.718, 'eval_steps_per_second': 37.303, 'epoch': 8.0}
+{'loss': 0.0298, 'grad_norm': 3.5716986656188965, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.25309836864471436, 'eval_runtime': 0.2138, 'eval_samples_per_second': 1169.05, 'eval_steps_per_second': 37.41, 'epoch': 9.0}
+{'loss': 0.0202, 'grad_norm': 1.4530044794082642, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0189, 'grad_norm': 1.1910827159881592, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.253752201795578, 'eval_runtime': 0.2012, 'eval_samples_per_second': 1242.537, 'eval_steps_per_second': 39.761, 'epoch': 10.0}
+{'train_runtime': 446.743, 'train_samples_per_second': 39.172, 'train_steps_per_second': 1.231, 'train_loss': 0.14289532195438037, 'epoch': 10.0}
+seed 42  dev F1 72.41  test F1 68.86
+=== xlmr__ner__amharic__seed42 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 42 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/xlmr__ner__amharic__seed42/ner
+xlmr__ner__amharic__seed42: test f1 68.86
+{'loss': 0.5781, 'grad_norm': 9.001532554626465, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.2464665174484253, 'eval_runtime': 0.2131, 'eval_samples_per_second': 1173.132, 'eval_steps_per_second': 37.54, 'epoch': 1.0}
+{'loss': 0.2061, 'grad_norm': 3.7979536056518555, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.21780145168304443, 'eval_runtime': 0.2137, 'eval_samples_per_second': 1169.981, 'eval_steps_per_second': 37.439, 'epoch': 2.0}
+{'loss': 0.1408, 'grad_norm': 4.009810447692871, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.1590328961610794, 'eval_runtime': 0.2139, 'eval_samples_per_second': 1168.72, 'eval_steps_per_second': 37.399, 'epoch': 3.0}
+{'loss': 0.0873, 'grad_norm': 5.5695695877075195, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.1777837872505188, 'eval_runtime': 0.2143, 'eval_samples_per_second': 1166.534, 'eval_steps_per_second': 37.329, 'epoch': 4.0}
+{'loss': 0.0712, 'grad_norm': 3.120311975479126, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.18084931373596191, 'eval_runtime': 0.2145, 'eval_samples_per_second': 1165.713, 'eval_steps_per_second': 37.303, 'epoch': 5.0}
+{'loss': 0.049, 'grad_norm': 2.4611964225769043, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.19905108213424683, 'eval_runtime': 0.2138, 'eval_samples_per_second': 1169.154, 'eval_steps_per_second': 37.413, 'epoch': 6.0}
+{'loss': 0.0393, 'grad_norm': 6.230103492736816, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.2150650918483734, 'eval_runtime': 0.2132, 'eval_samples_per_second': 1172.464, 'eval_steps_per_second': 37.519, 'epoch': 7.0}
+{'loss': 0.0278, 'grad_norm': 1.4601023197174072, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.22316913306713104, 'eval_runtime': 0.2141, 'eval_samples_per_second': 1167.946, 'eval_steps_per_second': 37.374, 'epoch': 8.0}
+{'loss': 0.0209, 'grad_norm': 1.870804786682129, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.23016153275966644, 'eval_runtime': 0.214, 'eval_samples_per_second': 1168.174, 'eval_steps_per_second': 37.382, 'epoch': 9.0}
+{'loss': 0.0151, 'grad_norm': 3.046217679977417, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0131, 'grad_norm': 0.3948514759540558, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.22752758860588074, 'eval_runtime': 0.2012, 'eval_samples_per_second': 1242.674, 'eval_steps_per_second': 39.766, 'epoch': 10.0}
+{'train_runtime': 431.3936, 'train_samples_per_second': 40.566, 'train_steps_per_second': 1.275, 'train_loss': 0.11351668585430492, 'epoch': 10.0}
+seed 43  dev F1 72.89  test F1 71.33
+=== xlmr__ner__amharic__seed43 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 43 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/xlmr__ner__amharic__seed43/ner
+xlmr__ner__amharic__seed43: test f1 71.33
+{'loss': 0.768, 'grad_norm': 3.858126640319824, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.47802749276161194, 'eval_runtime': 0.2141, 'eval_samples_per_second': 1167.718, 'eval_steps_per_second': 37.367, 'epoch': 1.0}
+{'loss': 0.331, 'grad_norm': 5.0494279861450195, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.23175762593746185, 'eval_runtime': 0.2135, 'eval_samples_per_second': 1170.773, 'eval_steps_per_second': 37.465, 'epoch': 2.0}
+{'loss': 0.1598, 'grad_norm': 4.088085174560547, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.1943282037973404, 'eval_runtime': 0.2135, 'eval_samples_per_second': 1171.104, 'eval_steps_per_second': 37.475, 'epoch': 3.0}
+{'loss': 0.1185, 'grad_norm': 2.293161153793335, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.19699472188949585, 'eval_runtime': 0.2143, 'eval_samples_per_second': 1166.331, 'eval_steps_per_second': 37.323, 'epoch': 4.0}
+{'loss': 0.0862, 'grad_norm': 4.164236068725586, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.21195398271083832, 'eval_runtime': 0.2139, 'eval_samples_per_second': 1168.952, 'eval_steps_per_second': 37.406, 'epoch': 5.0}
+{'loss': 0.0612, 'grad_norm': 2.600576400756836, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.20267392694950104, 'eval_runtime': 0.2133, 'eval_samples_per_second': 1171.784, 'eval_steps_per_second': 37.497, 'epoch': 6.0}
+{'loss': 0.0481, 'grad_norm': 1.3252625465393066, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.21592864394187927, 'eval_runtime': 0.213, 'eval_samples_per_second': 1173.665, 'eval_steps_per_second': 37.557, 'epoch': 7.0}
+{'loss': 0.035, 'grad_norm': 1.9046874046325684, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.2345436066389084, 'eval_runtime': 0.2135, 'eval_samples_per_second': 1171.143, 'eval_steps_per_second': 37.477, 'epoch': 8.0}
+{'loss': 0.0269, 'grad_norm': 1.3377935886383057, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.2425909787416458, 'eval_runtime': 0.2137, 'eval_samples_per_second': 1170.09, 'eval_steps_per_second': 37.443, 'epoch': 9.0}
+{'loss': 0.0205, 'grad_norm': 2.2436728477478027, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0171, 'grad_norm': 3.4180691242218018, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.24664834141731262, 'eval_runtime': 0.2017, 'eval_samples_per_second': 1239.326, 'eval_steps_per_second': 39.658, 'epoch': 10.0}
+{'train_runtime': 434.396, 'train_samples_per_second': 40.286, 'train_steps_per_second': 1.266, 'train_loss': 0.15202962344343013, 'epoch': 10.0}
+seed 44  dev F1 69.01  test F1 66.61
+=== xlmr__ner__amharic__seed44 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 44 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/xlmr__ner__amharic__seed44/ner
+xlmr__ner__amharic__seed44: test f1 66.61
+{'loss': 0.7195, 'grad_norm': 5.209518909454346, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.38169196248054504, 'eval_runtime': 0.2134, 'eval_samples_per_second': 1171.554, 'eval_steps_per_second': 37.49, 'epoch': 1.0}
+{'loss': 0.2894, 'grad_norm': 3.8284494876861572, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.20255398750305176, 'eval_runtime': 0.214, 'eval_samples_per_second': 1168.072, 'eval_steps_per_second': 37.378, 'epoch': 2.0}
+{'loss': 0.1568, 'grad_norm': 4.222020149230957, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.18611642718315125, 'eval_runtime': 0.2134, 'eval_samples_per_second': 1171.264, 'eval_steps_per_second': 37.48, 'epoch': 3.0}
+{'loss': 0.109, 'grad_norm': 4.172460079193115, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.20636309683322906, 'eval_runtime': 0.2139, 'eval_samples_per_second': 1168.873, 'eval_steps_per_second': 37.404, 'epoch': 4.0}
+{'loss': 0.0805, 'grad_norm': 4.086884498596191, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.1821213811635971, 'eval_runtime': 0.213, 'eval_samples_per_second': 1173.681, 'eval_steps_per_second': 37.558, 'epoch': 5.0}
+{'loss': 0.0605, 'grad_norm': 2.662304162979126, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.22931455075740814, 'eval_runtime': 0.2136, 'eval_samples_per_second': 1170.381, 'eval_steps_per_second': 37.452, 'epoch': 6.0}
+{'loss': 0.0414, 'grad_norm': 1.4725444316864014, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.2190469205379486, 'eval_runtime': 0.2131, 'eval_samples_per_second': 1173.253, 'eval_steps_per_second': 37.544, 'epoch': 7.0}
+{'loss': 0.0343, 'grad_norm': 1.2082934379577637, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.24863100051879883, 'eval_runtime': 0.2136, 'eval_samples_per_second': 1170.138, 'eval_steps_per_second': 37.444, 'epoch': 8.0}
+{'loss': 0.025, 'grad_norm': 1.8456342220306396, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.2431425154209137, 'eval_runtime': 0.2131, 'eval_samples_per_second': 1172.925, 'eval_steps_per_second': 37.534, 'epoch': 9.0}
+{'loss': 0.0224, 'grad_norm': 1.1304796934127808, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0151, 'grad_norm': 2.6688761711120605, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.24835816025733948, 'eval_runtime': 0.202, 'eval_samples_per_second': 1237.344, 'eval_steps_per_second': 39.595, 'epoch': 10.0}
+{'train_runtime': 382.4294, 'train_samples_per_second': 45.76, 'train_steps_per_second': 1.438, 'train_loss': 0.14128675937652588, 'epoch': 10.0}
+seed 45  dev F1 73.96  test F1 70.43
+=== xlmr__ner__amharic__seed45 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 45 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/xlmr__ner__amharic__seed45/ner
+xlmr__ner__amharic__seed45: test f1 70.43
+{'loss': 0.7373, 'grad_norm': 2.492478847503662, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.36990198493003845, 'eval_runtime': 0.2137, 'eval_samples_per_second': 1169.901, 'eval_steps_per_second': 37.437, 'epoch': 1.0}
+{'loss': 0.2865, 'grad_norm': 3.52457594871521, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.2185022532939911, 'eval_runtime': 0.2155, 'eval_samples_per_second': 1159.913, 'eval_steps_per_second': 37.117, 'epoch': 2.0}
+{'loss': 0.175, 'grad_norm': 4.578159332275391, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.17524562776088715, 'eval_runtime': 0.2142, 'eval_samples_per_second': 1167.124, 'eval_steps_per_second': 37.348, 'epoch': 3.0}
+{'loss': 0.1075, 'grad_norm': 3.2213361263275146, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.1864851415157318, 'eval_runtime': 0.2143, 'eval_samples_per_second': 1166.792, 'eval_steps_per_second': 37.337, 'epoch': 4.0}
+{'loss': 0.085, 'grad_norm': 0.9802346229553223, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.20319998264312744, 'eval_runtime': 0.2145, 'eval_samples_per_second': 1165.568, 'eval_steps_per_second': 37.298, 'epoch': 5.0}
+{'loss': 0.0617, 'grad_norm': 2.2171425819396973, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.22054097056388855, 'eval_runtime': 0.2142, 'eval_samples_per_second': 1167.063, 'eval_steps_per_second': 37.346, 'epoch': 6.0}
+{'loss': 0.0485, 'grad_norm': 3.662611961364746, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.2098807990550995, 'eval_runtime': 0.2155, 'eval_samples_per_second': 1160.163, 'eval_steps_per_second': 37.125, 'epoch': 7.0}
+{'loss': 0.0351, 'grad_norm': 1.596737265586853, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.22706124186515808, 'eval_runtime': 0.2133, 'eval_samples_per_second': 1171.859, 'eval_steps_per_second': 37.499, 'epoch': 8.0}
+{'loss': 0.0278, 'grad_norm': 1.9641213417053223, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.22564923763275146, 'eval_runtime': 0.2129, 'eval_samples_per_second': 1174.175, 'eval_steps_per_second': 37.574, 'epoch': 9.0}
+{'loss': 0.0202, 'grad_norm': 2.8793954849243164, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0154, 'grad_norm': 1.7926712036132812, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.2316470444202423, 'eval_runtime': 0.203, 'eval_samples_per_second': 1231.626, 'eval_steps_per_second': 39.412, 'epoch': 10.0}
+{'train_runtime': 413.4933, 'train_samples_per_second': 42.322, 'train_steps_per_second': 1.33, 'train_loss': 0.1454401969909668, 'epoch': 10.0}
+seed 46  dev F1 70.57  test F1 67.63
+=== xlmr__ner__amharic__seed46 ===
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model xlm-roberta-base --data-dir data/ner/amharic --seed 46 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/xlmr__ner__amharic__seed46/ner
+xlmr__ner__amharic__seed46: test f1 67.63
+{'loss': 0.733, 'grad_norm': 4.757923126220703, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.4455651044845581, 'eval_runtime': 0.2045, 'eval_samples_per_second': 1222.573, 'eval_steps_per_second': 39.122, 'epoch': 1.0}
+{'loss': 0.3338, 'grad_norm': 3.0307085514068604, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.22104591131210327, 'eval_runtime': 0.2039, 'eval_samples_per_second': 1226.336, 'eval_steps_per_second': 39.243, 'epoch': 2.0}
+{'loss': 0.1824, 'grad_norm': 3.3805949687957764, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.21102532744407654, 'eval_runtime': 0.2048, 'eval_samples_per_second': 1220.904, 'eval_steps_per_second': 39.069, 'epoch': 3.0}
+{'loss': 0.1321, 'grad_norm': 3.872737407684326, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.19081607460975647, 'eval_runtime': 0.2048, 'eval_samples_per_second': 1220.96, 'eval_steps_per_second': 39.071, 'epoch': 4.0}
+{'loss': 0.0964, 'grad_norm': 2.083357334136963, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.21436725556850433, 'eval_runtime': 0.2041, 'eval_samples_per_second': 1224.975, 'eval_steps_per_second': 39.199, 'epoch': 5.0}
+{'loss': 0.0805, 'grad_norm': 6.226706504821777, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.21268244087696075, 'eval_runtime': 0.2032, 'eval_samples_per_second': 1230.193, 'eval_steps_per_second': 39.366, 'epoch': 6.0}
+{'loss': 0.0555, 'grad_norm': 3.5246477127075195, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.22623172402381897, 'eval_runtime': 0.2041, 'eval_samples_per_second': 1224.863, 'eval_steps_per_second': 39.196, 'epoch': 7.0}
+{'loss': 0.0479, 'grad_norm': 1.404425859451294, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.25491806864738464, 'eval_runtime': 0.2027, 'eval_samples_per_second': 1233.155, 'eval_steps_per_second': 39.461, 'epoch': 8.0}
+{'loss': 0.0368, 'grad_norm': 1.9881913661956787, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.2639622688293457, 'eval_runtime': 0.204, 'eval_samples_per_second': 1225.679, 'eval_steps_per_second': 39.222, 'epoch': 9.0}
+{'loss': 0.0292, 'grad_norm': 1.354175090789795, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0258, 'grad_norm': 3.4320783615112305, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.2566392421722412, 'eval_runtime': 0.1913, 'eval_samples_per_second': 1306.92, 'eval_steps_per_second': 41.821, 'epoch': 10.0}
+{'train_runtime': 252.8838, 'train_samples_per_second': 69.202, 'train_steps_per_second': 2.175, 'train_loss': 0.15939972032200206, 'epoch': 10.0}
+seed 42  dev F1 69.22  test F1 63.41
+=== lapt__ner__amharic__seed42 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] avg loss this epoch: 3.2918 (mlm=2.9429 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2978 (mlm=3.8770 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2953 (mlm=2.7442 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2938 (mlm=3.6185 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2960 (mlm=3.4720 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2976 (mlm=2.7903 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2912 (mlm=2.9661 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2986 (mlm=4.2426 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2857 (mlm=3.6967 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2910 (mlm=4.1661 reg=0.0000 on last batch)
+Saved LGSE-specialized model to /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed42/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed42/lapt --data-dir data/ner/amharic --seed 42 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed42/ner
+lapt__ner__amharic__seed42: test f1 63.41
+{'loss': 0.6097, 'grad_norm': 6.448759078979492, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.27373266220092773, 'eval_runtime': 0.2047, 'eval_samples_per_second': 1221.12, 'eval_steps_per_second': 39.076, 'epoch': 1.0}
+{'loss': 0.2254, 'grad_norm': 4.799088478088379, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.20868974924087524, 'eval_runtime': 0.2052, 'eval_samples_per_second': 1218.131, 'eval_steps_per_second': 38.98, 'epoch': 2.0}
+{'loss': 0.1694, 'grad_norm': 4.264575481414795, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.1892748773097992, 'eval_runtime': 0.2044, 'eval_samples_per_second': 1223.35, 'eval_steps_per_second': 39.147, 'epoch': 3.0}
+{'loss': 0.1033, 'grad_norm': 4.078744411468506, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.19951675832271576, 'eval_runtime': 0.2044, 'eval_samples_per_second': 1223.333, 'eval_steps_per_second': 39.147, 'epoch': 4.0}
+{'loss': 0.0855, 'grad_norm': 3.0066211223602295, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.1957787722349167, 'eval_runtime': 0.2047, 'eval_samples_per_second': 1221.268, 'eval_steps_per_second': 39.081, 'epoch': 5.0}
+{'loss': 0.0595, 'grad_norm': 3.6632626056671143, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.22779901325702667, 'eval_runtime': 0.2045, 'eval_samples_per_second': 1222.246, 'eval_steps_per_second': 39.112, 'epoch': 6.0}
+{'loss': 0.0486, 'grad_norm': 2.408482789993286, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.22541499137878418, 'eval_runtime': 0.2048, 'eval_samples_per_second': 1220.647, 'eval_steps_per_second': 39.061, 'epoch': 7.0}
+{'loss': 0.0338, 'grad_norm': 1.6526055335998535, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.2446015477180481, 'eval_runtime': 0.2037, 'eval_samples_per_second': 1227.352, 'eval_steps_per_second': 39.275, 'epoch': 8.0}
+{'loss': 0.0257, 'grad_norm': 2.9687814712524414, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.24316132068634033, 'eval_runtime': 0.2037, 'eval_samples_per_second': 1227.203, 'eval_steps_per_second': 39.27, 'epoch': 9.0}
+{'loss': 0.0218, 'grad_norm': 1.0539149045944214, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0179, 'grad_norm': 2.0014662742614746, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.24827709794044495, 'eval_runtime': 0.1916, 'eval_samples_per_second': 1304.678, 'eval_steps_per_second': 41.75, 'epoch': 10.0}
+{'train_runtime': 220.3793, 'train_samples_per_second': 79.409, 'train_steps_per_second': 2.496, 'train_loss': 0.1273187680677934, 'epoch': 10.0}
+seed 43  dev F1 66.28  test F1 65.06
+=== lapt__ner__amharic__seed43 ===
+Loaded morphological lexicon: 10650 words
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] avg loss this epoch: 3.2944 (mlm=2.9668 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2933 (mlm=2.9811 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2968 (mlm=2.8004 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2929 (mlm=3.9873 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2893 (mlm=3.2073 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2942 (mlm=3.1794 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2968 (mlm=3.4157 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2899 (mlm=3.2463 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2920 (mlm=2.7960 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2820 (mlm=2.8834 reg=0.0000 on last batch)
+Saved LGSE-specialized model to /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed43/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed43/lapt --data-dir data/ner/amharic --seed 43 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output /homes/neumann/teklehaymanot/lgse-repro/results/lapt__ner__amharic__seed43/ner
+lapt__ner__amharic__seed43: test f1 65.06

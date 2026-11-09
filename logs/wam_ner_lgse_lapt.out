@@ -1,0 +1,225 @@
+==========================================
+SLURM_JOB_ID = 81558
+SLURM_NODELIST = gpunode03
+==========================================
+  guards OK: manifest, hornmorpho enabled, W_am confirmed Amharic
+=== lgse_lapt__ner__amharic__seed42 (hornmorpho, W_am) ===
+=== lgse_lapt__ner__amharic__seed42 ===
+Loaded morphological lexicon: 10650 words
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+{'loss': 0.7254, 'grad_norm': 5.553564071655273, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.4138106107711792, 'eval_runtime': 0.2077, 'eval_samples_per_second': 1203.724, 'eval_steps_per_second': 38.519, 'epoch': 1.0}
+{'loss': 0.3122, 'grad_norm': 4.061317443847656, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.20852114260196686, 'eval_runtime': 0.2089, 'eval_samples_per_second': 1196.841, 'eval_steps_per_second': 38.299, 'epoch': 2.0}
+{'loss': 0.1701, 'grad_norm': 3.3925669193267822, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.18996241688728333, 'eval_runtime': 0.2073, 'eval_samples_per_second': 1206.01, 'eval_steps_per_second': 38.592, 'epoch': 3.0}
+{'loss': 0.1221, 'grad_norm': 3.9479026794433594, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.1874036341905594, 'eval_runtime': 0.2079, 'eval_samples_per_second': 1202.741, 'eval_steps_per_second': 38.488, 'epoch': 4.0}
+{'loss': 0.0864, 'grad_norm': 3.265141248703003, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.189432755112648, 'eval_runtime': 0.2057, 'eval_samples_per_second': 1215.489, 'eval_steps_per_second': 38.896, 'epoch': 5.0}
+{'loss': 0.069, 'grad_norm': 8.449106216430664, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.20588897168636322, 'eval_runtime': 0.2064, 'eval_samples_per_second': 1211.322, 'eval_steps_per_second': 38.762, 'epoch': 6.0}
+{'loss': 0.0473, 'grad_norm': 2.9358417987823486, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.22418169677257538, 'eval_runtime': 0.206, 'eval_samples_per_second': 1213.691, 'eval_steps_per_second': 38.838, 'epoch': 7.0}
+{'loss': 0.0445, 'grad_norm': 2.670193910598755, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.22472824156284332, 'eval_runtime': 0.2069, 'eval_samples_per_second': 1208.506, 'eval_steps_per_second': 38.672, 'epoch': 8.0}
+{'loss': 0.0312, 'grad_norm': 3.269169569015503, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.24422882497310638, 'eval_runtime': 0.2058, 'eval_samples_per_second': 1215.006, 'eval_steps_per_second': 38.88, 'epoch': 9.0}
+{'loss': 0.023, 'grad_norm': 4.1581573486328125, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0215, 'grad_norm': 3.062838077545166, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.23170271515846252, 'eval_runtime': 0.1933, 'eval_samples_per_second': 1293.21, 'eval_steps_per_second': 41.383, 'epoch': 10.0}
+{'train_runtime': 282.6059, 'train_samples_per_second': 61.924, 'train_steps_per_second': 1.946, 'train_loss': 0.15024810682643544, 'epoch': 10.0}
+seed 42  dev F1 71.06  test F1 67.07
+[LGSELAPTrainer] avg loss this epoch: 3.2734 (mlm=3.2532 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2701 (mlm=3.3236 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2652 (mlm=1.7661 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2645 (mlm=2.5384 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2606 (mlm=2.9014 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2610 (mlm=3.7266 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2593 (mlm=3.4401 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2547 (mlm=4.1233 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2620 (mlm=2.2781 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2595 (mlm=2.2599 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed42/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed42/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model results_hornmorpho_wam/lgse_lapt__ner__amharic__seed42/lapt --data-dir data/ner/amharic --seed 42 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/lgse_lapt__ner__amharic__seed42/ner
+lgse_lapt__ner__amharic__seed42: test f1 67.07
+=== lgse_lapt__ner__amharic__seed43 (hornmorpho, W_am) ===
+=== lgse_lapt__ner__amharic__seed43 ===
+Loaded morphological lexicon: 10650 words
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+{'loss': 0.6093, 'grad_norm': 6.489317893981934, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.26766639947891235, 'eval_runtime': 0.212, 'eval_samples_per_second': 1179.295, 'eval_steps_per_second': 37.737, 'epoch': 1.0}
+{'loss': 0.2173, 'grad_norm': 4.552504062652588, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.1875602751970291, 'eval_runtime': 0.2105, 'eval_samples_per_second': 1187.605, 'eval_steps_per_second': 38.003, 'epoch': 2.0}
+{'loss': 0.1464, 'grad_norm': 3.142320394515991, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.20228195190429688, 'eval_runtime': 0.2066, 'eval_samples_per_second': 1210.145, 'eval_steps_per_second': 38.725, 'epoch': 3.0}
+{'loss': 0.0992, 'grad_norm': 5.615316390991211, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.18743593990802765, 'eval_runtime': 0.2056, 'eval_samples_per_second': 1216.234, 'eval_steps_per_second': 38.919, 'epoch': 4.0}
+{'loss': 0.0745, 'grad_norm': 2.8493874073028564, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.19669927656650543, 'eval_runtime': 0.2062, 'eval_samples_per_second': 1212.52, 'eval_steps_per_second': 38.801, 'epoch': 5.0}
+{'loss': 0.0586, 'grad_norm': 2.9125442504882812, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.21829135715961456, 'eval_runtime': 0.2059, 'eval_samples_per_second': 1213.932, 'eval_steps_per_second': 38.846, 'epoch': 6.0}
+{'loss': 0.0399, 'grad_norm': 3.6424121856689453, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.22811153531074524, 'eval_runtime': 0.2059, 'eval_samples_per_second': 1214.38, 'eval_steps_per_second': 38.86, 'epoch': 7.0}
+{'loss': 0.0311, 'grad_norm': 0.8192383646965027, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.2519310414791107, 'eval_runtime': 0.2054, 'eval_samples_per_second': 1216.886, 'eval_steps_per_second': 38.94, 'epoch': 8.0}
+{'loss': 0.0215, 'grad_norm': 1.8823634386062622, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.25716450810432434, 'eval_runtime': 0.206, 'eval_samples_per_second': 1213.659, 'eval_steps_per_second': 38.837, 'epoch': 9.0}
+{'loss': 0.019, 'grad_norm': 0.7472333312034607, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.015, 'grad_norm': 2.5507988929748535, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.25187060236930847, 'eval_runtime': 0.1928, 'eval_samples_per_second': 1296.347, 'eval_steps_per_second': 41.483, 'epoch': 10.0}
+{'train_runtime': 253.4237, 'train_samples_per_second': 69.054, 'train_steps_per_second': 2.17, 'train_loss': 0.12106767350977117, 'epoch': 10.0}
+seed 43  dev F1 70.34  test F1 69.28
+[LGSELAPTrainer] avg loss this epoch: 3.2786 (mlm=2.5600 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2790 (mlm=3.3062 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2668 (mlm=2.7278 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2767 (mlm=4.4336 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2570 (mlm=3.3535 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2714 (mlm=3.5553 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2591 (mlm=4.3119 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2589 (mlm=2.6741 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2631 (mlm=2.5979 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2586 (mlm=2.3488 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed43/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed43/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model results_hornmorpho_wam/lgse_lapt__ner__amharic__seed43/lapt --data-dir data/ner/amharic --seed 43 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/lgse_lapt__ner__amharic__seed43/ner
+lgse_lapt__ner__amharic__seed43: test f1 69.28
+=== lgse_lapt__ner__amharic__seed44 (hornmorpho, W_am) ===
+=== lgse_lapt__ner__amharic__seed44 ===
+Loaded morphological lexicon: 10650 words
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+{'loss': 0.8121, 'grad_norm': 6.176047325134277, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.48947933316230774, 'eval_runtime': 0.2074, 'eval_samples_per_second': 1205.534, 'eval_steps_per_second': 38.577, 'epoch': 1.0}
+{'loss': 0.3463, 'grad_norm': 4.361965179443359, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.26891639828681946, 'eval_runtime': 0.2067, 'eval_samples_per_second': 1209.719, 'eval_steps_per_second': 38.711, 'epoch': 2.0}
+{'loss': 0.1778, 'grad_norm': 3.3668065071105957, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.1917690932750702, 'eval_runtime': 0.2064, 'eval_samples_per_second': 1211.357, 'eval_steps_per_second': 38.763, 'epoch': 3.0}
+{'loss': 0.1244, 'grad_norm': 2.835137367248535, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.1810985803604126, 'eval_runtime': 0.2059, 'eval_samples_per_second': 1214.015, 'eval_steps_per_second': 38.848, 'epoch': 4.0}
+{'loss': 0.0939, 'grad_norm': 5.618587493896484, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.2216644585132599, 'eval_runtime': 0.2062, 'eval_samples_per_second': 1212.528, 'eval_steps_per_second': 38.801, 'epoch': 5.0}
+{'loss': 0.0651, 'grad_norm': 1.8180162906646729, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.21883413195610046, 'eval_runtime': 0.2073, 'eval_samples_per_second': 1205.938, 'eval_steps_per_second': 38.59, 'epoch': 6.0}
+{'loss': 0.0543, 'grad_norm': 3.3409769535064697, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.23182275891304016, 'eval_runtime': 0.2059, 'eval_samples_per_second': 1214.46, 'eval_steps_per_second': 38.863, 'epoch': 7.0}
+{'loss': 0.0388, 'grad_norm': 2.240063190460205, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.24847151339054108, 'eval_runtime': 0.2068, 'eval_samples_per_second': 1208.832, 'eval_steps_per_second': 38.683, 'epoch': 8.0}
+{'loss': 0.0295, 'grad_norm': 2.007720708847046, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.24388162791728973, 'eval_runtime': 0.2057, 'eval_samples_per_second': 1215.198, 'eval_steps_per_second': 38.886, 'epoch': 9.0}
+{'loss': 0.0244, 'grad_norm': 1.7674477100372314, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0196, 'grad_norm': 0.7338884472846985, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.24462534487247467, 'eval_runtime': 0.1921, 'eval_samples_per_second': 1301.195, 'eval_steps_per_second': 41.638, 'epoch': 10.0}
+{'train_runtime': 238.4699, 'train_samples_per_second': 73.385, 'train_steps_per_second': 2.306, 'train_loss': 0.16238663966005498, 'epoch': 10.0}
+seed 44  dev F1 71.93  test F1 67.43
+[LGSELAPTrainer] avg loss this epoch: 3.2632 (mlm=2.7203 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2695 (mlm=3.3251 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2711 (mlm=3.0239 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2560 (mlm=3.8783 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2585 (mlm=3.0481 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2642 (mlm=3.1276 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2588 (mlm=3.3174 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2587 (mlm=2.5707 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2593 (mlm=5.0683 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2592 (mlm=2.7156 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed44/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed44/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model results_hornmorpho_wam/lgse_lapt__ner__amharic__seed44/lapt --data-dir data/ner/amharic --seed 44 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/lgse_lapt__ner__amharic__seed44/ner
+lgse_lapt__ner__amharic__seed44: test f1 67.43
+=== lgse_lapt__ner__amharic__seed45 (hornmorpho, W_am) ===
+=== lgse_lapt__ner__amharic__seed45 ===
+Loaded morphological lexicon: 10650 words
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+{'loss': 0.9433, 'grad_norm': 1.2313774824142456, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.7784225940704346, 'eval_runtime': 0.205, 'eval_samples_per_second': 1219.45, 'eval_steps_per_second': 39.022, 'epoch': 1.0}
+{'loss': 0.7512, 'grad_norm': 0.6890150308609009, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.7634996175765991, 'eval_runtime': 0.2054, 'eval_samples_per_second': 1217.369, 'eval_steps_per_second': 38.956, 'epoch': 2.0}
+{'loss': 0.7465, 'grad_norm': 0.3962458372116089, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.7509443759918213, 'eval_runtime': 0.2051, 'eval_samples_per_second': 1218.709, 'eval_steps_per_second': 38.999, 'epoch': 3.0}
+{'loss': 0.7436, 'grad_norm': 0.9485278129577637, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.7547298669815063, 'eval_runtime': 0.204, 'eval_samples_per_second': 1225.705, 'eval_steps_per_second': 39.223, 'epoch': 4.0}
+{'loss': 0.7349, 'grad_norm': 0.45884189009666443, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.750143826007843, 'eval_runtime': 0.2049, 'eval_samples_per_second': 1220.082, 'eval_steps_per_second': 39.043, 'epoch': 5.0}
+{'loss': 0.7476, 'grad_norm': 0.34576866030693054, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.7508620619773865, 'eval_runtime': 0.205, 'eval_samples_per_second': 1219.333, 'eval_steps_per_second': 39.019, 'epoch': 6.0}
+{'loss': 0.7509, 'grad_norm': 0.6593889594078064, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.7520127296447754, 'eval_runtime': 0.2047, 'eval_samples_per_second': 1221.235, 'eval_steps_per_second': 39.08, 'epoch': 7.0}
+{'loss': 0.7488, 'grad_norm': 0.6837409734725952, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.7503296732902527, 'eval_runtime': 0.205, 'eval_samples_per_second': 1219.355, 'eval_steps_per_second': 39.019, 'epoch': 8.0}
+{'loss': 0.7341, 'grad_norm': 0.6463954448699951, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.7502561211585999, 'eval_runtime': 0.204, 'eval_samples_per_second': 1225.258, 'eval_steps_per_second': 39.208, 'epoch': 9.0}
+{'loss': 0.7479, 'grad_norm': 0.598374605178833, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.7387, 'grad_norm': 0.6504461169242859, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.7516980171203613, 'eval_runtime': 0.19, 'eval_samples_per_second': 1316.03, 'eval_steps_per_second': 42.113, 'epoch': 10.0}
+{'train_runtime': 258.5541, 'train_samples_per_second': 67.684, 'train_steps_per_second': 2.127, 'train_loss': 0.7624989596280185, 'epoch': 10.0}
+seed 45  dev F1 0.00  test F1 0.00
+[LGSELAPTrainer] avg loss this epoch: 3.2639 (mlm=3.2576 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2728 (mlm=2.9577 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2681 (mlm=4.7954 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2703 (mlm=3.6329 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2684 (mlm=4.7538 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2632 (mlm=4.0790 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2544 (mlm=2.1002 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2553 (mlm=3.2149 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2584 (mlm=3.4539 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2654 (mlm=3.1120 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed45/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed45/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model results_hornmorpho_wam/lgse_lapt__ner__amharic__seed45/lapt --data-dir data/ner/amharic --seed 45 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/lgse_lapt__ner__amharic__seed45/ner
+lgse_lapt__ner__amharic__seed45: test f1 0.00
+=== lgse_lapt__ner__amharic__seed46 (hornmorpho, W_am) ===
+=== lgse_lapt__ner__amharic__seed46 ===
+Loaded morphological lexicon: 10650 words
+[LGSELAPTrainer] HornMorpho fallback: active
+Added 198/198 new tokens to the tokenizer
+[LGSELAPTrainer] alignment matrix: W 768x768 from data/alignment/W_am.npy (frozen)
+[LGSELAPTrainer] W training status: author-required / unspecified in paper -- W is frozen; see IMPLEMENTATION_NOTES.md 1a
+{'loss': 0.906, 'grad_norm': 4.020207405090332, 'learning_rate': 4.5545454545454544e-05, 'epoch': 0.91}
+{'eval_loss': 0.7591910362243652, 'eval_runtime': 0.2066, 'eval_samples_per_second': 1209.852, 'eval_steps_per_second': 38.715, 'epoch': 1.0}
+{'loss': 0.6332, 'grad_norm': 1.6269588470458984, 'learning_rate': 4.1e-05, 'epoch': 1.82}
+{'eval_loss': 0.5073059797286987, 'eval_runtime': 0.2073, 'eval_samples_per_second': 1206.168, 'eval_steps_per_second': 38.597, 'epoch': 2.0}
+{'loss': 0.3966, 'grad_norm': 4.599342346191406, 'learning_rate': 3.645454545454546e-05, 'epoch': 2.73}
+{'eval_loss': 0.27138659358024597, 'eval_runtime': 0.2063, 'eval_samples_per_second': 1212.068, 'eval_steps_per_second': 38.786, 'epoch': 3.0}
+{'loss': 0.2212, 'grad_norm': 3.9241106510162354, 'learning_rate': 3.190909090909091e-05, 'epoch': 3.64}
+{'eval_loss': 0.21617907285690308, 'eval_runtime': 0.2071, 'eval_samples_per_second': 1207.239, 'eval_steps_per_second': 38.632, 'epoch': 4.0}
+{'loss': 0.1702, 'grad_norm': 1.8294459581375122, 'learning_rate': 2.7363636363636362e-05, 'epoch': 4.55}
+{'eval_loss': 0.20956586301326752, 'eval_runtime': 0.2055, 'eval_samples_per_second': 1216.42, 'eval_steps_per_second': 38.925, 'epoch': 5.0}
+{'loss': 0.1162, 'grad_norm': 1.62147855758667, 'learning_rate': 2.281818181818182e-05, 'epoch': 5.45}
+{'eval_loss': 0.1900036633014679, 'eval_runtime': 0.2075, 'eval_samples_per_second': 1205.037, 'eval_steps_per_second': 38.561, 'epoch': 6.0}
+{'loss': 0.0864, 'grad_norm': 2.6736111640930176, 'learning_rate': 1.8272727272727275e-05, 'epoch': 6.36}
+{'eval_loss': 0.21616744995117188, 'eval_runtime': 0.2058, 'eval_samples_per_second': 1214.884, 'eval_steps_per_second': 38.876, 'epoch': 7.0}
+{'loss': 0.0631, 'grad_norm': 3.153676986694336, 'learning_rate': 1.3727272727272727e-05, 'epoch': 7.27}
+{'eval_loss': 0.20564010739326477, 'eval_runtime': 0.2054, 'eval_samples_per_second': 1217.037, 'eval_steps_per_second': 38.945, 'epoch': 8.0}
+{'loss': 0.0536, 'grad_norm': 2.665786027908325, 'learning_rate': 9.181818181818182e-06, 'epoch': 8.18}
+{'eval_loss': 0.23580271005630493, 'eval_runtime': 0.2056, 'eval_samples_per_second': 1216.142, 'eval_steps_per_second': 38.917, 'epoch': 9.0}
+{'loss': 0.0378, 'grad_norm': 2.6206600666046143, 'learning_rate': 4.636363636363636e-06, 'epoch': 9.09}
+{'loss': 0.0339, 'grad_norm': 4.753452777862549, 'learning_rate': 9.090909090909091e-08, 'epoch': 10.0}
+{'eval_loss': 0.23139049112796783, 'eval_runtime': 0.1914, 'eval_samples_per_second': 1306.108, 'eval_steps_per_second': 41.795, 'epoch': 10.0}
+{'train_runtime': 242.5913, 'train_samples_per_second': 72.138, 'train_steps_per_second': 2.267, 'train_loss': 0.24710276907140558, 'epoch': 10.0}
+seed 46  dev F1 73.06  test F1 68.95
+[LGSELAPTrainer] avg loss this epoch: 3.2652 (mlm=2.0725 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2706 (mlm=4.1414 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2686 (mlm=3.2474 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2674 (mlm=3.0572 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2609 (mlm=2.8426 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2616 (mlm=3.0362 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2604 (mlm=5.1401 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2698 (mlm=3.9917 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2540 (mlm=2.7971 reg=0.0000 on last batch)
+[LGSELAPTrainer] avg loss this epoch: 3.2625 (mlm=2.6522 reg=0.0000 on last batch)
+Saved alignment matrix W to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed46/lapt/projection.pt
+Saved LGSE-specialized model to results_hornmorpho_wam/lgse_lapt__ner__amharic__seed46/lapt
+  /opt/conda/bin/python3 /homes/neumann/teklehaymanot/lgse-repro/src/evaluation/run_ner.py --model results_hornmorpho_wam/lgse_lapt__ner__amharic__seed46/lapt --data-dir data/ner/amharic --seed 46 --learning-rate 5e-05 --batch-size 32 --epochs 10 --output results_hornmorpho_wam/lgse_lapt__ner__amharic__seed46/ner
+lgse_lapt__ner__amharic__seed46: test f1 68.95

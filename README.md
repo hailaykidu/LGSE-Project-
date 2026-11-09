@@ -1,267 +1,148 @@
 # LGSE: Lexically Grounded Subword Embedding Initialization
 
-### Official implementation — LREC 2026
-
-This is the official repository for **LGSE: Lexically Grounded Subword
-Embedding Initialization for Low-Resource Language Adaptation**
-(Teklehaymanot, Fazlija & Nejdl, LREC 2026).
+Implementation of **LGSE: Lexically Grounded Subword Embedding
+Initialization for Low-Resource Language Adaptation** (Teklehaymanot,
+Fazlija & Nejdl, LREC 2026), for Amharic and Tigrinya.
 Paper: https://aclanthology.org/2026.lrec-1.812/
 
-It implements the method described in the paper for **Amharic** and
-**Tigrinya**, two morphologically rich Ethio-Semitic languages.
+The repository also contains a controlled comparison of LGSE against four
+other initialization strategies: 165 runs, with every run record, the
+training logs the exclusion rule reads, and the scripts that build every
+table. Those measurements do **not** reproduce the ranking reported in the
+LREC paper; see [Reproducing the tables](#reproducing-the-tables).
 
-> **On the measured results.** The controlled five-system comparison run in
-> this repository does not reproduce the ranking reported in the LREC paper.
-> Read [`paper_arr/`](paper_arr/) and
-> [`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) before quoting any
-> number from here.
+## Method
 
----
+When the vocabulary of a pretrained encoder (here `xlm-roberta-base`) is
+extended, each new token needs an embedding. LGSE builds it from the
+token's morphemes:
 
-## Overview
-
-Adapting pretrained multilingual language models to low-resource,
-morphologically rich languages is limited by how new vocabulary is
-initialized. Standard vocabulary expansion relies on arbitrary subword
-units, which fragment morphological structure and degrade semantic
-alignment.
-
-LGSE initializes new token embeddings from linguistic structure rather than
-from random vectors:
-
-1. **Morphological decomposition** — words are segmented into meaningful
-   morphemes using a supervised lexicon.
-2. **Morpheme-averaged embeddings** — each new token's embedding is the
-   average of its morphemes' FastText representations, aligned into the
-   model's embedding space by a linear projection `W ∈ R^(d×d)` (Sec 4.1).
-3. **Character n-gram fallback** — tokens with no usable segmentation fall
-   back to character n-gram representations.
-4. **Regularized LAPT** — during language-adaptive pretraining the encoder
-   is frozen and only the new embeddings are updated, with
-
-   ```
-   L_total = L_MLM + λ · ‖e_new − μ‖²
-   ```
-
-   penalizing drift from the initialized values (Sec 4.2).
-
-### Pipeline
+1. segment the token with a morpheme lexicon (optionally HornMorpho);
+2. average the morphemes' FastText vectors and map the result into the
+   model's space with a square matrix `W`;
+3. fall back to character n-grams when no segmentation exists;
+4. during language-adaptive pretraining (LAPT), keep the new rows near
+   their initial values with `L = L_MLM + λ·‖e_new − μ‖²`.
 
 | Stage | Module |
 |---|---|
 | Token selection | `src/lgse/token_selection.py` |
-| Morphological segmentation | `src/lgse/segmentation.py` |
-| Morpheme embeddings + projection W | `src/lgse/morpheme_embeddings.py`, `src/lgse/projection.py` |
+| Segmentation | `src/lgse/segmentation.py` |
+| Morpheme embeddings, projection `W` | `src/lgse/morpheme_embeddings.py`, `src/lgse/projection.py` |
 | Character n-gram fallback | `src/lgse/char_ngrams.py` |
-| Embedding initialization | `src/lgse/initializer.py` |
+| Initialization | `src/lgse/initializer.py` |
 | Regularization | `src/lgse/regularization.py` |
-| Language-adaptive pretraining | `src/lgse/lap_trainer.py` |
-| Downstream evaluation | `src/evaluation/` |
+| LAPT | `src/lgse/lap_trainer.py` |
+| Baselines (FOCUS, random) | `src/baselines/` |
+| Task runners (TC, NER, QA) | `src/evaluation/` |
 
----
+The paper defines `W` and `λ` but gives neither a construction nor a value.
+This implementation uses orthogonal Procrustes on shared FastText/XLM-R
+anchors for `W` (`scripts/build_alignment_matrix.py`; matrices and sidecars
+in `data/alignment/`) and `λ = 1.0`. A run missing either stops with an
+error rather than falling back to a default.
 
 ## Installation
 
 ```bash
 pip install -r requirements.txt
-```
-
-Core dependencies: `torch`, `transformers`, `fasttext`, `numpy`,
-`sentencepiece`.
-
----
-
-## Usage
-
-### Requirements
-
-Three artifacts are supplied per run:
-
-| Requirement | Where | Published specification |
-|---|---|---|
-| Alignment matrix **W** | `lgse.alignment_matrix_path` | Sec 4.1 defines W; its construction is not specified |
-| Regularization strength **λ** | `lgse.reg_lambda` | Sec 4.2 defines λ; no value is given |
-| FastText at the model's width | `data/fasttext_manifest.json` | W is square (`d×d`), so FastText must match the model's embedding width |
-
-A run missing any of these stops with an explanatory error. See
-[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) §1, §1a and §8a.
-
-### FastText models
-
-FastText binaries are 2–3 GB and are not committed. Fetch them with:
-
-```bash
 python data/scripts/download_fasttext.py --language both
 ```
 
-- **Amharic** — FastText Common Crawl vectors (Grave et al., 2018)
-- **Tigrinya** — https://huggingface.co/Hailay/fasttext-tigrinya
+FastText models are 2–3 GB and are not committed. Because `W` is square,
+the vectors must have the model's width (768); `data/scripts/train_fasttext_768.py`
+trains them, and `data/fasttext_manifest.json` records the command and
+checksum of each.
 
-Both are released at 300 dimensions. Because W is square, they must be
-trained at the model's embedding width (768 for `xlm-roberta-base`) before
-use:
+## Running
 
-```bash
-fasttext skipgram -input <corpus> -output <model> -dim 768
-```
-
-Mismatched vectors are not truncated, padded, or rectangularly projected to
-fit; the dimension is checked at download, at config resolution, and at
-construction.
-
-### Language-adaptive pretraining
-
-```bash
-python scripts/run_lgse_lap.py \
-    --language ti \
-    --corpus_file /path/to/tigrinya_corpus.txt
-```
-
-`--language` is `am` or `ti`. Model, lexicon, FastText and W paths come from
-`configs/base.yaml` via `src/lgse/config.py`.
-
-### Downstream evaluation
+One run (LAPT followed by fine-tuning and evaluation):
 
 ```bash
 python src/training/run_experiment.py \
-    --system lgse_lapt --task ner --language tigrinya --seed 42 \
-    --data-dir <split> --corpus <LAPT corpus>
-
-python scripts/aggregate_results.py        # build the results table
+    --system lgse_lapt --task ner --language amharic --seed 42 \
+    --data-dir data/ner/amharic --corpus <LAPT corpus> \
+    --config configs/hornmorpho.yaml
 ```
 
-Systems: `xlmr`, `lapt`, `random_lapt`, `focus_lapt`, `lgse_lapt`. The
-baselines use no FastText and need no alignment matrix.
+`--system` is one of `xlmr`, `lapt`, `random_lapt`, `focus_lapt`,
+`lgse_lapt`; `--task` is `tc`, `ner` or `qa`. Use `configs/tigrinya.yaml`
+for Tigrinya. `scripts/run_table2.sh` runs all systems and seeds for one
+task and language. Each run writes an `experiment.json` with the commit,
+configuration checksum, alignment matrix, corpus checksum and test metrics.
 
----
-
-## Repository structure
-
-```
-LGSE-Project/
-├── configs/          base.yaml, systems.yaml
-├── data/
-│   ├── morph_lexicon.txt, new_tokens.txt
-│   └── scripts/      download_fasttext.py, prepare_ner.py, prepare_qa.py
-├── src/
-│   ├── lgse/         the method (segmentation, projection, initializer,
-│   │                 regularization, lap_trainer, ...)
-│   ├── baselines/    comparison systems
-│   ├── evaluation/   NER / QA metrics and runners
-│   └── training/     run_experiment.py
-├── scripts/          run_lgse_lap.py, run_table2.sh, aggregate_results.py
-├── tests/
-└── IMPLEMENTATION_NOTES.md
-```
-
----
-
-## Reproducibility
-
-Per-run records **are** committed, under `results_hornmorpho_wam/` and the
-other `results*/` directories: one `experiment.json` per run, each recording
-the commit, configuration hash, dataset manifest, seed, environment and which
-alignment matrix the run used. No number in any paper directory is typed by
-hand; each is regenerated from those records.
+## Reproducing the tables
 
 ```bash
-python3 scripts/loss_rule.py --write tables/loss_rule.json  # failed runs, from training logs
-python3 scripts/build_table2.py --out tables                 # every table and statistic
-python3 scripts/build_table2.py --audit                      # which runs are used, and why
-python3 scripts/token_share.py                               # new-token share (paper section 7)
+python3 scripts/build_table2.py --out tables   # every table and statistic
+python3 scripts/build_table2.py --audit        # which runs are used, and why
+python3 scripts/loss_rule.py                   # recompute the excluded runs from logs/
+python3 scripts/token_share.py                 # share of test tokens on new rows
+python3 -m pytest tests/ -q
 ```
 
-`build_table2.py` reads 165 runs from three directories, each for a stated
-reason given in its docstring: `results_hornmorpho_wam/` (Amharic XLM-R,
-+FOCUS+LAPT, +LGSE+LAPT), `results_hornmorpho/` (Amharic +LAPT and
-+Random+LAPT only; its config names the Tigrinya matrix, which those two
-systems never read), and `results_tigrinya_gen2/` (all Tigrinya). Other
-result directories are excluded for protocol differences, never for their
-outcomes; `--audit` prints each with its reason. Exclusions come only from
-the training-loss rule (`IMPLEMENTATION_NOTES.md` §5d-vii).
+No GPU is needed; the first command takes about ten seconds. It reads the
+165 run records in `results_hornmorpho_wam/`, `results_hornmorpho/` (Amharic
+`lapt` and `random_lapt` only) and `results_tigrinya_gen2/`, and the
+exclusions in `tables/loss_rule.json`.
 
-`scripts/build_paper_tables.py` belongs to the earlier `paper_final/`
-write-up. It reads one directory only and its failure rule covers three
-Amharic systems; do not use it for `paper_arr/` numbers.
+Nine of the 165 runs failed to fit their training data. They are identified
+from training loss alone (`scripts/loss_rule.py`), never from test scores,
+and `build_table2.py` prints each affected mean both with and without them.
 
-**The full comparison has been run end-to-end** — five systems, three tasks,
-two languages, five seeds (165 runs; W via orthogonal Procrustes, λ=1.0). The
-published LREC Table 2 has no surviving execution record to reproduce
-against, so this run is the only measured result that exists for the method,
-and **it does not reproduce the published ranking, margins, or winner.** The
-current analysis of those runs is the ARR submission in
-[`paper_arr/`](paper_arr/); see also
-[`report/TABLE2_REPORT.md`](report/TABLE2_REPORT.md).
+Choices this implementation had to make where the paper is silent, and the
+provenance of every data split, are recorded in
+[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md).
 
-[`IMPLEMENTATION_NOTES.md`](IMPLEMENTATION_NOTES.md) records each point where
-an implementation choice is supplied alongside the published specification,
-and [`docs/VALIDATION.md`](docs/VALIDATION.md) records end-to-end pipeline
-validation.
+## Data
 
----
-
-## Paper directories
-
-| Directory | Status |
-|---|---|
-| [`paper_arr/`](paper_arr/) | **Current.** ACL Rolling Review submission, anonymous. Standalone five-system comparison. |
-| `paper_final/` | Earlier full-disclosure write-up. Superseded. |
-| `paper_new/`, `paper/` | Earlier drafts. Superseded, and containing figures since corrected — do not cite from them. |
-
-Numbers quoted anywhere outside `paper_arr/` may predate corrections
-recorded in `IMPLEMENTATION_NOTES.md`.
-
----
-
-## Supported languages
-
-Amharic and Tigrinya, with the method designed to extend to other
-Ge'ez-script and Semitic languages where morphological segmentation
-resources exist.
-
----
-
-## Data sources
-
-Every split carries a manifest recording source, raw checksum, cleaning
-counts and split seed.
+Every split has a `manifest.json` with its source, checksum, cleaning counts
+and split seed.
 
 | Task | Language | Source | Split |
 |---|---|---|---|
-| NER | Amharic | MasakhaNER, Adelani et al. (2021) | official |
-| NER | Tigrinya | Tigrinya NER, Yohannes & Amagasa (2022) — **not MasakhaNER** | derived 80/10/10, seed 42 |
-| QA | Amharic | AmQA, Taffa et al. (2024) | as released |
-| QA | Tigrinya | extractive SQuAD conversion of TIGQA, Teklehaymanot et al. (2024) | derived, seed 42 |
-| TC | Tigrinya | FineWeb-C (`tir_Ethi`) | 597 / 74 / 74 |
-| TC | Amharic | annotated within this project | 1872 / 233 / 235 |
+| NER | Amharic | MasakhaNER (Adelani et al., 2021) | official |
+| NER | Tigrinya | Tigrinya NER (Yohannes & Amagasa, 2022) | 80/10/10, seed 42 |
+| QA | Amharic | AmQA (Taffa et al., 2024) | as released |
+| QA | Tigrinya | extractive conversion of TIGQA (Teklehaymanot et al., 2024) | seed 42 |
+| TC | Amharic | annotated for this work | 1872/233/235 |
+| TC | Tigrinya | FineWeb-C, `tir_Ethi` | 597/74/74 |
 
-Two cautions, both carried into the paper:
+- MasakhaNER does not cover Tigrinya. The two NER datasets use different tag
+  sets (Tigrinya adds `MISC`) and are not compared with each other.
+- The TIGQA release reports about 2.68K questions; the converted file used
+  here has 2,179, of which the 1,517 with an exactly matching answer span are
+  kept. The difference is not reconciled, so Tigrinya QA results here are not
+  comparable to published TIGQA numbers.
+- The Amharic TC corpus was labelled by eleven annotators (one author and
+  ten native-speaker volunteers) with a six-class rubric, one label per
+  document, followed by a full adjudication pass. Labels were merged without
+  annotator identifiers, so no inter-annotator agreement can be computed.
 
-- **Neither MasakhaNER release covers Tigrinya.** The two NER columns are
-  different datasets with different tag sets (Tigrinya has `MISC`), so they
-  are never compared against each other. See `IMPLEMENTATION_NOTES.md` §6.
-- **Tigrinya QA is not comparable to published TIGQA numbers.** The release
-  reports ~2.68K questions; the SQuAD-format file converted here yields
-  2,179, of which 1,517 have an exactly matching answer span. That
-  difference has not been reconciled against the original release. See
-  `IMPLEMENTATION_NOTES.md` §5.
+## Layout
 
-The Amharic text-classification corpus (`data/tc/amharic/`) was annotated
-within this project on FineWeb-C's five-level quality scale plus its
-problematic-content flag. **No inter-annotator agreement was computed**, and
-it is the only resource here that is neither externally released nor
-independently validated. Per-file provenance and cleaning counts are in
-`data/tc/amharic/manifest.json`.
-
----
+```
+configs/                base, Amharic (hornmorpho), Tigrinya, systems
+data/                   splits and manifests, alignment matrices, token lists,
+                        morpheme lexicon; data/scripts/ prepares each split
+src/lgse/               the method
+src/baselines/          FOCUS and random initialization
+src/evaluation/         TC, NER and QA runners
+src/training/           run_experiment.py
+scripts/                build_table2.py, loss_rule.py, token_share.py,
+                        build_alignment_matrix.py, run_table2.sh,
+                        run_lgse_lap.py, aggregate_results.py
+results_*/              one experiment.json per run
+logs/                   the fine-tuning logs loss_rule.py reads
+tables/                 generated tables and exclusions
+tests/
+```
 
 ## License
 
 - Code follows the license of the original LGSE / FOCUS implementation.
 - FastText models follow their respective licenses.
 - Morphological lexicons are released for research use.
-
----
 
 ## Citation
 
@@ -277,5 +158,5 @@ independently validated. Per-file provenance and cleaning counts are in
   publisher = {European Language Resources Association (ELRA)},
   editor = {Piperidis, Stelios and Bel, Núria and van den Heuvel, Henk and Ide, Nancy and Krek, Simon and Toral, Antonio},
   doi = {10.63317/5i7acx7v348w},
-   }
+}
 ```

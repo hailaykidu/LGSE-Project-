@@ -1,5 +1,9 @@
 # Implementation notes: what the paper specifies, and what it does not
 
+> Files this document cites that were removed when the repository was
+> cleaned up (`report/`, `docs/`, `scripts/build_paper_tables.py`, and the
+> draft paper directories) remain available in the git history.
+
 This repository implements the LGSE method described in the paper. This
 document records every aspect of the implementation that cannot be derived
 directly from the paper, where a value, an artifact, or a procedure is
@@ -417,7 +421,7 @@ reconciled it.** The TIGQA publication reports about 2.68K questions. The
 converted file holds 2,179 QA pairs over 107 contexts; the *first*
 conversion held 2,108 over 433 contexts. Three counts of the same release
 disagree with each other, and nothing in this repository explains the
-difference. Consequence, carried into `paper_arr/` §3: **Tigrinya QA results
+difference. Consequence: **Tigrinya QA results
 here are not comparable to published TIGQA numbers.** Closing this requires
 counting the original release and diffing its question IDs against the 2,179.
 
@@ -622,10 +626,10 @@ volunteers labelling the same short string differently, not a formatting
 defect. Keeping them unresolved remains correct — there is no per-annotator
 record by which to prefer one label.
 
-**Reporting.** `paper_arr/` §3 states the annotator count, the rubric, the
-single-annotation-plus-adjudication design, and that no agreement statistic
-can be computed; the Ethics Statement records that the volunteers were
-unpaid and that no annotator-identifying data is released.
+**Reporting.** Any write-up should state the annotator count, the rubric, the
+single-annotation-plus-adjudication design, that no agreement statistic can
+be computed, and that the volunteers were unpaid. No annotator-identifying
+data is released.
 
 **Amharic TC source replaced 2026-09-18.** The Amharic file was replaced with
 a larger raw annotation export, `data/Dataset_Educational_classifier_annotated.tsv`
@@ -1130,7 +1134,7 @@ path ends in `W_am.npy` and that `W_am.json` declares `language: amharic`.
 
 > **Superseded as an exclusion criterion.** This section describes runs
 > identified by a *test-score* rule (F1 exactly 0.0) over the 387-run
-> superset of all result directories. `paper_arr/` does not use that rule.
+> superset of all result directories. The current tables do not use that rule.
 > It uses a *training-loss* rule applied to all 165 runs behind the paper's
 > tables, which selects **nine** runs — see §5d-vii. A rule that
 > consults test scores cannot decide what counts as a measurement, which is
@@ -1167,7 +1171,7 @@ Baseline re-evaluation on the rebuilt split (xlmr, lapt, random_lapt)
 deferred: estimated several days on the current cluster queue. † cells remain
 on the previous test set until rerun.
 
-### 5d-vii. The exclusion rule used by `paper_arr/` (training loss only, all 165 runs)
+### 5d-vii. The exclusion rule (training loss only, all 165 runs)
 
 **Rule.** For each run, the relative reduction in fine-tuning training loss
 from the first to the last logged value. Computed per language over every
@@ -1290,8 +1294,7 @@ official partition, so a random 80/10/10 split is derived here with seed 42:
 | Tags | PER, ORG, LOC, DATE | PER, ORG, LOC, DATE, **MISC** |
 
 Tigrinya carries `MISC`, which the MasakhaNER schema does not. Any
-cross-language NER comparison is therefore invalid, and none is made
-anywhere in `paper_arr/`.
+cross-language NER comparison is therefore invalid, and none is made.
 
 ### Tag normalisation, and one stray tag
 
