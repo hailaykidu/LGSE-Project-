@@ -7,9 +7,13 @@ maps to an added row (id >= the base vocabulary size), and how many test
 examples contain at least one such token. Reported in the paper, section
 "Why the Metric Cannot Move".
 
-The extended tokenizer is read from a saved +LGSE+LAPT checkpoint. All
-vocabulary-extended systems of a language add the same tokens, so which
-system's checkpoint is used does not matter; the script checks that.
+The extended tokenizer is rebuilt by adding the language's token list
+(data/new_tokens_amharic.txt, data/new_tokens.txt) to the XLM-R base
+tokenizer, exactly as the pipeline does. Where saved checkpoints are present
+(the working repository), the script also checks that every checkpoint
+carries the same added-token set as the rebuilt tokenizer. The pipeline
+assigns the new ids in a different order, which does not affect which tokens
+are split off, and so does not affect any count here.
 
 Items counted: TC, each document; NER, each sentence (words joined by
 spaces); QA, each distinct context once and each question once.
@@ -34,6 +38,8 @@ SPLITS = {
     ("tigrinya", "ner"): "data/ner/tigrinya/test.conll",
     ("tigrinya", "qa"): "data/qa/tigqa_squad/test.json",
 }
+TOKEN_LIST = {"amharic": "data/new_tokens_amharic.txt",
+              "tigrinya": "data/new_tokens.txt"}
 CHECKPOINT_DIR = {"amharic": "results_hornmorpho_wam",
                   "tigrinya": "results_tigrinya_gen2"}
 
@@ -70,20 +76,28 @@ def examples(lang: str, task: str) -> list[str]:
 
 
 def extended_tokenizer(lang: str):
+    """XLM-R base plus the language's added tokens; checked against checkpoints."""
     from transformers import AutoTokenizer
+    tok = AutoTokenizer.from_pretrained("xlm-roberta-base")
+    n_base = len(tok)
+    words = list(dict.fromkeys(
+        l.strip() for l in open(ROOT / TOKEN_LIST[lang], encoding="utf-8")
+        if l.strip()))
+    tok.add_tokens(words)
+    rebuilt = {c for c, i in tok.get_added_vocab().items() if i >= n_base}
+
     hits = sorted(glob.glob(str(ROOT / CHECKPOINT_DIR[lang]
                                 / f"*lapt__*__{lang}__seed*" / "lapt"
                                 / "tokenizer.json")))
-    if not hits:
-        raise SystemExit(f"no saved extended tokenizer for {lang}")
-    # every checkpoint must add the same tokens at the same ids; compare the
-    # added-token lists directly rather than loading each tokenizer
-    added = {tuple((a["id"], a["content"]) for a in
-                   json.load(open(h, encoding="utf-8"))["added_tokens"])
-             for h in hits}
-    if len(added) != 1:
-        raise SystemExit(f"{lang}: added tokens differ across {len(hits)} checkpoints")
-    return AutoTokenizer.from_pretrained(str(Path(hits[0]).parent)), len(hits)
+    for h in hits:
+        saved = {a["content"] for a in
+                 json.load(open(h, encoding="utf-8"))["added_tokens"]
+                 if not a["special"] and a["id"] >= n_base}
+        if saved != rebuilt:
+            raise SystemExit(f"{lang}: {h} adds a different token set")
+    note = (f"matches all {len(hits)} saved checkpoints" if hits
+            else "no checkpoints present to cross-check")
+    return tok, f"{len(words)} listed, {len(rebuilt)} new rows; {note}"
 
 
 def main() -> int:
@@ -99,9 +113,8 @@ def main() -> int:
     print(f"\n  {'lang':4s}{'task':5s}{'tokens':>9s}{'new':>6s}{'%':>7s}"
           f"{'examples':>10s}{'with new':>10s}")
     for lang in ("amharic", "tigrinya"):
-        tok, n_ckpt = extended_tokenizer(lang)
-        added = len(tok) - n_base
-        print(f"  {lang}: {added} added rows (consistent across {n_ckpt} checkpoints)")
+        tok, note = extended_tokenizer(lang)
+        print(f"  {lang}: {note}")
         for task in ("tc", "ner", "qa"):
             ex = examples(lang, task)
             total = new = with_new = 0
