@@ -595,41 +595,8 @@ The previous 558/71/71 split and every Table 2 TC number measured on it are
 preserved in `results_gen2_snapshot_20260924/`. The new split has a test set
 of 235 items against the previous 71, so TC results measured on the two are
 not comparable and the TC column requires rerunning before it can be read
-alongside the earlier one.
-
-### 5a-ii. Amharic TC annotation protocol (supplied by the author 2026-11-09)
-
-Recorded here because the data files themselves carry only `Text` and
-`Label`, so none of it is recoverable from the corpus.
-
-| | |
-|---|---|
-| Annotators | 11 — one author plus 10 native Amharic-speaking volunteers, from student and community networks |
-| Period | 2024-12-20 to 2025-04-04 |
-| Rubric | 6 classes with worked examples, in `data/Dataset_Educational_classifier_annotated.tsv` (lines 1–80) |
-| Assignment | corpus partitioned among annotators after a joint calibration session; **one label per document** |
-| Adjudication | one author reviewed 100% of the 2,499 rows, resolving adjacent-class boundary cases |
-| Agreement | **not computable** — labels were merged without per-annotator identifiers or timestamps |
-
-**Verified against the files 2026-11-09.** The rubric is physically present
-in the TSV header block (6 classes, matching the 1–6 encoding used by
-`run_tc.py`). The annotated TSV holds 822 text+label rows, of which 793
-(96.5%) appear verbatim in `merged_dataset_first_2500_rows.csv`; 8 carry a
-different label in the merged file and 3 differ only by a `::` prefix
-artifact. That is consistent with the described adjudication pass. Both
-files carry two columns only — no annotator column exists in either, which
-is the direct reason Fleiss' Kappa cannot be reported.
-
-This also explains the inconsistency noted below (the 8 short
-menu/navigation texts recurring with different labels): those are different
-volunteers labelling the same short string differently, not a formatting
-defect. Keeping them unresolved remains correct — there is no per-annotator
-record by which to prefer one label.
-
-**Reporting.** Any write-up should state the annotator count, the rubric, the
-single-annotation-plus-adjudication design, that no agreement statistic can
-be computed, and that the volunteers were unpaid. No annotator-identifying
-data is released.
+alongside the earlier one. *(Since rerun: every Amharic TC record behind the current
+tables uses the 235-item test split, verified 2026-11-09.)*
 
 **Amharic TC source replaced 2026-09-18.** The Amharic file was replaced with
 a larger raw annotation export, `data/Dataset_Educational_classifier_annotated.tsv`
@@ -685,6 +652,40 @@ FineWeb-C config; the Amharic TC pipeline uses a separate, self-annotated
 TSV of a different size from a different source, now with a recorded split
 built the same way as Tigrinya's. Both are documented as what they are, not
 as the paper's dataset.
+
+### 5a-ii. Amharic TC annotation protocol (supplied by the author 2026-11-09)
+
+Recorded here because the data files themselves carry only `Text` and
+`Label`, so none of it is recoverable from the corpus.
+
+| | |
+|---|---|
+| Annotators | 11 — one author plus 10 native Amharic-speaking volunteers, from student and community networks |
+| Period | 2024-12-20 to 2025-04-04 |
+| Rubric | 6 classes with worked examples, in `data/Dataset_Educational_classifier_annotated.tsv` (lines 1–80) |
+| Assignment | corpus partitioned among annotators after a joint calibration session; **one label per document** |
+| Adjudication | one author reviewed 100% of the 2,499 rows, resolving adjacent-class boundary cases |
+| Agreement | **not computable** — labels were merged without per-annotator identifiers or timestamps |
+
+**Verified against the files 2026-11-09.** The rubric is physically present
+in the TSV header block (6 classes, matching the 1–6 encoding used by
+`run_tc.py`). The annotated TSV holds 822 text+label rows, of which 793
+(96.5%) appear verbatim in `merged_dataset_first_2500_rows.csv`; 8 carry a
+different label in the merged file and 3 differ only by a `::` prefix
+artifact. That is consistent with the described adjudication pass. Both
+files carry two columns only — no annotator column exists in either, which
+is the direct reason Fleiss' Kappa cannot be reported.
+
+This also explains the inconsistency noted above (the 8 short
+menu/navigation texts recurring with different labels): those are different
+volunteers labelling the same short string differently, not a formatting
+defect. Keeping them unresolved remains correct — there is no per-annotator
+record by which to prefer one label.
+
+**Reporting.** Any write-up should state the annotator count, the rubric, the
+single-annotation-plus-adjudication design, that no agreement statistic can
+be computed, and that the volunteers were unpaid. No annotator-identifying
+data is released.
 
 ## 5b. LGSE's own fallback-chain usage is not logged
 
@@ -1167,9 +1168,13 @@ report the converged-seed mean alongside the all-seed mean, with the
 collapse count disclosed, rather than silently dropping or silently
 averaging the zero.
 
-Baseline re-evaluation on the rebuilt split (xlmr, lapt, random_lapt)
-deferred: estimated several days on the current cluster queue. † cells remain
-on the previous test set until rerun.
+*Resolved.* An earlier version of this section said baseline re-evaluation
+on a rebuilt split was deferred. It is no longer outstanding: verified
+2026-11-09, every one of the 165 runs behind the current tables records the
+same dataset manifest as the other runs of its cell (Tigrinya QA records carry
+two manifest versions that differ only in documentation fields added later,
+not in the split), and every QA exact-match and TC accuracy is k/n for integer
+k at the current test size (299 and 151 QA items, 235 and 74 TC items).
 
 ### 5d-vii. The exclusion rule (training loss only, all 165 runs)
 
