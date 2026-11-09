@@ -178,19 +178,36 @@ Tigrinya's 32\%, and the Tigrinya test split holds 74 items against Amharic's
 235. We report no cross-language statistic and no overall column.
 
 \paragraph{Data.} Amharic NER uses the official MasakhaNER splits
-\citep{adelani-etal-2021-masakhaner}; Tigrinya NER uses the MasakhaNER~2.0
-Tigrinya splits \citep{adelani-etal-2022-masakhaner2}. Amharic QA uses AmQA
-as released \citep{taffa-etal-2024-amqa}. Tigrinya QA is an extractive
-SQuAD-format conversion of TIGQA \citep{teklehaymanot-etal-2024-tigqa}: of
-2{,}179 raw pairs we keep the 1{,}517 whose answer span matches exactly,
-dropping 148 fuzzy alignments and 514 unmatched or unanswerable pairs, split
-1189/177/151. Tigrinya text classification uses FineWeb-C
+\citep{adelani-etal-2021-masakhaner}. Tigrinya is absent from MasakhaNER, so
+Tigrinya NER uses the Tigrinya NER dataset of
+\citet{yohannes-amagasa-2022-ner}, which ships no official partition; we
+derive a random 80/10/10 split (4562/570/571 sentences, seed 42) and
+normalise a handful of malformed tags in the release. Its tag set includes
+\textsc{misc}, which the MasakhaNER schema does not, so the two NER columns
+are not directly comparable and we never compare across them. Amharic QA uses
+AmQA
+as released \citep{taffa-etal-2024-amqa}. Tigrinya QA is an extractive SQuAD-format conversion of the TIGQA release
+\citep{teklehaymanot-etal-2024-tigqa}. The published dataset reports about
+2.68K questions; the SQuAD-format file we converted yields 2{,}179 pairs, and
+we did not reconcile that difference against the original release, so our
+Tigrinya QA results are not comparable to published TIGQA numbers. Of the
+2{,}179 we keep the 1{,}517 whose answer span matches its context exactly,
+dropping 148 fuzzy alignments and 514 unmatched or unanswerable pairs, and
+split them 1189/177/151 at the question level. Tigrinya text classification uses FineWeb-C
 \citep{kydlicek-etal-2025-fineweb2} (\texttt{tir\_Ethi}) at 597/74/74.
-Amharic text classification uses a 2{,}499-row annotated educational-quality
-corpus; after removing 2 spreadsheet-error rows and 157 exact duplicates,
-2{,}340 documents are split 1872/233/235 by the same stratified procedure.
-Every split carries a manifest recording source, raw checksum, cleaning
-counts and split seed.
+Amharic text classification uses a 2{,}499-row educational-quality corpus
+annotated by the authors for this work, on the same five-level scale and
+problematic-content flag that FineWeb-C uses, so that the two languages share
+a labelling scheme. We record what our own provenance files establish and no
+more: the corpus was annotated within this project, the label scheme matches
+FineWeb-C's, and no inter-annotator agreement was computed. Readers should
+weight the Amharic text-classification column accordingly; it is the only
+resource here that is neither externally released nor independently
+validated. Cleaning removes 157 exact duplicates and two
+rows that are spreadsheet artifacts rather than documents---one an unevaluated
+formula, one an error cell---leaving 2{,}340 documents split 1872/233/235 by
+the same stratified procedure. Every split carries a manifest recording
+source, raw checksum, cleaning counts and split seed.
 
 \paragraph{The text-classification label set.} Documents carry an
 educational-quality level on a five-point ordinal scale, plus a separate flag
@@ -205,7 +222,12 @@ score.
 
 \paragraph{Metrics and seeds.} Macro-F1 over the quality scale for text
 classification, span F1 for NER, answer F1 for QA. Five seeds (42--46) per
-cell, extended to ten (42--51) for three Amharic NER cells. We report mean
+cell, extended to ten (42--51) for three Amharic NER cells. That extension
+was decided after degenerate runs appeared in those cells
+(\S\ref{sec:degenerate}) and was applied only to the three systems affected,
+not to +Mean+LAPT or +Random+LAPT. It is therefore unbalanced by
+circumstance rather than by design, and it leaves the Amharic NER comparison
+against the floor at $n=3$, the smallest in the paper. We report mean
 $\pm$ sample standard deviation over converged runs.
 
 \paragraph{Seed matching.} A paired comparison uses the seeds present in both
@@ -232,10 +254,10 @@ whose lexicon coverage of added tokens is the higher of the two.
 \paragraph{Compute.} Each vocabulary-extended run takes about 5.1 hours
 (Amharic) or 5.8 hours (Tigrinya) on one A100, dominated by LAPT, which
 cannot be shared across seeds because the seed determines the initialization
-under test. XLM-R takes 11.1 and 7.2 minutes respectively. The extended
-systems therefore cost $27.7\times$ (Amharic) and $47.8\times$ (Tigrinya) the
-unmodified baseline at the median, with individual-run ratios spanning
-$12\times$ to $94\times$. The 165 runs total roughly 800 GPU-hours.
+under test. XLM-R takes 11.1 and 7.2 minutes. The extended systems therefore
+cost $27.7\times$ and $47.8\times$ the unmodified baseline at the median
+(run-level range $12$--$94\times$); the 165 runs total roughly 800
+GPU-hours.
 
 \section{Results}
 \label{sec:results}
@@ -310,60 +332,28 @@ whose mechanism is under test.
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{llrrc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrr}
 \toprule
-Lang. & Task & System & $\Delta$ & 95\% CI \\
+Lang. & Task & $\Delta_{\text{LGSE}}$ & 95\% CI & sep. \\
 \midrule
-\multirow{4}{*}{am}
- & \multirow{4}{*}{TC}
-            & XLM-R & $-2.11$ & $[-14.10, \;+9.89]$ \\
- & & +Mean  & $+4.54$ & $[-17.61, +26.70]$ \\
- & & +FOCUS & $+2.47$ & $[-15.35, +20.30]$ \\
- & & +LGSE  & $-4.22$ & $[-18.79, +10.36]$ \\
+\multirow{3}{*}{am}
+ & TC  & $-4.22$ & $[-18.79, +10.36]$ & 0/4 \\
+ & NER & $-0.54$ & $[\;-6.70, \;+5.63]$ & 0/4 \\
+ & QA  & $+0.22$ & $[\;-1.32, \;+1.76]$ & 2/4 \\
 \midrule
-\multirow{4}{*}{am}
- & \multirow{4}{*}{NER}
-            & XLM-R & $+1.53$ & $[\;-3.48, \;+6.54]$ \\
- & & +Mean  & $-1.70$ & $[\;-3.57, \;+0.18]$ \\
- & & +FOCUS & $-1.14$ & $[\;-9.43, \;+7.16]$ \\
- & & +LGSE  & $-0.54$ & $[\;-6.70, \;+5.63]$ \\
-\midrule
-\multirow{4}{*}{am}
- & \multirow{4}{*}{QA}
-            & XLM-R & $+1.52$ & $[\;-1.34, \;+4.38]$ \\
- & & +Mean  & $+1.86$ & $\mathbf{[+0.83, \;+2.88]}$ \\
- & & +FOCUS & $+1.39$ & $\mathbf{[+0.09, \;+2.69]}$ \\
- & & +LGSE  & $+0.22$ & $[\;-1.32, \;+1.76]$ \\
-\midrule
-\multirow{4}{*}{ti}
- & \multirow{4}{*}{TC}
-            & XLM-R & $+8.17$ & $[\;-1.88, +18.23]$ \\
- & & +Mean  & $+5.36$ & $[\;-1.13, +11.84]$ \\
- & & +FOCUS & $+6.62$ & $[\;-4.04, +17.28]$ \\
- & & +LGSE  & $+5.02$ & $[\;-8.04, +18.07]$ \\
-\midrule
-\multirow{4}{*}{ti}
- & \multirow{4}{*}{NER}
-            & XLM-R & $+0.11$ & $[\;-0.84, \;+1.07]$ \\
- & & +Mean  & $-0.48$ & $[\;-2.24, \;+1.28]$ \\
- & & +FOCUS & $-0.56$ & $[\;-1.77, \;+0.65]$ \\
- & & +LGSE  & $-0.97$ & $[\;-2.55, \;+0.62]$ \\
-\midrule
-\multirow{4}{*}{ti}
- & \multirow{4}{*}{QA}
-            & XLM-R & $+1.97$ & $[\;-2.36, \;+6.30]$ \\
- & & +Mean  & $-0.50$ & $[\;-6.83, \;+5.82]$ \\
- & & +FOCUS & $+1.96$ & $[\;-6.76, +10.68]$ \\
- & & +LGSE  & $-0.42$ & $[\;-4.75, \;+3.91]$ \\
+\multirow{3}{*}{ti}
+ & TC  & $+5.02$ & $[\;-8.04, +18.07]$ & 0/4 \\
+ & NER & $-0.97$ & $[\;-2.55, \;+0.62]$ & 0/4 \\
+ & QA  & $-0.42$ & $[\;-4.75, \;+3.91]$ & 0/4 \\
 \bottomrule
 \end{tabular}
-\caption{Each system minus +Random+LAPT on matched converged seeds, with
-paired-$t$ intervals; 24 comparisons, 4 per cell. Twenty-two intervals
-contain zero. The two that do not (\textbf{bold}) favour +Mean+LAPT and
-+FOCUS+LAPT on Amharic QA by 1.86 and 1.39 points. Effective $n$ per
-comparison is in Table~\ref{tab:allpaired} and ranges from 3 to 5. The
-intervals are wide relative to the differences: on Tigrinya TC they span 13
-to 26 points around estimates of 5 to 8.}
+\caption{Each cell's comparison against +Random+LAPT. $\Delta_{\text{LGSE}}$
+and its paired-$t$ interval are for the morpheme-grounded system; ``sep.''
+counts how many of the cell's four systems have an interval excluding zero.
+Two of the 24 comparisons do, both on Amharic QA and both favouring simpler
+baselines (+Mean+LAPT by 1.86, +FOCUS+LAPT by 1.39). All 24 rows are in
+Table~\ref{tab:floorfull}.}
 \label{tab:floor}
 \end{table}
 
@@ -376,16 +366,26 @@ anywhere.} Its six intervals all contain zero, with estimates from $-4.22$ to
 $+5.02$ and no consistent sign. These data do not distinguish it from a
 Gaussian on any task in either language.
 
+A null result is more informative when stated as a bound, so we read the
+upper limits directly off the intervals. Any advantage of morpheme-grounded
+initialization over the floor is at most $+10.36$ (Amharic TC), $+5.63$
+(Amharic NER), $+1.76$ (Amharic QA), $+18.07$ (Tigrinya TC), $+0.62$
+(Tigrinya NER) and $+3.91$ (Tigrinya QA) points at 95\% confidence. Two of
+these are tight enough to be useful: on Tigrinya NER the method cannot be
+better than $0.62$ F1, and on Amharic QA not better than $1.76$. The
+remaining four, all on text classification or on the $n=3$ Amharic NER cell,
+bound nothing a reader would care about, which is a statement about those
+cells rather than about the method.
+
 \paragraph{Two comparisons do exclude zero, and neither favours the
 morpheme-grounded system.} On Amharic QA, +Mean+LAPT exceeds the floor by
 $1.86$ points ($[+0.83,+2.88]$) and +FOCUS+LAPT by $1.39$
-($[+0.09,+2.69]$). We report these rather than summarize them away, and we
-read them cautiously: two of 24 intervals at a nominal 95\% level is close to
-what multiplicity alone produces, both are under two points, the +FOCUS+LAPT
-interval reaches to $+0.09$, and neither effect appears on the same task in
-the other language or on either other task. What they do not support is the
-proposition the floor comparison was set up to test, since the system that
-reconstructs tokens from morphemes is not among them.
+($[+0.09,+2.69]$). We report rather than summarize them away, and read them
+cautiously: two of 24 intervals at a nominal 95\% level is close to what
+multiplicity alone produces, both are under two points, the +FOCUS+LAPT
+interval reaches to $+0.09$, and neither effect recurs on another task or in
+the other language. They do not support the proposition the floor comparison
+tests, since the morpheme-grounded system is not among them.
 
 \paragraph{Reading in the other direction.} Three of the 24 comparisons
 between +LGSE+LAPT and a baseline exclude zero (Appendix~\ref{app:paired}),
@@ -453,13 +453,12 @@ three of six cells, with the balance in seed and residual variation. Whatever
 separates these five systems, it is not what dominates the numbers in
 Table~\ref{tab:main}.
 
-We state the obvious caveat. A permutation test that fails to reject is not
-proof of no difference, and with $n$ between 3 and 5 its power is low; the
-same is true of a variance share estimated from five groups. The three
-analyses are not independent confirmations so much as three views of one
-fact---that within-system variation here is of the same order as
-between-system variation---which is why we pair them with the minimum
-detectable difference below rather than resting on any one of them.
+One caveat. A permutation test that fails to reject is not proof of no
+difference, and at $n$ between 3 and 5 its power is low, as is that of a
+variance share estimated from five groups. These are three views of one
+fact---within-system variation is of the same order as between-system
+variation---rather than three independent confirmations, which is why we pair
+them with the minimum detectable difference below.
 
 \subsection{Minimum detectable difference}
 
@@ -470,35 +469,12 @@ $.80$,
 \text{MDD} = \left(t_{.975,n-1} + t_{.80,n-1}\right)\frac{s_d}{\sqrt{n}} .
 \end{equation}
 
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{llrrr}
-\toprule
-Language & Task & $|\Delta|$ range & MDD range & $<$MDD \\
-\midrule
-\multirow{3}{*}{Amharic}
- & TC  & 1.22--4.22 & 18.2--41.0 & 4/4 \\
- & NER & 0.54--1.78 & \;2.6--7.7 & 4/4 \\
- & QA  & 0.22--1.64 & \;1.5--2.4 & 3/4 \\
-\midrule
-\multirow{3}{*}{Tigrinya}
- & TC  & 0.34--5.02 & 13.3--17.5 & 4/4 \\
- & NER & 0.05--1.00 & \;0.4--2.1 & 3/4 \\
- & QA  & 0.08--2.39 & \;2.9--7.0 & 4/4 \\
-\bottomrule
-\end{tabular}
-\caption{Observed absolute differences against the minimum detectable
-difference, over the four comparisons in each cell. The last column counts
-comparisons whose observed difference falls below the MDD. Per-comparison
-values are in Appendix~\ref{app:paired}.}
-\label{tab:mdd}
-\end{table}
 
-Table~\ref{tab:mdd} summarizes. In 22 of 24 comparisons the observed
-difference is smaller than the smallest difference the design could reliably
-detect. The two exceptions are Amharic QA against +Mean+LAPT and Tigrinya NER
-against XLM-R, both unfavourable to +LGSE+LAPT.
+
+In 22 of 24 comparisons the observed difference is smaller than the smallest
+difference the design could reliably detect (Table~\ref{tab:mdd}). The two
+exceptions are Amharic QA against +Mean+LAPT and Tigrinya NER against XLM-R,
+both unfavourable to +LGSE+LAPT.
 
 The text-classification MDDs deserve emphasis: 18--41 points for Amharic and
 13--18 for Tigrinya, against observed differences under 6. No initializer
@@ -576,15 +552,14 @@ initialization substantially where it started.
 
 \paragraph{The two together.} The initializations are distinct, they largely
 survive adaptation, and they are what the model uses---yet they touch under
-1\% of task tokens. The seed-to-seed variation that dominates
-Table~\ref{tab:main} is therefore unlikely to originate in initialization,
-and more likely in fine-tuning, which is consistent with +Random+LAPT being
-the only system whose new rows differ across seeds while all five systems
-show comparable seed variance. We offer this as the most parsimonious account
-of the null rather than as a demonstration: the drift measurement covers one
-cell and one seed per system, and attributing variance to fine-tuning
-directly would require holding the fine-tuning seed fixed while varying the
-initialization seed, which our runs do not do.
+1\% of task tokens. The seed variation that dominates Table~\ref{tab:main} is
+therefore unlikely to originate in initialization: +Random+LAPT is the only
+system whose new rows differ across seeds, yet all five show comparable seed
+variance. We offer this as the most parsimonious account rather than a
+demonstration---the drift measurement covers one cell and one seed per
+system, and attributing variance to fine-tuning directly would require
+holding the fine-tuning seed fixed while varying the initialization seed,
+which our runs do not do.
 
 \paragraph{Coverage of the morpheme path does not explain it.} One might
 expect the morpheme-grounded initializer to be inert because few tokens
@@ -663,22 +638,21 @@ observations the smallest exact two-sided Wilcoxon $p$ is 0.0625. Reporting
 $p > 0.05$ at $n = 5$ as a negative finding, or hoping for $p < 0.05$,
 mistakes an arithmetic ceiling for an empirical result.
 
-\paragraph{Release the fitted operator, not only the equation.} A method that
-requires a fitted transform is not reproducible from its equation alone. Ours
-is a $768 \times 768$ matrix, 2.3\,MB; we release it with a sidecar recording
-its language, anchor count, objective and residual norm, so a reader can tell
-at a glance whether they hold the right one.
+\paragraph{Release the fitted operator, not only the equation.} A method
+requiring a fitted transform is not reproducible from its equation alone.
+Ours is a $768\times768$ matrix, 2.3\,MB, released with a sidecar recording
+its language, anchor count, objective and residual norm.
 
 \paragraph{Disclose degenerate runs with the rule and the count.} Averaging a
 zero into a five-seed mean misstates a baseline by over 13 points; dropping
 it silently is equally misleading. State a rule computed from training
-behaviour, report the count, and give the affected means both ways.
+behaviour, report the count, and give affected means both ways.
 
 \paragraph{Name the resize semantics.} A library default is part of the
 experimental condition. In current \texttt{transformers}, resizing an
 embedding matrix initializes new rows from the existing mean and covariance,
-so a column labelled "default initialization" is an informed baseline. A
-reader who assumes a zero-mean Gaussian misreads the whole table.
+so a column labelled ``default initialization'' is an informed baseline, and
+a reader assuming a zero-mean Gaussian misreads the table.
 
 \section{Related Work}
 
@@ -705,7 +679,8 @@ AfroXLMR \citep{alabi-etal-2022-adapting} and Glot500
 \citep{imanigooghari-etal-2023-glot500}, and EthioLLM
 \citep{tonja-etal-2024-ethiollm} targets Ethiopian languages directly. Our
 task resources come from MasakhaNER
-\citep{adelani-etal-2021-masakhaner,adelani-etal-2022-masakhaner2}, AmQA
+\citep{adelani-etal-2021-masakhaner}, the Tigrinya NER dataset of
+\citet{yohannes-amagasa-2022-ner}, AmQA
 \citep{taffa-etal-2024-amqa}, TIGQA
 \citep{teklehaymanot-etal-2024-tigqa} and FineWeb-C
 \citep{kydlicek-etal-2025-fineweb2}.
@@ -878,5 +853,91 @@ the minimum detectable difference at $\alpha = .05$, power $.80$. Three
 intervals exclude zero, all unfavourable to +LGSE+LAPT.}
 \label{tab:allpaired}
 \end{table*}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrrc}
+\toprule
+Lang. & Task & System & $\Delta$ & 95\% CI \\
+\midrule
+\multirow{4}{*}{am}
+ & \multirow{4}{*}{TC}
+            & XLM-R & $-2.11$ & $[-14.10, \;+9.89]$ \\
+ & & +Mean  & $+4.54$ & $[-17.61, +26.70]$ \\
+ & & +FOCUS & $+2.47$ & $[-15.35, +20.30]$ \\
+ & & +LGSE  & $-4.22$ & $[-18.79, +10.36]$ \\
+\midrule
+\multirow{4}{*}{am}
+ & \multirow{4}{*}{NER}
+            & XLM-R & $+1.53$ & $[\;-3.48, \;+6.54]$ \\
+ & & +Mean  & $-1.70$ & $[\;-3.57, \;+0.18]$ \\
+ & & +FOCUS & $-1.14$ & $[\;-9.43, \;+7.16]$ \\
+ & & +LGSE  & $-0.54$ & $[\;-6.70, \;+5.63]$ \\
+\midrule
+\multirow{4}{*}{am}
+ & \multirow{4}{*}{QA}
+            & XLM-R & $+1.52$ & $[\;-1.34, \;+4.38]$ \\
+ & & +Mean  & $+1.86$ & $\mathbf{[+0.83, \;+2.88]}$ \\
+ & & +FOCUS & $+1.39$ & $\mathbf{[+0.09, \;+2.69]}$ \\
+ & & +LGSE  & $+0.22$ & $[\;-1.32, \;+1.76]$ \\
+\midrule
+\multirow{4}{*}{ti}
+ & \multirow{4}{*}{TC}
+            & XLM-R & $+8.17$ & $[\;-1.88, +18.23]$ \\
+ & & +Mean  & $+5.36$ & $[\;-1.13, +11.84]$ \\
+ & & +FOCUS & $+6.62$ & $[\;-4.04, +17.28]$ \\
+ & & +LGSE  & $+5.02$ & $[\;-8.04, +18.07]$ \\
+\midrule
+\multirow{4}{*}{ti}
+ & \multirow{4}{*}{NER}
+            & XLM-R & $+0.11$ & $[\;-0.84, \;+1.07]$ \\
+ & & +Mean  & $-0.48$ & $[\;-2.24, \;+1.28]$ \\
+ & & +FOCUS & $-0.56$ & $[\;-1.77, \;+0.65]$ \\
+ & & +LGSE  & $-0.97$ & $[\;-2.55, \;+0.62]$ \\
+\midrule
+\multirow{4}{*}{ti}
+ & \multirow{4}{*}{QA}
+            & XLM-R & $+1.97$ & $[\;-2.36, \;+6.30]$ \\
+ & & +Mean  & $-0.50$ & $[\;-6.83, \;+5.82]$ \\
+ & & +FOCUS & $+1.96$ & $[\;-6.76, +10.68]$ \\
+ & & +LGSE  & $-0.42$ & $[\;-4.75, \;+3.91]$ \\
+\bottomrule
+\end{tabular}
+\caption{All 24 comparisons against the random floor: each system minus
++Random+LAPT on matched converged seeds, with
+paired-$t$ intervals; 24 comparisons, 4 per cell. Twenty-two intervals
+contain zero. The two that do not (\textbf{bold}) favour +Mean+LAPT and
++FOCUS+LAPT on Amharic QA by 1.86 and 1.39 points. Effective $n$ per
+comparison is in Table~\ref{tab:allpaired} and ranges from 3 to 5. The
+intervals are wide relative to the differences: on Tigrinya TC they span 13
+to 26 points around estimates of 5 to 8.}
+\label{tab:floorfull}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+Language & Task & $|\Delta|$ range & MDD range & $<$MDD \\
+\midrule
+\multirow{3}{*}{Amharic}
+ & TC  & 1.22--4.22 & 18.2--41.0 & 4/4 \\
+ & NER & 0.54--1.78 & \;2.6--7.7 & 4/4 \\
+ & QA  & 0.22--1.64 & \;1.5--2.4 & 3/4 \\
+\midrule
+\multirow{3}{*}{Tigrinya}
+ & TC  & 0.34--5.02 & 13.3--17.5 & 4/4 \\
+ & NER & 0.05--1.00 & \;0.4--2.1 & 3/4 \\
+ & QA  & 0.08--2.39 & \;2.9--7.0 & 4/4 \\
+\bottomrule
+\end{tabular}
+\caption{Observed absolute differences against the minimum detectable
+difference, over the four comparisons in each cell. The last column counts
+comparisons whose observed difference falls below the MDD. Per-comparison
+values are in Appendix~\ref{app:paired}.}
+\label{tab:mdd}
+\end{table}
 
 \end{document}

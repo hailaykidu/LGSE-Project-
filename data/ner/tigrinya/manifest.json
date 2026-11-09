@@ -1,0 +1,24 @@
+{
+  "source": "https://raw.githubusercontent.com/mehari-eng/Tigrinya-NER/main/Tigrinya-NER-Dataset.txt",
+  "citation": "Yohannes and Amagasa (2022)",
+  "split": "random 80/10/10 derived here (the release ships no official split); seed recorded below",
+  "seed": 42,
+  "note": "Not MasakhaNER. MasakhaNER 1.0 and 2.0 do not include Tigrinya. Tag set includes MISC, which MasakhaNER 2.0 does not use. A handful of malformed tags in the release ('B-DATe','IO','BO','B-LO') are normalised by data/scripts/prepare_ner.py.",
+  "files": {
+    "train": {
+      "sha256": "01a9968d78ce30c9c3ca84ab290ea192a31683409d971e3c3e15f6f32683fc64",
+      "sentences": 4562,
+      "tokens": 88102
+    },
+    "dev": {
+      "sha256": "e3f86c999f177e1fe7d3233f9b55e72e4b844fb9b7fdf55e675bd933c936339d",
+      "sentences": 570,
+      "tokens": 11003
+    },
+    "test": {
+      "sha256": "19fa30537db6b88addf254b1fbaf5cb10573d4c084ccce59fd50832b783f5a12",
+      "sentences": 571,
+      "tokens": 10818
+    }
+  }
+}
